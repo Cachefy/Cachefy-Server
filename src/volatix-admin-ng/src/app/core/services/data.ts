@@ -7,6 +7,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Service } from '../models/service.model';
 import { Cache } from '../models/cache.model';
 import { Agent } from '../models/agent.model';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root',
@@ -20,7 +21,11 @@ export class DataService {
   private agents = signal<Agent[]>([]);
   private logs = signal<string[]>([]);
 
-  constructor(private http: HttpClient, @Inject(PLATFORM_ID) private platformId: Object) {
+  constructor(
+    private http: HttpClient, 
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private notificationService: NotificationService
+  ) {
     this.loadAgents();
   }
 
@@ -80,43 +85,182 @@ export class DataService {
     );
   }
 
+  // Service management
+  saveService(service: Omit<Service, 'id'> & { id?: string }): void {
+    try {
+      const services = [...this.services()];
+      const now = new Date().toISOString();
+      let isUpdate = false;
+
+      if (service.id) {
+        const index = services.findIndex((s) => s.id === service.id);
+        if (index >= 0) {
+          services[index] = { ...services[index], ...service };
+          this.addLog(`Updated service: ${service.name}`);
+          isUpdate = true;
+        }
+      } else {
+        const id = this.toSlug(service.name);
+        services.push({
+          ...service,
+          id,
+          lastSeen: now,
+        });
+        this.addLog(`Added service: ${service.name}`);
+      }
+
+      this.services.set(services);
+
+      // Show success notification
+      if (isUpdate) {
+        this.notificationService.showUpdateSuccess(`Service "${service.name}"`);
+      } else {
+        this.notificationService.showCreateSuccess(`Service "${service.name}"`);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      if (service.id) {
+        this.notificationService.showUpdateError(`Service "${service.name}"`, errorMessage);
+      } else {
+        this.notificationService.showCreateError(`Service "${service.name}"`, errorMessage);
+      }
+    }
+  }
+
+  deleteService(id: string): void {
+    try {
+      const deletedService = this.services().find((s) => s.id === id);
+      const services = this.services().filter((s) => s.id !== id);
+      
+      this.services.set(services);
+      
+      if (deletedService) {
+        this.addLog(`Deleted service: ${deletedService.name}`);
+        this.notificationService.showDeleteSuccess(`Service "${deletedService.name}"`);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const serviceName = this.services().find((s) => s.id === id)?.name || 'Service';
+      this.notificationService.showDeleteError(`Service "${serviceName}"`, errorMessage);
+    }
+  }
+
+  // Cache management
+  saveCache(cache: Cache & { isUpdate?: boolean }): void {
+    try {
+      const caches = [...this.caches()];
+      const existingIndex = caches.findIndex((c) => 
+        c.name === cache.name && c.serviceId === cache.serviceId
+      );
+
+      if (existingIndex >= 0 || cache.isUpdate) {
+        if (existingIndex >= 0) {
+          caches[existingIndex] = { ...caches[existingIndex], ...cache };
+        }
+        this.addLog(`Updated cache: ${cache.name}`);
+        this.notificationService.showUpdateSuccess(`Cache "${cache.name}"`);
+      } else {
+        caches.push(cache);
+        this.addLog(`Added cache: ${cache.name}`);
+        this.notificationService.showCreateSuccess(`Cache "${cache.name}"`);
+      }
+
+      this.caches.set(caches);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      if (cache.isUpdate) {
+        this.notificationService.showUpdateError(`Cache "${cache.name}"`, errorMessage);
+      } else {
+        this.notificationService.showCreateError(`Cache "${cache.name}"`, errorMessage);
+      }
+    }
+  }
+
+  deleteCache(name: string, serviceId: string): void {
+    try {
+      const deletedCache = this.caches().find((c) => 
+        c.name === name && c.serviceId === serviceId
+      );
+      const caches = this.caches().filter((c) => 
+        !(c.name === name && c.serviceId === serviceId)
+      );
+      
+      this.caches.set(caches);
+      
+      if (deletedCache) {
+        this.addLog(`Deleted cache: ${deletedCache.name}`);
+        this.notificationService.showDeleteSuccess(`Cache "${deletedCache.name}"`);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      this.notificationService.showDeleteError(`Cache "${name}"`, errorMessage);
+    }
+  }
+
   // Agent management
   getAgents(): Agent[] {
     return this.agents();
   }
 
   saveAgent(agent: Omit<Agent, 'id'> & { id?: string }): void {
-    const agents = [...this.agents()];
-    const now = new Date().toISOString();
+    try {
+      const agents = [...this.agents()];
+      const now = new Date().toISOString();
+      let isUpdate = false;
 
-    if (agent.id) {
-      const index = agents.findIndex((a) => a.id === agent.id);
-      if (index >= 0) {
-        agents[index] = { ...agents[index], ...agent, updatedAt: now };
-        this.addLog(`Updated agent: ${agent.name}`);
+      if (agent.id) {
+        const index = agents.findIndex((a) => a.id === agent.id);
+        if (index >= 0) {
+          agents[index] = { ...agents[index], ...agent, updatedAt: now };
+          this.addLog(`Updated agent: ${agent.name}`);
+          isUpdate = true;
+        }
+      } else {
+        const id = this.uniqueAgentId(agent.name);
+        agents.push({
+          ...agent,
+          id,
+          createdAt: now,
+          updatedAt: now,
+        });
+        this.addLog(`Added agent: ${agent.name}`);
       }
-    } else {
-      const id = this.uniqueAgentId(agent.name);
-      agents.push({
-        ...agent,
-        id,
-        createdAt: now,
-        updatedAt: now,
-      });
-      this.addLog(`Added agent: ${agent.name}`);
-    }
 
-    this.agents.set(agents);
-    this.saveAgentsToStorage();
+      this.agents.set(agents);
+      this.saveAgentsToStorage();
+
+      // Show success notification
+      if (isUpdate) {
+        this.notificationService.showUpdateSuccess(`Agent "${agent.name}"`);
+      } else {
+        this.notificationService.showCreateSuccess(`Agent "${agent.name}"`);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      if (agent.id) {
+        this.notificationService.showUpdateError(`Agent "${agent.name}"`, errorMessage);
+      } else {
+        this.notificationService.showCreateError(`Agent "${agent.name}"`, errorMessage);
+      }
+    }
   }
 
   deleteAgent(id: string): void {
-    const agents = this.agents().filter((a) => a.id !== id);
-    const deletedAgent = this.agents().find((a) => a.id === id);
-    this.agents.set(agents);
-    this.saveAgentsToStorage();
-    if (deletedAgent) {
-      this.addLog(`Deleted agent: ${deletedAgent.name}`);
+    try {
+      const deletedAgent = this.agents().find((a) => a.id === id);
+      const agents = this.agents().filter((a) => a.id !== id);
+      
+      this.agents.set(agents);
+      this.saveAgentsToStorage();
+      
+      if (deletedAgent) {
+        this.addLog(`Deleted agent: ${deletedAgent.name}`);
+        this.notificationService.showDeleteSuccess(`Agent "${deletedAgent.name}"`);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const agentName = this.agents().find((a) => a.id === id)?.name || 'Agent';
+      this.notificationService.showDeleteError(`Agent "${agentName}"`, errorMessage);
     }
   }
 

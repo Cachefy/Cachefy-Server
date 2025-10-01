@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DataService } from '../../core/services/data';
 import { Agent } from '../../core/models/agent.model';
 import { Pagination } from '../../shared/components/pagination/pagination';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-settings',
@@ -13,11 +14,11 @@ import { Pagination } from '../../shared/components/pagination/pagination';
 })
 export class Settings implements OnInit {
   public dataService = inject(DataService);
+  private notificationService = inject(NotificationService);
 
   agents = signal<Agent[]>([]);
   currentPage = signal(1);
   itemsPerPage = 10;
-  formMessage = signal('');
   editingAgent = signal<Agent | null>(null);
 
   agentForm = {
@@ -53,19 +54,10 @@ export class Settings implements OnInit {
       id: this.editingAgent()?.id,
     };
 
-    try {
-      this.dataService.saveAgent(agentData);
-      this.loadAgents();
-      this.clearForm();
-
-      const action = this.editingAgent() ? 'updated' : 'added';
-      this.formMessage.set(`Agent ${action} successfully!`);
-
-      // Clear message after 3 seconds
-      setTimeout(() => this.formMessage.set(''), 3000);
-    } catch (error) {
-      this.formMessage.set('Error saving agent. Please try again.');
-    }
+    // The notification will be handled by the DataService
+    this.dataService.saveAgent(agentData);
+    this.loadAgents();
+    this.clearForm();
   }
 
   editAgent(agent: Agent) {
@@ -75,17 +67,13 @@ export class Settings implements OnInit {
       apiKey: agent.apiKey || '',
     };
     this.editingAgent.set(agent);
-    this.formMessage.set('');
   }
 
   deleteAgent(id: string) {
     if (confirm('Are you sure you want to delete this agent?')) {
+      // The notification will be handled by the DataService
       this.dataService.deleteAgent(id);
       this.loadAgents();
-      this.formMessage.set('Agent deleted successfully!');
-
-      // Clear message after 3 seconds
-      setTimeout(() => this.formMessage.set(''), 3000);
     }
   }
 
@@ -96,7 +84,6 @@ export class Settings implements OnInit {
       apiKey: '',
     };
     this.editingAgent.set(null);
-    this.formMessage.set('');
   }
 
   onPageChange(page: number) {
@@ -123,17 +110,17 @@ export class Settings implements OnInit {
 
   private validateForm(): boolean {
     if (!this.agentForm.name.trim()) {
-      this.formMessage.set('Agent name is required');
+      this.notificationService.showError('Validation Error', 'Agent name is required');
       return false;
     }
 
     if (!this.agentForm.url.trim()) {
-      this.formMessage.set('Agent URL is required');
+      this.notificationService.showError('Validation Error', 'Agent URL is required');
       return false;
     }
 
     if (!this.agentForm.apiKey.trim()) {
-      this.formMessage.set('Agent API key is required');
+      this.notificationService.showError('Validation Error', 'Agent API key is required');
       return false;
     }
 
@@ -141,11 +128,10 @@ export class Settings implements OnInit {
     try {
       new URL(this.agentForm.url);
     } catch {
-      this.formMessage.set('Please enter a valid URL');
+      this.notificationService.showError('Validation Error', 'Please enter a valid URL');
       return false;
     }
 
-    this.formMessage.set('');
     return true;
   }
 }

@@ -41,5 +41,15 @@
         The layout uses a fixed center width to keep content aligned consistently across all pages.
       </div>
     </div>
+
+    <div class="card" style="margin-top: 16px">
+      <h2>Notification System Demo</h2>
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px">
+        <button class="btn success" (click)="testSuccessNotification()">Test Success</button>
+        <button class="btn error" (click)="testErrorNotification()">Test Error</button>
+        <button class="btn warning" (click)="testWarningNotification()">Test Warning</button>
+        <button class="btn info" (click)="testInfoNotification()">Test Info</button>
+      </div>
+    </div>
   </aside>
 </div>

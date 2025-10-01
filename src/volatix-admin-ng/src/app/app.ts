@@ -5,10 +5,11 @@ import { Topbar } from './shared/components/topbar/topbar';
 import { Sidebar } from './shared/components/sidebar/sidebar';
 import { Modal } from './shared/components/modal/modal';
 import { AuthService } from './core/services/auth.service';
+import { NotificationComponent } from './shared/components/notification/notification.component';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, Topbar, Sidebar, Modal],
+  imports: [CommonModule, RouterOutlet, Topbar, Sidebar, Modal, NotificationComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
