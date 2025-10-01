@@ -3,8 +3,8 @@
     <section>
       <div class="card">
         <div class="row" style="align-items: center; justify-content: space-between">
-          <button class="btn ghost" (click)="goBack()">Back to Services</button>
           <div class="text-app" style="font-weight: 700">Service details</div>
+          <button class="btn ghost" (click)="goBack()">Back to Services</button>
         </div>
         <div
           class="kv"
@@ -12,8 +12,24 @@
         >
           @for (detail of getServiceDetails(); track detail.label) {
           <div class="text-slate-400">{{ detail.label }}:</div>
-          <div class="text" [class]="detail.label === 'Status' ? getStatusClass(detail.value) : ''">
+          <div
+            class="text"
+            [class]="detail.label === 'Status' ? getStatusClass(detail.value) : ''"
+            style="display: flex; align-items: center; gap: 8px"
+          >
             {{ detail.value }}
+            @if (detail.label === 'Status') { @switch (detail.value?.toLowerCase()) { @case
+            ('healthy') {
+            <span style="color: #10b981">✓</span>
+            } @case ('degraded') {
+            <span style="color: #f59e0b">⚠</span>
+            } @case ('down') {
+            <span style="color: #ef4444">✗</span>
+            } @case ('maintenance') {
+            <span style="color: #6b7280">🔧</span>
+            } @default {
+            <span style="color: #6b7280">?</span>
+            } } }
           </div>
           }
         </div>
@@ -39,6 +55,17 @@
               <td class="p-2">
                 <span [class]="getStatusClass(cache.status || 'unknown')">
                   {{ cache.status || '—' }}
+                  @switch ((cache.status || 'unknown').toLowerCase()) { @case ('healthy') {
+                  <span style="color: #10b981; font-size: 12px; margin-left: 6px">✓</span>
+                  } @case ('degraded') {
+                  <span style="color: #f59e0b; font-size: 12px; margin-left: 6px">⚠</span>
+                  } @case ('down') {
+                  <span style="color: #ef4444; font-size: 12px; margin-left: 6px">✗</span>
+                  } @case ('maintenance') {
+                  <span style="color: #6b7280; font-size: 12px; margin-left: 6px">🔧</span>
+                  } @default {
+                  <span style="color: #6b7280; font-size: 12px; margin-left: 6px">?</span>
+                  } }
                 </span>
               </td>
               <td class="p-2">{{ cache.items || '—' }}</td>

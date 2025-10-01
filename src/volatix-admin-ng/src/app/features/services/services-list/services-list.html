@@ -14,37 +14,51 @@
         </thead>
         <tbody>
           @for (service of paginatedServices; track service.id || service.name) {
-            <tr>
-              <td class="p-2">{{ service.name }}</td>
-              <td class="p-2" style="text-transform:capitalize">{{ service.status || '—' }}</td>
-              <td class="p-2">{{ service.instances || '—' }}</td>
-              <td class="p-2">{{ service.lastSeen || 'Unknown' }}</td>
-              <td class="p-2 col-actions">
-                <div class="table-actions">
-                  <button class="btn" (click)="viewServiceDetails(service)">Details</button>
-                  <button class="btn ghost" (click)="pingService(service)">Ping</button>
-                </div>
-              </td>
-            </tr>
+          <tr>
+            <td class="p-2">{{ service.name }}</td>
+            <td class="p-2" style="text-transform: capitalize">
+              {{ service.status || '—' }}
+              @switch ((service.status || 'unknown').toLowerCase()) { @case ('healthy') {
+              <span style="color: #10b981; font-size: 12px; margin-left: 6px">✓</span>
+              } @case ('degraded') {
+              <span style="color: #f59e0b; font-size: 12px; margin-left: 6px">⚠</span>
+              } @case ('down') {
+              <span style="color: #ef4444; font-size: 12px; margin-left: 6px">✗</span>
+              } @case ('maintenance') {
+              <span style="color: #6b7280; font-size: 12px; margin-left: 6px">🔧</span>
+              } @default {
+              <span style="color: #6b7280; font-size: 12px; margin-left: 6px">?</span>
+              } }
+            </td>
+            <td class="p-2">{{ service.instances || '—' }}</td>
+            <td class="p-2">{{ service.lastSeen || 'Unknown' }}</td>
+            <td class="p-2 col-actions">
+              <div class="table-actions">
+                <button class="btn" (click)="viewServiceDetails(service)">Details</button>
+                <button class="btn ghost" (click)="pingService(service)">Ping</button>
+              </div>
+            </td>
+          </tr>
           } @empty {
-            <tr>
-              <td class="p-2 text-slate-400" colspan="5">No services found.</td>
-            </tr>
+          <tr>
+            <td class="p-2 text-slate-400" colspan="5">No services found.</td>
+          </tr>
           }
         </tbody>
       </table>
-      
+
       <app-pagination
         [currentPage]="currentPage()"
         [totalPages]="totalPages"
         [pageInfo]="'Page ' + currentPage() + ' of ' + totalPages"
         (pageChange)="onPageChange($event)"
         (prevClick)="onPageChange(currentPage() - 1)"
-        (nextClick)="onPageChange(currentPage() + 1)">
+        (nextClick)="onPageChange(currentPage() + 1)"
+      >
       </app-pagination>
     </div>
   </section>
-  
+
   <aside>
     <div class="card">
       <h2>Notes</h2>

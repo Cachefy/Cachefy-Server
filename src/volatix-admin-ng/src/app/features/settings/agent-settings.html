@@ -1,112 +1,109 @@
-<div id="page-settings" class="page">
-  <div class="grid">
-    <section>
-      <div class="card">
-        <h2 class="text-app">Agent configuration</h2>
-        <div class="row">
-          <div class="form-group" style="flex: 1">
-            <label for="agentName">Agent name</label>
-            <input
-              id="agentName"
-              type="text"
-              placeholder="e.g., edge-cache-agent"
-              [(ngModel)]="agentForm.name"
-            />
-          </div>
+<div class="grid">
+  <section>
+    <div class="card">
+      <h2 class="text-app">Agent configuration</h2>
+      <div class="row">
+        <div class="form-group" style="flex: 1">
+          <label for="agentName">Agent name</label>
+          <input
+            id="agentName"
+            type="text"
+            placeholder="e.g., edge-cache-agent"
+            [(ngModel)]="agentForm.name"
+          />
         </div>
-        <div class="row">
-          <div class="form-group" style="flex: 1">
-            <label for="agentUrl">Agent URL</label>
-            <input
-              id="agentUrl"
-              type="url"
-              placeholder="https://agent.example.com"
-              [(ngModel)]="agentForm.url"
-            />
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="form-group" style="flex: 1">
-            <label for="agentApiKey">Agent ApiKey</label>
-            <input
-              id="agentApiKey"
-              type="text"
-              placeholder="Enter API key"
-              [(ngModel)]="agentForm.apiKey"
-            />
-          </div>
-          <div class="form-group button-group" style="flex: 1">
-            <label style="visibility: hidden">Actions</label>
-            <div class="button-container">
-              <button class="btn" (click)="saveAgent()">
-                {{ editingAgent() ? 'Update agent' : 'Add agent' }}
-              </button>
-              <button class="btn ghost" (click)="clearForm()">Clear</button>
-            </div>
-          </div>
-        </div>
-        <div class="form-message" style="font-size: 12px; color: #f88; min-height: 18px">
-          {{ formMessage() }}
+      </div>
+      <div class="row">
+        <div class="form-group" style="flex: 1">
+          <label for="agentUrl">Agent URL</label>
+          <input
+            id="agentUrl"
+            type="url"
+            placeholder="https://agent.example.com"
+            [(ngModel)]="agentForm.url"
+          />
         </div>
       </div>
 
-      <div class="card" style="margin-top: 16px">
-        <h2 class="text-app">Agents</h2>
-        @if (paginatedAgents().length > 0) {
-        <table class="min-w-full table-fixed text-sm">
-          <thead>
-            <tr class="text-left text-xs text-slate-400 border-b border-slate-800">
-              <th class="p-2 w-48">Name</th>
-              <th class="p-2 w-64">URL</th>
-              <th class="p-2 w-48">ApiKey</th>
-              <th class="p-2 w-48">Updated</th>
-              <th class="p-2 col-actions">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (agent of paginatedAgents(); track agent.id) {
-            <tr class="border-b border-slate-800 hover:bg-slate-800/50">
-              <td class="p-2">{{ agent.name }}</td>
-              <td class="p-2">
-                <a [href]="agent.url" target="_blank" class="text-blue-400 hover:underline">
-                  {{ agent.url }}
-                </a>
-              </td>
-              <td class="p-2">{{ dataService.maskKey(agent.apiKey || '') }}</td>
-              <td class="p-2">{{ formatDate(agent.updatedAt) }}</td>
-              <td class="p-2 col-actions">
-                <div class="table-actions">
-                  <button class="btn" (click)="editAgent(agent)">Edit</button>
-                  <button class="btn ghost" (click)="deleteAgent(agent.id!)">Delete</button>
-                </div>
-              </td>
-            </tr>
-            }
-          </tbody>
-        </table>
-
-        @if (totalPages() > 1) {
-        <app-pagination
-          [currentPage]="currentPage()"
-          [totalPages]="totalPages()"
-          (pageChange)="onPageChange($event)"
-        ></app-pagination>
-        } } @else {
-        <div class="text-center text-slate-400 py-8">No agents configured yet.</div>
-        }
-      </div>
-    </section>
-    <aside>
-      <div class="card">
-        <h2>Info</h2>
-        <div style="font-size: 12px">
-          - Use the form to add or update agents. Click Edit to load an agent into the form.
-          <br />- Data persists in your browser (localStorage). Optionally provide agents.json on
-          your server to pre-populate. <br />- API keys are masked in the grid; they are stored as
-          entered.
+      <div class="row">
+        <div class="form-group" style="flex: 1">
+          <label for="agentApiKey">Agent ApiKey</label>
+          <input
+            id="agentApiKey"
+            type="text"
+            placeholder="Enter API key"
+            [(ngModel)]="agentForm.apiKey"
+          />
+        </div>
+        <div class="form-group button-group" style="flex: 1">
+          <label style="visibility: hidden">Actions</label>
+          <div class="button-container">
+            <button class="btn" (click)="saveAgent()">
+              {{ editingAgent() ? 'Update agent' : 'Add agent' }}
+            </button>
+            <button class="btn ghost" (click)="clearForm()">Clear</button>
+          </div>
         </div>
       </div>
-    </aside>
-  </div>
+      <div class="form-message" style="font-size: 12px; color: #f88; min-height: 18px">
+        {{ formMessage() }}
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 16px">
+      <h2 class="text-app">Agents</h2>
+      @if (paginatedAgents().length > 0) {
+      <table class="min-w-full table-fixed text-sm">
+        <thead>
+          <tr class="text-left text-xs text-slate-400 border-b border-slate-800">
+            <th class="p-2 w-20">Name</th>
+            <th class="p-2 w-80">URL</th>
+            <th class="p-2 w-16">ApiKey</th>
+            <th class="p-2 w-24">Updated</th>
+            <th class="p-2 col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (agent of paginatedAgents(); track agent.id) {
+          <tr class="border-b border-slate-800 hover:bg-slate-800/50">
+            <td class="p-2">{{ agent.name }}</td>
+            <td class="p-2">
+              <a [href]="agent.url" target="_blank" class="text-blue-400 hover:underline">
+                {{ agent.url }}
+              </a>
+            </td>
+            <td class="p-2">{{ dataService.maskKey(agent.apiKey || '') }}</td>
+            <td class="p-2">{{ formatDate(agent.updatedAt) }}</td>
+            <td class="p-2 col-actions">
+              <div class="table-actions">
+                <button class="btn" (click)="editAgent(agent)">Edit</button>
+                <button class="btn ghost" (click)="deleteAgent(agent.id!)">Delete</button>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (totalPages() > 1) {
+      <app-pagination
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        (pageChange)="onPageChange($event)"
+      ></app-pagination>
+      } } @else {
+      <div class="text-center text-slate-400 py-8">No agents configured yet.</div>
+      }
+    </div>
+  </section>
+  <aside>
+    <div class="card">
+      <h2>Info</h2>
+      <div style="font-size: 12px">
+        - Use the form to add or update agents. Click Edit to load an agent into the form.
+        <br />- Data persists in your browser (localStorage). Optionally provide agents.json on your
+        server to pre-populate. <br />- API keys are masked in the grid; they are stored as entered.
+      </div>
+    </div>
+  </aside>
 </div>
