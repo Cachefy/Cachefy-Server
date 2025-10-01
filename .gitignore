@@ -1,0 +1,13 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/src/.vs
+/src/api/.vs
+/src/api/VolatixServer.Api/bin/Debug/net9.0
+/src/api/VolatixServer.Api/obj
+/src/api/VolatixServer.Infrastructure/bin/Debug/net9.0
+/src/api/VolatixServer.Infrastructure/obj
+*.user
+/src/api/VolatixServer.Service/bin/Debug/net9.0
+/src/api/VolatixServer.Service/obj
