@@ -15,3 +15,11 @@
 
 <!-- Global notification system -->
 <app-notification></app-notification>
+
+<!-- Global confirmation modal -->
+<app-confirmation-modal
+  [isOpen]="confirmationService.isConfirmationOpen()"
+  [config]="confirmationService.confirmationConfig()"
+  (confirm)="confirmationService.onConfirm()"
+  (cancel)="confirmationService.onCancel()"
+></app-confirmation-modal>

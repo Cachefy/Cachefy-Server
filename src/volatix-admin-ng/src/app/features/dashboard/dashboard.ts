@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { DataService } from '../../core/services/data';
 import { NotificationService } from '../../core/services/notification.service';
+import { ConfirmationService } from '../../core/services/confirmation.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -11,6 +12,7 @@ import { NotificationService } from '../../core/services/notification.service';
 export class Dashboard implements OnInit {
   private dataService = inject(DataService);
   private notificationService = inject(NotificationService);
+  private confirmationService = inject(ConfirmationService);
 
   metrics = signal({
     activeCaches: 0,
@@ -64,5 +66,41 @@ export class Dashboard implements OnInit {
       'Maintenance window scheduled for tomorrow at 2 AM',
       'Info'
     );
+  }
+
+  // Demo methods for testing confirmation modal
+  async testDeleteConfirmation() {
+    const confirmed = await this.confirmationService.confirmDelete('Test Record');
+    if (confirmed) {
+      this.notificationService.showDeleteSuccess('Test Record');
+    }
+  }
+
+  async testWarningConfirmation() {
+    const confirmed = await this.confirmationService.confirmWarning({
+      title: 'Clear Cache',
+      message:
+        'Are you sure you want to clear all cached data? This will affect system performance temporarily.',
+      confirmText: 'Clear Cache',
+      cancelText: 'Keep Cache',
+    });
+    if (confirmed) {
+      this.notificationService.showInfo(
+        'Cache Cleared',
+        'All cached data has been cleared successfully'
+      );
+    }
+  }
+
+  async testInfoConfirmation() {
+    const confirmed = await this.confirmationService.confirmInfo({
+      title: 'System Update',
+      message: 'A new system update is available. Would you like to proceed with the update?',
+      confirmText: 'Update Now',
+      cancelText: 'Later',
+    });
+    if (confirmed) {
+      this.notificationService.showInfo('Update Started', 'System update has been initiated');
+    }
   }
 }

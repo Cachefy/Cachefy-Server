@@ -5,6 +5,7 @@ import { DataService } from '../../core/services/data';
 import { Agent } from '../../core/models/agent.model';
 import { Pagination } from '../../shared/components/pagination/pagination';
 import { NotificationService } from '../../core/services/notification.service';
+import { ConfirmationService } from '../../core/services/confirmation.service';
 
 @Component({
   selector: 'app-settings',
@@ -15,6 +16,7 @@ import { NotificationService } from '../../core/services/notification.service';
 export class Settings implements OnInit {
   public dataService = inject(DataService);
   private notificationService = inject(NotificationService);
+  private confirmationService = inject(ConfirmationService);
 
   agents = signal<Agent[]>([]);
   currentPage = signal(1);
@@ -69,10 +71,15 @@ export class Settings implements OnInit {
     this.editingAgent.set(agent);
   }
 
-  deleteAgent(id: string) {
-    if (confirm('Are you sure you want to delete this agent?')) {
+  async deleteAgent(id: string) {
+    const agent = this.agents().find((a) => a.id === id);
+    const agentName = agent?.name || 'this agent';
+
+    const confirmed = await this.confirmationService.confirmDelete(agentName);
+
+    if (confirmed) {
       // The notification will be handled by the DataService
-      this.dataService.deleteAgent(id);
+      await this.dataService.deleteAgent(id);
       this.loadAgents();
     }
   }

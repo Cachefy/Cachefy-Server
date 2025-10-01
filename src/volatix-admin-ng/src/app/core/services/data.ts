@@ -8,6 +8,7 @@ import { Service } from '../models/service.model';
 import { Cache } from '../models/cache.model';
 import { Agent } from '../models/agent.model';
 import { NotificationService } from './notification.service';
+import { ConfirmationService } from './confirmation.service';
 
 @Injectable({
   providedIn: 'root',
@@ -24,7 +25,8 @@ export class DataService {
   constructor(
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private confirmationService: ConfirmationService
   ) {
     this.loadAgents();
   }
@@ -127,20 +129,26 @@ export class DataService {
     }
   }
 
-  deleteService(id: string): void {
-    try {
-      const deletedService = this.services().find((s) => s.id === id);
-      const services = this.services().filter((s) => s.id !== id);
+  async deleteService(id: string): Promise<void> {
+    const service = this.services().find((s) => s.id === id);
+    const serviceName = service?.name || 'Service';
 
+    const confirmed = await this.confirmationService.confirmDelete(serviceName);
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const services = this.services().filter((s) => s.id !== id);
       this.services.set(services);
 
-      if (deletedService) {
-        this.addLog(`Deleted service: ${deletedService.name}`);
-        this.notificationService.showDeleteSuccess(`Service "${deletedService.name}"`);
+      if (service) {
+        this.addLog(`Deleted service: ${service.name}`);
+        this.notificationService.showDeleteSuccess(`Service "${service.name}"`);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      const serviceName = this.services().find((s) => s.id === id)?.name || 'Service';
       this.notificationService.showDeleteError(`Service "${serviceName}"`, errorMessage);
     }
   }
@@ -176,7 +184,13 @@ export class DataService {
     }
   }
 
-  deleteCache(name: string, serviceId: string): void {
+  async deleteCache(name: string, serviceId: string): Promise<void> {
+    const confirmed = await this.confirmationService.confirmDelete(`Cache "${name}"`);
+
+    if (!confirmed) {
+      return;
+    }
+
     try {
       const deletedCache = this.caches().find((c) => c.name === name && c.serviceId === serviceId);
       const caches = this.caches().filter((c) => !(c.name === name && c.serviceId === serviceId));
@@ -241,21 +255,27 @@ export class DataService {
     }
   }
 
-  deleteAgent(id: string): void {
-    try {
-      const deletedAgent = this.agents().find((a) => a.id === id);
-      const agents = this.agents().filter((a) => a.id !== id);
+  async deleteAgent(id: string): Promise<void> {
+    const agent = this.agents().find((a) => a.id === id);
+    const agentName = agent?.name || 'Agent';
 
+    const confirmed = await this.confirmationService.confirmDelete(agentName);
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const agents = this.agents().filter((a) => a.id !== id);
       this.agents.set(agents);
       this.saveAgentsToStorage();
 
-      if (deletedAgent) {
-        this.addLog(`Deleted agent: ${deletedAgent.name}`);
-        this.notificationService.showDeleteSuccess(`Agent "${deletedAgent.name}"`);
+      if (agent) {
+        this.addLog(`Deleted agent: ${agent.name}`);
+        this.notificationService.showDeleteSuccess(`Agent "${agent.name}"`);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      const agentName = this.agents().find((a) => a.id === id)?.name || 'Agent';
       this.notificationService.showDeleteError(`Agent "${agentName}"`, errorMessage);
     }
   }
