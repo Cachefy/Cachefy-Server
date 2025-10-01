@@ -15,7 +15,7 @@ export const authInterceptor: HttpInterceptorFn = (
   next: HttpHandlerFn
 ): Observable<HttpEvent<any>> => {
   const authService = inject(AuthService);
-  
+
   // Don't add token for public assets or auth endpoints
   const isPublicAsset =
     request.url.includes('/assets/') ||

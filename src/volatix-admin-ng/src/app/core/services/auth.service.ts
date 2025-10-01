@@ -30,7 +30,7 @@ export class AuthService {
   public readonly authError = computed(() => this._authState().error);
 
   constructor(
-    private http: HttpClient, 
+    private http: HttpClient,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
