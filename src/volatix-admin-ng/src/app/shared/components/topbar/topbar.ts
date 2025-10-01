@@ -1,14 +1,17 @@
 import { Component, inject, HostListener } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../../core/services/theme';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-topbar',
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './topbar.html',
   styleUrl: './topbar.css',
 })
 export class Topbar {
   private themeService = inject(ThemeService);
+  private authService = inject(AuthService);
   isUserMenuOpen = false;
 
   get isLight() {
@@ -32,8 +35,11 @@ export class Topbar {
 
   logOff() {
     this.isUserMenuOpen = false;
-    // TODO: Implement logout functionality
-    console.log('Log off user');
+    this.authService.logout();
+  }
+
+  get currentUser() {
+    return this.authService.currentUser();
   }
 
   @HostListener('document:click', ['$event'])

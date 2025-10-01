@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+@if (isAuthenticated) {
 <app-topbar></app-topbar>
 
 <div class="wrap">
@@ -9,3 +9,6 @@
 </div>
 
 <app-modal></app-modal>
+} @else {
+<router-outlet />
+}
