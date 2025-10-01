@@ -52,7 +52,7 @@ export class Dashboard implements OnInit {
 
   testWarningNotification() {
     this.notificationService.showWarning(
-      'System Warning', 
+      'System Warning',
       'Cache memory usage is above 80%',
       'Warning'
     );

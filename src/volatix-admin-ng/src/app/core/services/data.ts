@@ -22,7 +22,7 @@ export class DataService {
   private logs = signal<string[]>([]);
 
   constructor(
-    private http: HttpClient, 
+    private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object,
     private notificationService: NotificationService
   ) {
@@ -131,9 +131,9 @@ export class DataService {
     try {
       const deletedService = this.services().find((s) => s.id === id);
       const services = this.services().filter((s) => s.id !== id);
-      
+
       this.services.set(services);
-      
+
       if (deletedService) {
         this.addLog(`Deleted service: ${deletedService.name}`);
         this.notificationService.showDeleteSuccess(`Service "${deletedService.name}"`);
@@ -149,8 +149,8 @@ export class DataService {
   saveCache(cache: Cache & { isUpdate?: boolean }): void {
     try {
       const caches = [...this.caches()];
-      const existingIndex = caches.findIndex((c) => 
-        c.name === cache.name && c.serviceId === cache.serviceId
+      const existingIndex = caches.findIndex(
+        (c) => c.name === cache.name && c.serviceId === cache.serviceId
       );
 
       if (existingIndex >= 0 || cache.isUpdate) {
@@ -178,15 +178,11 @@ export class DataService {
 
   deleteCache(name: string, serviceId: string): void {
     try {
-      const deletedCache = this.caches().find((c) => 
-        c.name === name && c.serviceId === serviceId
-      );
-      const caches = this.caches().filter((c) => 
-        !(c.name === name && c.serviceId === serviceId)
-      );
-      
+      const deletedCache = this.caches().find((c) => c.name === name && c.serviceId === serviceId);
+      const caches = this.caches().filter((c) => !(c.name === name && c.serviceId === serviceId));
+
       this.caches.set(caches);
-      
+
       if (deletedCache) {
         this.addLog(`Deleted cache: ${deletedCache.name}`);
         this.notificationService.showDeleteSuccess(`Cache "${deletedCache.name}"`);
@@ -249,10 +245,10 @@ export class DataService {
     try {
       const deletedAgent = this.agents().find((a) => a.id === id);
       const agents = this.agents().filter((a) => a.id !== id);
-      
+
       this.agents.set(agents);
       this.saveAgentsToStorage();
-      
+
       if (deletedAgent) {
         this.addLog(`Deleted agent: ${deletedAgent.name}`);
         this.notificationService.showDeleteSuccess(`Agent "${deletedAgent.name}"`);

@@ -12,7 +12,7 @@ export interface NotificationMessage {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class NotificationService {
   private notifications = signal<NotificationMessage[]>([]);
@@ -33,7 +33,7 @@ export class NotificationService {
       message,
       action,
       autoClose,
-      duration
+      duration,
     });
   }
 
@@ -46,7 +46,7 @@ export class NotificationService {
       title,
       message,
       action,
-      autoClose
+      autoClose,
     });
   }
 
@@ -60,7 +60,7 @@ export class NotificationService {
       message,
       action,
       autoClose,
-      duration
+      duration,
     });
   }
 
@@ -74,7 +74,7 @@ export class NotificationService {
       message,
       action,
       autoClose,
-      duration
+      duration,
     });
   }
 
@@ -82,10 +82,10 @@ export class NotificationService {
     const newNotification: NotificationMessage = {
       ...notification,
       id: this.generateId(),
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
-    this.notifications.update(notifications => [...notifications, newNotification]);
+    this.notifications.update((notifications) => [...notifications, newNotification]);
 
     // Auto close if enabled
     if (notification.autoClose) {
@@ -99,8 +99,8 @@ export class NotificationService {
    * Remove a specific notification
    */
   removeNotification(id: string) {
-    this.notifications.update(notifications => 
-      notifications.filter(notification => notification.id !== id)
+    this.notifications.update((notifications) =>
+      notifications.filter((notification) => notification.id !== id)
     );
   }
 
@@ -124,7 +124,7 @@ export class NotificationService {
 
   showUpdateSuccess(entityName: string) {
     this.showSuccess(
-      'Updated Successfully', 
+      'Updated Successfully',
       `${entityName} has been updated successfully.`,
       'Updated'
     );
