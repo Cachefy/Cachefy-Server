@@ -1,13 +1,15 @@
 <div class="pagination">
-  <button class="btn" [disabled]="currentPage() <= 1" (click)="onPrevClick()">Prev</button>
+  <button class="btn secondary sm btn-ripple" [disabled]="currentPage() <= 1" (click)="onPrevClick()">
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Prev
+  </button>
 
   <div class="page-numbers">
     @for (page of pageNumbers; track page) {
     <button
-      class="btn"
-      [style.background]="page === currentPage() ? 'var(--accent)' : 'transparent'"
-      [style.color]="page === currentPage() ? '#000' : 'var(--muted)'"
-      [style.border]="page === currentPage() ? 'none' : '1px solid var(--glass-border)'"
+      [class]="page === currentPage() ? 'btn primary sm' : 'btn ghost sm'"
       (click)="onPageClick(page)"
     >
       {{ page }}
@@ -17,7 +19,10 @@
 
   <span class="page-info">{{ pageInfo() }}</span>
 
-  <button class="btn" [disabled]="currentPage() >= totalPages()" (click)="onNextClick()">
+  <button class="btn secondary sm btn-ripple" [disabled]="currentPage() >= totalPages()" (click)="onNextClick()">
     Next
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+    </svg>
   </button>
 </div>

@@ -9,13 +9,23 @@
   <div class="modal-card">
     <div class="modal-header">
       <div class="text-app" style="font-weight: 700">{{ title() }}</div>
-      <button class="btn ghost" (click)="onClose()" aria-label="Close">Close</button>
+      <button class="btn ghost sm btn-ripple" (click)="onClose()" aria-label="Close">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        Close
+      </button>
     </div>
     <div class="modal-body">
       <ng-content></ng-content>
     </div>
     <div class="modal-footer">
-      <button class="btn ghost" (click)="onClose()">Dismiss</button>
+      <button class="btn secondary btn-ripple" (click)="onClose()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        Dismiss
+      </button>
     </div>
   </div>
 </div>

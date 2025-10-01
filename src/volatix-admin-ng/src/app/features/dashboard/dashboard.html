@@ -42,13 +42,33 @@
       </div>
     </div>
 
-    <div class="card" style="margin-top: 16px">
-      <h2>Notification System Demo</h2>
-      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px">
-        <button class="btn success" (click)="testSuccessNotification()">Test Success</button>
-        <button class="btn error" (click)="testErrorNotification()">Test Error</button>
-        <button class="btn warning" (click)="testWarningNotification()">Test Warning</button>
-        <button class="btn info" (click)="testInfoNotification()">Test Info</button>
+    <div class="card animate-fade-in-up" style="margin-top: 16px">
+      <h2>🧪 Notification System Demo</h2>
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px">
+        <button class="btn success btn-ripple animate-slide-in-right" (click)="testSuccessNotification()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          Test Success
+        </button>
+        <button class="btn danger btn-ripple animate-slide-in-right" (click)="testErrorNotification()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          Test Error
+        </button>
+        <button class="btn warning btn-ripple animate-slide-in-right" (click)="testWarningNotification()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+          </svg>
+          Test Warning
+        </button>
+        <button class="btn info btn-ripple animate-slide-in-right" (click)="testInfoNotification()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Test Info
+        </button>
       </div>
     </div>
   </aside>

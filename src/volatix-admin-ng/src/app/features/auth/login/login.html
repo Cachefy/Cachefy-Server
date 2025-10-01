@@ -113,8 +113,10 @@
       <!-- Submit Button -->
       <button
         type="submit"
-        class="login-button"
+        class="btn primary lg animate-fade-in-up"
+        [class.loading]="isLoading"
         [disabled]="isLoading || !credentials().username || !credentials().password"
+        style="width: 100%; justify-content: center;"
       >
         @if (isLoading) {
         <svg class="spinner" width="20" height="20" viewBox="0 0 24 24">
@@ -129,7 +131,11 @@
             stroke-linecap="round"
           />
         </svg>
-        Signing in... } @else { Sign In }
+        Signing in... } @else { 
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+        </svg>
+        Sign In }
       </button>
     </form>
 
@@ -141,12 +147,13 @@
         @for (demo of demoCredentials; track demo.username) {
         <button
           type="button"
-          class="demo-card"
+          class="btn secondary btn-ripple animate-slide-in-right demo-card-btn"
           (click)="fillDemoCredentials(demo)"
           [disabled]="isLoading"
+          style="flex-direction: column; padding: 16px; text-align: center;"
         >
-          <div class="demo-role">{{ demo.role }}</div>
-          <div class="demo-username">{{ demo.username }}</div>
+          <div class="demo-role" style="font-weight: 600; color: var(--accent); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">{{ demo.role }}</div>
+          <div class="demo-username" style="margin-top: 4px; font-size: 14px;">{{ demo.username }}</div>
         </button>
         }
       </div>

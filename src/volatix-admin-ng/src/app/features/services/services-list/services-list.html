@@ -34,8 +34,18 @@
             <td class="p-2">{{ service.lastSeen || 'Unknown' }}</td>
             <td class="p-2 col-actions">
               <div class="table-actions">
-                <button class="btn" (click)="viewServiceDetails(service)">Details</button>
-                <button class="btn ghost" (click)="pingService(service)">Ping</button>
+                <button class="btn primary sm btn-ripple" (click)="viewServiceDetails(service)">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  Details
+                </button>
+                <button class="btn secondary sm btn-ripple" (click)="pingService(service)">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
+                  </svg>
+                  Ping
+                </button>
               </div>
             </td>
           </tr>

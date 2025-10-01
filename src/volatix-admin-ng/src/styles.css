@@ -1,3 +1,6 @@
+/* Import enhanced button styles */
+@import './enhanced-buttons.css';
+
 /* Global styles for Volatix Admin */
 :root {
   --bg: #0b0b0b;
