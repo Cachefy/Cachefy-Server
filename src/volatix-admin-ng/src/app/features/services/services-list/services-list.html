@@ -1,0 +1,56 @@
+<div class="grid">
+  <section>
+    <div class="card">
+      <h2 class="text-app">Registered services</h2>
+      <table class="min-w-full table-fixed text-sm">
+        <thead>
+          <tr class="text-left text-xs text-slate-400 border-b border-slate-800">
+            <th class="p-2 w-64">Service</th>
+            <th class="p-2 w-24">Status</th>
+            <th class="p-2 w-24">Instances</th>
+            <th class="p-2 w-48">Last seen</th>
+            <th class="p-2 col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (service of paginatedServices; track service.id || service.name) {
+            <tr>
+              <td class="p-2">{{ service.name }}</td>
+              <td class="p-2" style="text-transform:capitalize">{{ service.status || '—' }}</td>
+              <td class="p-2">{{ service.instances || '—' }}</td>
+              <td class="p-2">{{ service.lastSeen || 'Unknown' }}</td>
+              <td class="p-2 col-actions">
+                <div class="table-actions">
+                  <button class="btn" (click)="viewServiceDetails(service)">Details</button>
+                  <button class="btn ghost" (click)="pingService(service)">Ping</button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td class="p-2 text-slate-400" colspan="5">No services found.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      
+      <app-pagination
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages"
+        [pageInfo]="'Page ' + currentPage() + ' of ' + totalPages"
+        (pageChange)="onPageChange($event)"
+        (prevClick)="onPageChange(currentPage() - 1)"
+        (nextClick)="onPageChange(currentPage() + 1)">
+      </app-pagination>
+    </div>
+  </section>
+  
+  <aside>
+    <div class="card">
+      <h2>Notes</h2>
+      <div style="font-size: 12px">
+        Services register caches and policies at startup. Keep clients up to date.
+      </div>
+    </div>
+  </aside>
+</div>

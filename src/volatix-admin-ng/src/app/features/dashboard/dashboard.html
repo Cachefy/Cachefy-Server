@@ -1,0 +1,45 @@
+<div class="grid">
+  <section>
+    <div class="card">
+      <h2 class="text-app">Overview</h2>
+      <div class="row" style="margin-top: 6px">
+        <div class="card" style="flex: 1">
+          <div style="font-size: 12px">Active caches</div>
+          <div style="font-size: 22px; font-weight: 800; color: var(--vol-appname-text)">
+            {{ metrics().activeCaches }}
+          </div>
+        </div>
+        <div class="card" style="flex: 1">
+          <div style="font-size: 12px">Total items</div>
+          <div style="font-size: 22px; font-weight: 800; color: var(--vol-appname-text)">
+            {{ metrics().totalItems }}
+          </div>
+        </div>
+        <div class="card" style="flex: 1">
+          <div style="font-size: 12px">Hit ratio</div>
+          <div style="font-size: 22px; font-weight: 800; color: var(--vol-appname-text)">
+            {{ metrics().hitRatio }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 16px">
+      <h2 class="text-app">Recent activity</h2>
+      <div style="font-family: monospace; font-size: 12px; min-height: 100px; color: var(--muted)">
+        @if (logs().length === 0) { No activity yet. } @else { @for (log of logs(); track log) {
+        <div>{{ log }}</div>
+        } }
+      </div>
+    </div>
+  </section>
+
+  <aside>
+    <div class="card">
+      <h2>Info</h2>
+      <div style="font-size: 12px">
+        The layout uses a fixed center width to keep content aligned consistently across all pages.
+      </div>
+    </div>
+  </aside>
+</div>

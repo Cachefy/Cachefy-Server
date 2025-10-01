@@ -1,0 +1,56 @@
+[
+  {
+    "serviceId": "auth-service",
+    "name": "user-sessions",
+    "status": "active",
+    "items": 1250,
+    "ttl": 3600,
+    "policy": "LRU",
+    "hits": 8540
+  },
+  {
+    "serviceId": "auth-service",
+    "name": "token-cache",
+    "status": "active",
+    "items": 456,
+    "ttl": 1800,
+    "policy": "TTL",
+    "hits": 2340
+  },
+  {
+    "serviceId": "catalog-service",
+    "name": "product-catalog",
+    "status": "active",
+    "items": 5680,
+    "ttl": 7200,
+    "policy": "LFU",
+    "hits": 12300
+  },
+  {
+    "serviceId": "catalog-service",
+    "name": "category-cache",
+    "status": "active",
+    "items": 234,
+    "ttl": 14400,
+    "policy": "FIFO",
+    "hits": 4560
+  },
+  {
+    "serviceId": "payments-service",
+    "name": "payment-methods",
+    "status": "degraded",
+    "items": 890,
+    "ttl": 2700,
+    "policy": "LRU",
+    "hits": 3450
+  },
+  {
+    "serviceId": "search-service",
+    "name": "search-results",
+    "status": "maintenance",
+    "items": 2340,
+    "ttl": 900,
+    "policy": "TTL",
+    "hits": 7800
+  }
+]

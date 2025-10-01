@@ -1,0 +1,23 @@
+<div class="pagination">
+  <button class="btn" [disabled]="currentPage() <= 1" (click)="onPrevClick()">Prev</button>
+
+  <div class="page-numbers">
+    @for (page of pageNumbers; track page) {
+    <button
+      class="btn"
+      [style.background]="page === currentPage() ? 'var(--accent)' : 'transparent'"
+      [style.color]="page === currentPage() ? '#000' : 'var(--muted)'"
+      [style.border]="page === currentPage() ? 'none' : '1px solid var(--glass-border)'"
+      (click)="onPageClick(page)"
+    >
+      {{ page }}
+    </button>
+    }
+  </div>
+
+  <span class="page-info">{{ pageInfo() }}</span>
+
+  <button class="btn" [disabled]="currentPage() >= totalPages()" (click)="onNextClick()">
+    Next
+  </button>
+</div>

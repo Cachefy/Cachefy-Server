@@ -1,0 +1,24 @@
+<div class="topbar">
+  <div class="flex items-center gap-3">
+    <div class="logo-circle">
+      <span class="logo-x">X</span>
+    </div>
+    <div>
+      <div
+        class="brand appname text-app text-xl"
+        style="font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em"
+      >
+        Volati<span class="x">x</span>
+      </div>
+      <div class="text-xs text-slate-400">Cache lifecycle manager</div>
+    </div>
+  </div>
+  <div class="controls">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <label style="font-size: 13px; color: var(--muted)">Theme</label>
+      <div class="switch" [class.on]="isLight" title="Toggle theme" (click)="toggleTheme()">
+        <div class="knob"></div>
+      </div>
+    </div>
+  </div>
+</div>

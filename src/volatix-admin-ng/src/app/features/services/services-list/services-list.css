@@ -1,0 +1,89 @@
+/* Page container styling - consistent across all feature components */
+.page {
+  padding: 20px;
+  min-height: calc(100vh - 120px); /* Consistent height accounting for header/footer */
+  box-sizing: border-box;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page {
+    padding: 16px; /* Slightly smaller padding on mobile */
+  }
+}
+
+.btn.ghost {
+  background: transparent;
+  border-color: #475569;
+}
+
+.text-app {
+  color: #f1f5f9;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+}
+
+.table-fixed {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-fixed th,
+.table-fixed td {
+  text-align: left;
+  border-bottom: 1px solid #334155;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.table-actions .btn {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.text-slate-400 {
+  color: #94a3b8;
+}
+
+.col-actions {
+  width: 120px;
+}
+
+/* Status styles for consistency */
+.status-healthy {
+  color: #22c55e;
+  font-weight: 500;
+}
+
+.status-degraded {
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+.status-down {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.status-maintenance {
+  color: #8b5cf6;
+  font-weight: 500;
+}

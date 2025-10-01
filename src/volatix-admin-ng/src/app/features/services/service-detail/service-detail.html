@@ -1,0 +1,90 @@
+<div id="page-service" class="page">
+  <div class="grid">
+    <section>
+      <div class="card">
+        <div class="row" style="align-items: center; justify-content: space-between">
+          <button class="btn ghost" (click)="goBack()">Back to Services</button>
+          <div class="text-app" style="font-weight: 700">Service details</div>
+        </div>
+        <div
+          class="kv"
+          style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; margin-top: 12px"
+        >
+          @for (detail of getServiceDetails(); track detail.label) {
+          <div class="text-slate-400">{{ detail.label }}:</div>
+          <div class="text" [class]="detail.label === 'Status' ? getStatusClass(detail.value) : ''">
+            {{ detail.value }}
+          </div>
+          }
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 16px">
+        <h2 class="text-app">Caches for this service</h2>
+        @if (paginatedCaches().length > 0) {
+        <table class="min-w-full table-fixed text-sm">
+          <thead>
+            <tr class="text-left text-xs text-slate-400 border-b border-slate-800">
+              <th class="p-2 w-64">Cache</th>
+              <th class="p-2 w-24">Status</th>
+              <th class="p-2 w-24">Items</th>
+              <th class="p-2 w-48">TTL</th>
+              <th class="p-2 w-48">Policy</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cache of paginatedCaches(); track cache.name) {
+            <tr class="border-b border-slate-800 hover:bg-slate-800/50">
+              <td class="p-2">{{ cache.name || '—' }}</td>
+              <td class="p-2">
+                <span [class]="getStatusClass(cache.status || 'unknown')">
+                  {{ cache.status || '—' }}
+                </span>
+              </td>
+              <td class="p-2">{{ cache.items || '—' }}</td>
+              <td class="p-2">{{ dataService.humanTTL(cache.ttl || 0) }}</td>
+              <td class="p-2">{{ cache.policy || cache.evictionPolicy || '—' }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+
+        @if (totalPages() > 1) {
+        <app-pagination
+          [currentPage]="currentPage()"
+          [totalPages]="totalPages()"
+          (pageChange)="onPageChange($event)"
+        ></app-pagination>
+        } } @else {
+        <div class="text-center text-slate-400 py-8">No caches found for this service</div>
+        }
+      </div>
+    </section>
+
+    <aside>
+      <div class="card">
+        <h2 class="text-app">Service snapshot (JSON)</h2>
+        <div style="font-size: 12px; margin-bottom: 6px">
+          Includes serviceId, service info, and all caches for this service.
+        </div>
+        <pre
+          class="pre"
+          style="
+            font-family: monospace;
+            font-size: 12px;
+            min-height: 100px;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.04);
+            padding: 10px;
+            border-radius: 8px;
+          "
+          >{{ serviceSnapshot() | json }}</pre
+        >
+        <div class="row" style="margin-top: 8px">
+          <button class="btn" (click)="copyJSON()">Copy JSON</button>
+          <button class="btn ghost" (click)="downloadJSON()">Download JSON</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>

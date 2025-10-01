@@ -1,0 +1,21 @@
+<div
+  class="modal-backdrop"
+  [class.show]="isOpen()"
+  (click)="onBackdropClick($event)"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-hidden]="!isOpen()"
+>
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="text-app" style="font-weight: 700">{{ title() }}</div>
+      <button class="btn ghost" (click)="onClose()" aria-label="Close">Close</button>
+    </div>
+    <div class="modal-body">
+      <ng-content></ng-content>
+    </div>
+    <div class="modal-footer">
+      <button class="btn ghost" (click)="onClose()">Dismiss</button>
+    </div>
+  </div>
+</div>
