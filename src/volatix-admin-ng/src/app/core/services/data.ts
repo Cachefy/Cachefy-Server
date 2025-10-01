@@ -9,6 +9,7 @@ import { Cache } from '../models/cache.model';
 import { Agent } from '../models/agent.model';
 import { NotificationService } from './notification.service';
 import { ConfirmationService } from './confirmation.service';
+import { ApiKeyService } from './api-key.service';
 
 @Injectable({
   providedIn: 'root',
@@ -26,7 +27,8 @@ export class DataService {
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object,
     private notificationService: NotificationService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private apiKeyService: ApiKeyService
   ) {
     this.loadAgents();
   }
@@ -212,28 +214,47 @@ export class DataService {
     return this.agents();
   }
 
-  saveAgent(agent: Omit<Agent, 'id'> & { id?: string }): void {
+  saveAgent(agent: Omit<Agent, 'id' | 'apiKey'> & { id?: string }): {
+    agent: Agent;
+    isNewKey: boolean;
+  } {
     try {
       const agents = [...this.agents()];
       const now = new Date().toISOString();
       let isUpdate = false;
+      let generatedApiKey = '';
+      let isNewKey = false;
 
       if (agent.id) {
         const index = agents.findIndex((a) => a.id === agent.id);
         if (index >= 0) {
-          agents[index] = { ...agents[index], ...agent, updatedAt: now };
+          // For updates, keep existing API key
+          agents[index] = {
+            ...agents[index],
+            ...agent,
+            updatedAt: now,
+          };
           this.addLog(`Updated agent: ${agent.name}`);
           isUpdate = true;
+          generatedApiKey = agents[index].apiKey;
         }
       } else {
+        // For new agents, generate API key
         const id = this.uniqueAgentId(agent.name);
-        agents.push({
+        generatedApiKey = this.apiKeyService.generateApiKey();
+        isNewKey = true;
+
+        const newAgent: Agent = {
           ...agent,
           id,
+          apiKey: generatedApiKey,
+          apiKeyGenerated: now,
           createdAt: now,
           updatedAt: now,
-        });
-        this.addLog(`Added agent: ${agent.name}`);
+        };
+
+        agents.push(newAgent);
+        this.addLog(`Added agent: ${agent.name} with new API key`);
       }
 
       this.agents.set(agents);
@@ -245,6 +266,13 @@ export class DataService {
       } else {
         this.notificationService.showCreateSuccess(`Agent "${agent.name}"`);
       }
+
+      // Return the saved agent and key generation info
+      const savedAgent = agents.find(
+        (a) => a.id === (agent.id || this.uniqueAgentId(agent.name)) || a.name === agent.name
+      )!;
+
+      return { agent: savedAgent, isNewKey };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       if (agent.id) {
@@ -252,6 +280,60 @@ export class DataService {
       } else {
         this.notificationService.showCreateError(`Agent "${agent.name}"`, errorMessage);
       }
+
+      // Return error state
+      throw error;
+    }
+  }
+
+  async revokeApiKey(agentId: string): Promise<{ agent: Agent; newApiKey: string } | null> {
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Revoke API Key',
+      message:
+        'Are you sure you want to revoke this API key? This will generate a new key and the old one will no longer work.',
+      confirmText: 'Revoke & Generate New',
+      cancelText: 'Cancel',
+      type: 'warning',
+    });
+
+    if (!confirmed) {
+      return null;
+    }
+
+    try {
+      const agents = [...this.agents()];
+      const agentIndex = agents.findIndex((a) => a.id === agentId);
+
+      if (agentIndex === -1) {
+        throw new Error('Agent not found');
+      }
+
+      const agent = agents[agentIndex];
+      const newApiKey = this.apiKeyService.generateApiKey();
+      const now = new Date().toISOString();
+
+      // Update agent with new API key
+      agents[agentIndex] = {
+        ...agent,
+        apiKey: newApiKey,
+        apiKeyGenerated: now,
+        updatedAt: now,
+      };
+
+      this.agents.set(agents);
+      this.saveAgentsToStorage();
+      this.addLog(`Revoked API key for agent: ${agent.name}`);
+
+      this.notificationService.showInfo(
+        'API Key Revoked',
+        `New API key generated for "${agent.name}"`
+      );
+
+      return { agent: agents[agentIndex], newApiKey };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      this.notificationService.showError('API Key Revocation Failed', errorMessage);
+      return null;
     }
   }
 
@@ -391,5 +473,103 @@ export class DataService {
       id = `${base}-${i++}`;
     }
     return id;
+  }
+
+  // Export agents to JSON file
+  exportAgentsToJson(): void {
+    try {
+      const agentsData = this.agents();
+      const jsonString = JSON.stringify(agentsData, null, 2);
+
+      if (isPlatformBrowser(this.platformId)) {
+        // Create downloadable file
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `agents-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        this.addLog(`Exported ${agentsData.length} agents to JSON file`);
+        this.notificationService.showSuccess(
+          'Export Complete',
+          `Downloaded agents JSON file with ${agentsData.length} agents`
+        );
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      this.notificationService.showError('Export Failed', errorMessage);
+    }
+  }
+
+  // Import agents from JSON data
+  importAgentsFromJson(jsonData: Agent[]): void {
+    try {
+      if (!Array.isArray(jsonData)) {
+        throw new Error('Invalid JSON format - expected an array of agents');
+      }
+
+      // Validate agent structure
+      const validAgents = jsonData.filter(
+        (agent) =>
+          agent.name && agent.url && typeof agent.name === 'string' && typeof agent.url === 'string'
+      );
+
+      if (validAgents.length !== jsonData.length) {
+        this.notificationService.showWarning(
+          'Import Warning',
+          `${jsonData.length - validAgents.length} invalid agents were skipped`
+        );
+      }
+
+      // Merge with existing agents, avoiding duplicates
+      const existingAgents = this.agents();
+      const mergedAgents = [...existingAgents];
+      let importedCount = 0;
+      let updatedCount = 0;
+
+      validAgents.forEach((importAgent) => {
+        const existingIndex = existingAgents.findIndex(
+          (a) => a.id === importAgent.id || a.name === importAgent.name
+        );
+
+        if (existingIndex >= 0) {
+          // Update existing agent
+          mergedAgents[existingIndex] = {
+            ...mergedAgents[existingIndex],
+            ...importAgent,
+            updatedAt: new Date().toISOString(),
+          };
+          updatedCount++;
+        } else {
+          // Add new agent with unique ID
+          const newAgent = {
+            ...importAgent,
+            id: importAgent.id || this.uniqueAgentId(importAgent.name),
+            apiKey: importAgent.apiKey || this.apiKeyService.generateApiKey(),
+            createdAt: importAgent.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            apiKeyGenerated: importAgent.apiKeyGenerated || new Date().toISOString(),
+          };
+          mergedAgents.push(newAgent);
+          importedCount++;
+        }
+      });
+
+      this.agents.set(mergedAgents);
+      this.saveAgentsToStorage();
+
+      this.addLog(`Imported ${importedCount} new agents, updated ${updatedCount} existing agents`);
+      this.notificationService.showSuccess(
+        'Import Complete',
+        `Imported ${importedCount} new agents, updated ${updatedCount} existing agents`
+      );
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      this.notificationService.showError('Import Failed', errorMessage);
+    }
   }
 }

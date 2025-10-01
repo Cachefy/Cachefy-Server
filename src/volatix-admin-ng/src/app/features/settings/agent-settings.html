@@ -26,34 +26,37 @@
       </div>
 
       <div class="row">
-        <div class="form-group" style="flex: 1">
-          <label for="agentApiKey">Agent ApiKey</label>
-          <input
-            id="agentApiKey"
-            type="text"
-            placeholder="Enter API key"
-            [(ngModel)]="agentForm.apiKey"
-          />
-        </div>
         <div class="form-group button-group" style="flex: 1">
-          <label style="visibility: hidden">Actions</label>
-          <div class="button-container" style="display: flex; gap: 12px;">
+          <div class="button-container" style="display: flex; gap: 12px">
             <button class="btn primary btn-ripple" (click)="saveAgent()">
               @if (editingAgent()) {
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-                Update Agent
-              } @else {
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                </svg>
-                Add Agent
-              }
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              Update Agent } @else {
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              Add Agent }
             </button>
             <button class="btn ghost" (click)="clearForm()">
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
               </svg>
               Clear
             </button>
@@ -63,7 +66,47 @@
     </div>
 
     <div class="card" style="margin-top: 16px">
-      <h2 class="text-app">Agents</h2>
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 16px;
+        "
+      >
+        <h2 class="text-app">Agents</h2>
+        <div style="display: flex; gap: 8px">
+          <input
+            type="file"
+            accept=".json"
+            (change)="importAgents($event)"
+            style="display: none"
+            #fileInput
+          />
+          <button class="btn secondary sm btn-ripple" (click)="fileInput.click()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
+              />
+            </svg>
+            Import JSON
+          </button>
+          <button class="btn secondary sm btn-ripple" (click)="exportAgents()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
+            </svg>
+            Export JSON
+          </button>
+        </div>
+      </div>
       @if (paginatedAgents().length > 0) {
       <table class="min-w-full table-fixed text-sm">
         <thead>
@@ -90,13 +133,34 @@
               <div class="table-actions">
                 <button class="btn secondary sm btn-ripple" (click)="editAgent(agent)">
                   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
                   </svg>
                   Edit
                 </button>
+                <button class="btn warning sm btn-ripple" (click)="revokeApiKey(agent)">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                    />
+                  </svg>
+                  Revoke
+                </button>
                 <button class="btn danger sm btn-ripple" (click)="deleteAgent(agent.id!)">
                   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
                   </svg>
                   Delete
                 </button>
@@ -122,10 +186,18 @@
     <div class="card">
       <h2>Info</h2>
       <div style="font-size: 12px">
-        - Use the form to add or update agents. Click Edit to load an agent into the form.
-        <br />- Data persists in your browser (localStorage). Optionally provide agents.json on your
-        server to pre-populate. <br />- API keys are masked in the grid; they are stored as entered.
+        - Use the form to add or update agents. API keys are automatically generated.
+        <br />- Data persists in your browser (localStorage). Use Export/Import to backup agents
+        with API keys. <br />- Use the Revoke button to generate new API keys for existing agents.
+        <br />- Exported JSON files include all agent data and API keys for backup/restore.
       </div>
     </div>
   </aside>
 </div>
+
+<!-- API Key Modal -->
+<app-api-key-modal
+  [isOpen]="!!apiKeyModalData()"
+  [keyData]="apiKeyModalData()"
+  (close)="closeApiKeyModal()"
+></app-api-key-modal>

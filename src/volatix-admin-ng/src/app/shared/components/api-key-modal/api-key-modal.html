@@ -1,0 +1,142 @@
+<div
+  class="api-key-backdrop"
+  [class.show]="isOpen()"
+  (click)="onBackdropClick($event)"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-hidden]="!isOpen()"
+>
+  <div class="api-key-modal">
+    <div class="api-key-header">
+      <div class="header-content">
+        <div class="api-key-icon">
+          <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+            />
+          </svg>
+        </div>
+        <div>
+          <h3 class="modal-title">
+            @if (keyData()?.isNewKey) { New API Key Generated } @else { API Key Details }
+          </h3>
+          <p class="modal-subtitle">For agent: {{ keyData()?.agentName }}</p>
+        </div>
+      </div>
+      <button class="close-btn" (click)="onClose()" aria-label="Close">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <div class="api-key-body">
+      @if (keyData()?.isNewKey) {
+      <div class="warning-notice">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+          />
+        </svg>
+        <div>
+          <strong>Important:</strong> This API key will only be shown once. Make sure to copy it
+          now.
+        </div>
+      </div>
+      }
+
+      <div class="key-details">
+        <div class="detail-group">
+          <label>Key ID</label>
+          <div class="detail-value">{{ keyData()?.keyId }}</div>
+        </div>
+
+        <div class="detail-group">
+          <label>Generated</label>
+          <div class="detail-value">{{ keyData()?.generatedAt | date : 'medium' }}</div>
+        </div>
+
+        <div class="detail-group">
+          <label>API Key</label>
+          <div class="api-key-container">
+            <div class="api-key-display">
+              <code>{{ keyData()?.apiKey }}</code>
+            </div>
+            <button
+              class="copy-btn"
+              [class.copied]="copied()"
+              (click)="copyApiKey()"
+              [title]="copied() ? 'Copied!' : 'Copy API key'"
+            >
+              @if (copied()) {
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              } @else {
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="api-key-actions">
+      <button class="btn secondary btn-ripple" (click)="downloadAsJson()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        Download JSON
+      </button>
+      <button class="btn primary btn-ripple" (click)="copyApiKey()">
+        @if (copied()) {
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+        Copied! } @else {
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+          />
+        </svg>
+        Copy API Key }
+      </button>
+    </div>
+  </div>
+</div>
