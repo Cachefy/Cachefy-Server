@@ -189,6 +189,14 @@ textarea {
   color: inherit;
 }
 
+:root.light input,
+:root.light select,
+:root.light textarea {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #111827;
+}
+
 .row {
   display: flex;
   gap: 10px;
@@ -485,6 +493,10 @@ tr.active td {
   justify-content: center;
 }
 
+:root.light .modal-backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
 .modal-backdrop.show {
   display: flex;
 }
@@ -501,12 +513,22 @@ tr.active td {
   flex-direction: column;
 }
 
+:root.light .modal-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
 .modal-header {
   padding: 16px;
   border-bottom: 1px solid var(--glass-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+:root.light .modal-header {
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .modal-body {
@@ -521,6 +543,10 @@ tr.active td {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+}
+
+:root.light .modal-footer {
+  border-top: 1px solid #e5e7eb;
 }
 
 .kv {

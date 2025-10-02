@@ -1,27 +1,7 @@
 <div class="grid">
   <section>
     <div class="card">
-      <div
-        style="
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1rem;
-        "
-      >
-        <h2 class="text-app">Registered services</h2>
-        <button class="btn primary btn-ripple" (click)="openCreateForm()">
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          Add Service
-        </button>
-      </div>
+      <h2 class="text-app" style="margin-bottom: 1rem">Registered services</h2>
 
       <table class="min-w-full table-fixed text-sm">
         <thead>
@@ -66,27 +46,16 @@
                   </svg>
                   Details
                 </button>
-                <button class="btn secondary sm btn-ripple" (click)="openEditForm(service)">
+                <button class="btn secondary sm btn-ripple" (click)="pingService(service)">
                   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"
                     />
                   </svg>
-                  Edit
-                </button>
-                <button class="btn danger sm btn-ripple" (click)="deleteService(service)">
-                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                  Delete
+                  Ping
                 </button>
               </div>
             </td>
@@ -120,99 +89,3 @@
     </div>
   </aside>
 </div>
-
-<!-- Service Form Modal -->
-<app-modal
-  [isOpen]="showServiceForm()"
-  [title]="isEditing ? 'Edit Service' : 'Create New Service'"
-  [closeOnBackdrop]="false"
-  (closeModal)="closeForm()"
->
-  <form (ngSubmit)="saveService()">
-    <div class="form-group">
-      <label for="serviceName">Service Name *</label>
-      <input
-        id="serviceName"
-        type="text"
-        [(ngModel)]="serviceForm.name"
-        name="serviceName"
-        placeholder="Enter service name"
-        required
-        class="form-input"
-      />
-    </div>
-
-    <div class="form-group">
-      <label for="serviceUrl">Service URL</label>
-      <input
-        id="serviceUrl"
-        type="url"
-        [(ngModel)]="serviceForm.url"
-        name="serviceUrl"
-        placeholder="https://service.example.com"
-        class="form-input"
-      />
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label for="serviceStatus">Status</label>
-        <select
-          id="serviceStatus"
-          [(ngModel)]="serviceForm.status"
-          name="serviceStatus"
-          class="form-input"
-        >
-          <option value="Healthy">Healthy</option>
-          <option value="Degraded">Degraded</option>
-          <option value="Down">Down</option>
-          <option value="Maintenance">Maintenance</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="serviceInstances">Instances</label>
-        <input
-          id="serviceInstances"
-          type="number"
-          [(ngModel)]="serviceForm.instances"
-          name="serviceInstances"
-          min="0"
-          placeholder="1"
-          class="form-input"
-        />
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label for="serviceVersion">Version</label>
-      <input
-        id="serviceVersion"
-        type="text"
-        [(ngModel)]="serviceForm.version"
-        name="serviceVersion"
-        placeholder="1.0.0"
-        class="form-input"
-      />
-    </div>
-
-    <div class="form-group">
-      <label for="serviceDescription">Description</label>
-      <textarea
-        id="serviceDescription"
-        [(ngModel)]="serviceForm.description"
-        name="serviceDescription"
-        rows="3"
-        placeholder="Enter service description"
-        class="form-input"
-      ></textarea>
-    </div>
-
-    <div class="modal-actions">
-      <button type="button" class="btn secondary btn-ripple" (click)="closeForm()">Cancel</button>
-      <button type="submit" class="btn primary btn-ripple">
-        {{ isEditing ? 'Update Service' : 'Create Service' }}
-      </button>
-    </div>
-  </form>
-</app-modal>
