@@ -1,6 +1,7 @@
 # Complete API Reference
 
 ## Base URL
+
 - **Development:** `http://localhost:5046/api`
 - **Production:** `https://api.volatix.com/api`
 
@@ -9,6 +10,7 @@
 All endpoints except `/auth/login` require JWT Bearer token authentication.
 
 ### Login
+
 ```http
 POST /auth/login
 Content-Type: application/json
@@ -20,6 +22,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIs...",
@@ -32,12 +35,14 @@ Content-Type: application/json
 ## Agents
 
 ### Get All Agents
+
 ```http
 GET /agents
 Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -53,6 +58,7 @@ Authorization: Bearer <token>
 ```
 
 ### Create Agent
+
 ```http
 POST /agents
 Authorization: Bearer <token>
@@ -65,6 +71,7 @@ Content-Type: application/json
 ```
 
 ### Update Agent
+
 ```http
 PUT /agents/{id}
 Authorization: Bearer <token>
@@ -77,12 +84,14 @@ Content-Type: application/json
 ```
 
 ### Delete Agent
+
 ```http
 DELETE /agents/{id}
 Authorization: Bearer <token>
 ```
 
 ### Regenerate API Key
+
 ```http
 POST /agents/{id}/regenerate-api-key
 Authorization: Bearer <token>
@@ -93,12 +102,14 @@ Authorization: Bearer <token>
 ## Services
 
 ### Get All Services
+
 ```http
 GET /services
 Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -117,6 +128,7 @@ Authorization: Bearer <token>
 ```
 
 ### Create Service
+
 ```http
 POST /services
 Authorization: Bearer <token>
@@ -133,6 +145,7 @@ Content-Type: application/json
 ```
 
 ### Update Service
+
 ```http
 PUT /services/{id}
 Authorization: Bearer <token>
@@ -148,6 +161,7 @@ Content-Type: application/json
 ```
 
 ### Delete Service
+
 ```http
 DELETE /services/{id}
 Authorization: Bearer <token>
@@ -158,12 +172,14 @@ Authorization: Bearer <token>
 ## Caches
 
 ### Get All Caches
+
 ```http
 GET /caches
 Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -183,12 +199,14 @@ Authorization: Bearer <token>
 ```
 
 ### Get Caches for Service
+
 ```http
 GET /caches?serviceId={serviceId}
 Authorization: Bearer <token>
 ```
 
 ### Create Cache
+
 ```http
 POST /caches
 Authorization: Bearer <token>
@@ -208,6 +226,7 @@ Content-Type: application/json
 ```
 
 ### Update Cache
+
 ```http
 PUT /caches/{serviceId}/{name}
 Authorization: Bearer <token>
@@ -224,6 +243,7 @@ Content-Type: application/json
 ```
 
 ### Delete Cache
+
 ```http
 DELETE /caches/{serviceId}/{name}
 Authorization: Bearer <token>
@@ -234,6 +254,7 @@ Authorization: Bearer <token>
 ## Error Responses
 
 ### 400 Bad Request
+
 ```json
 {
   "message": "Validation error message"
@@ -241,13 +262,15 @@ Authorization: Bearer <token>
 ```
 
 ### 401 Unauthorized
+
 ```json
 {
-  "message": "Invalid credentials" 
+  "message": "Invalid credentials"
 }
 ```
 
 ### 404 Not Found
+
 ```json
 {
   "message": "Resource not found"
@@ -255,6 +278,7 @@ Authorization: Bearer <token>
 ```
 
 ### 500 Internal Server Error
+
 ```json
 {
   "message": "An error occurred"
@@ -266,6 +290,7 @@ Authorization: Bearer <token>
 ## PowerShell Examples
 
 ### Login and Store Token
+
 ```powershell
 $body = @{
     email = "admin@volatix.com"
@@ -284,6 +309,7 @@ $headers = @{
 ```
 
 ### Get Agents
+
 ```powershell
 Invoke-RestMethod -Uri "http://localhost:5046/api/agents" `
     -Method Get `
@@ -291,6 +317,7 @@ Invoke-RestMethod -Uri "http://localhost:5046/api/agents" `
 ```
 
 ### Create Agent
+
 ```powershell
 $agentBody = @{
     name = "Test Agent"
@@ -305,6 +332,7 @@ Invoke-RestMethod -Uri "http://localhost:5046/api/agents" `
 ```
 
 ### Get Services
+
 ```powershell
 Invoke-RestMethod -Uri "http://localhost:5046/api/services" `
     -Method Get `
@@ -312,6 +340,7 @@ Invoke-RestMethod -Uri "http://localhost:5046/api/services" `
 ```
 
 ### Create Service
+
 ```powershell
 $serviceBody = @{
     name = "Test Service"
@@ -329,6 +358,7 @@ Invoke-RestMethod -Uri "http://localhost:5046/api/services" `
 ```
 
 ### Get Caches
+
 ```powershell
 Invoke-RestMethod -Uri "http://localhost:5046/api/caches" `
     -Method Get `
@@ -336,6 +366,7 @@ Invoke-RestMethod -Uri "http://localhost:5046/api/caches" `
 ```
 
 ### Create Cache
+
 ```powershell
 $cacheBody = @{
     name = "test-cache"
@@ -357,6 +388,7 @@ Invoke-RestMethod -Uri "http://localhost:5046/api/caches" `
 ## Testing with cURL
 
 ### Login
+
 ```bash
 curl -X POST http://localhost:5046/api/auth/login \
   -H "Content-Type: application/json" \
@@ -364,18 +396,21 @@ curl -X POST http://localhost:5046/api/auth/login \
 ```
 
 ### Get Agents
+
 ```bash
 curl -X GET http://localhost:5046/api/agents \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
 ### Get Services
+
 ```bash
 curl -X GET http://localhost:5046/api/services \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
 ### Get Caches
+
 ```bash
 curl -X GET http://localhost:5046/api/caches \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
@@ -395,22 +430,22 @@ curl -X GET http://localhost:5046/api/caches \
 
 ## API Endpoints Summary
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/auth/login` | Authenticate user |
-| GET | `/agents` | Get all agents |
-| POST | `/agents` | Create agent |
-| PUT | `/agents/{id}` | Update agent |
-| DELETE | `/agents/{id}` | Delete agent |
-| POST | `/agents/{id}/regenerate-api-key` | Regenerate agent API key |
-| GET | `/services` | Get all services |
-| POST | `/services` | Create service |
-| PUT | `/services/{id}` | Update service |
-| DELETE | `/services/{id}` | Delete service |
-| GET | `/caches` | Get all caches |
-| POST | `/caches` | Create cache |
-| PUT | `/caches/{serviceId}/{name}` | Update cache |
-| DELETE | `/caches/{serviceId}/{name}` | Delete cache |
+| Method | Endpoint                          | Description              |
+| ------ | --------------------------------- | ------------------------ |
+| POST   | `/auth/login`                     | Authenticate user        |
+| GET    | `/agents`                         | Get all agents           |
+| POST   | `/agents`                         | Create agent             |
+| PUT    | `/agents/{id}`                    | Update agent             |
+| DELETE | `/agents/{id}`                    | Delete agent             |
+| POST   | `/agents/{id}/regenerate-api-key` | Regenerate agent API key |
+| GET    | `/services`                       | Get all services         |
+| POST   | `/services`                       | Create service           |
+| PUT    | `/services/{id}`                  | Update service           |
+| DELETE | `/services/{id}`                  | Delete service           |
+| GET    | `/caches`                         | Get all caches           |
+| POST   | `/caches`                         | Create cache             |
+| PUT    | `/caches/{serviceId}/{name}`      | Update cache             |
+| DELETE | `/caches/{serviceId}/{name}`      | Delete cache             |
 
 ---
 

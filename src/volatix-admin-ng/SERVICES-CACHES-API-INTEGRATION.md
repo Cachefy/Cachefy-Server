@@ -1,6 +1,7 @@
 # Services and Caches API Integration - Update Summary
 
 ## Overview
+
 Extended the API integration to include Services and Caches endpoints, moving away from JSON files for all data operations.
 
 ## Changes Made
@@ -10,6 +11,7 @@ Extended the API integration to include Services and Caches endpoints, moving aw
 #### 1. Services Methods
 
 **getServices()** - Updated to call API
+
 - **Before:** `GET /services.json` (static file)
 - **After:** `GET ${apiUrl}/services` with JWT authentication
 - Returns Observable<Service[]>
@@ -17,6 +19,7 @@ Extended the API integration to include Services and Caches endpoints, moving aw
 - Shows error notifications on failure
 
 **saveService()** - Changed from synchronous to Observable
+
 - **Before:** Local signal update only (void return)
 - **After:** API call with Observable return
   - Create: `POST ${apiUrl}/services`
@@ -26,6 +29,7 @@ Extended the API integration to include Services and Caches endpoints, moving aw
 - Proper error handling with notifications
 
 **deleteService()** - Updated to call API
+
 - **Before:** Local signal update only
 - **After:** `DELETE ${apiUrl}/services/{id}` with firstValueFrom
 - Async/await pattern
@@ -35,6 +39,7 @@ Extended the API integration to include Services and Caches endpoints, moving aw
 #### 2. Caches Methods
 
 **getCaches()** - Updated to call API
+
 - **Before:** `GET /caches.json` (static file)
 - **After:** `GET ${apiUrl}/caches` with JWT authentication
 - Returns Observable<Cache[]>
@@ -42,6 +47,7 @@ Extended the API integration to include Services and Caches endpoints, moving aw
 - Shows error notifications on failure
 
 **saveCache()** - Changed from synchronous to Observable
+
 - **Before:** Local signal update only (void return)
 - **After:** API call with Observable return
   - Create: `POST ${apiUrl}/caches`
@@ -51,6 +57,7 @@ Extended the API integration to include Services and Caches endpoints, moving aw
 - Proper error handling with notifications
 
 **deleteCache()** - Updated to call API
+
 - **Before:** Local signal update only
 - **After:** `DELETE ${apiUrl}/caches/{serviceId}/{name}` with firstValueFrom
 - Async/await pattern
@@ -58,38 +65,39 @@ Extended the API integration to include Services and Caches endpoints, moving aw
 - Updates signal after API success
 
 **getCachesForService()** - No changes needed
+
 - Already uses `getCaches()` which now calls API
 - Filter logic remains client-side
 
 ### Return Type Changes
 
-| Method | Before | After |
-|--------|--------|-------|
-| `getServices()` | Observable<Service[]> | Observable<Service[]> (no change) |
-| `saveService()` | void | **Observable<Service>** |
-| `deleteService()` | Promise<void> | Promise<void> (no change) |
-| `getCaches()` | Observable<Cache[]> | Observable<Cache[]> (no change) |
-| `saveCache()` | void | **Observable<Cache>** |
-| `deleteCache()` | Promise<void> | Promise<void> (no change) |
+| Method            | Before                | After                             |
+| ----------------- | --------------------- | --------------------------------- |
+| `getServices()`   | Observable<Service[]> | Observable<Service[]> (no change) |
+| `saveService()`   | void                  | **Observable<Service>**           |
+| `deleteService()` | Promise<void>         | Promise<void> (no change)         |
+| `getCaches()`     | Observable<Cache[]>   | Observable<Cache[]> (no change)   |
+| `saveCache()`     | void                  | **Observable<Cache>**             |
+| `deleteCache()`   | Promise<void>         | Promise<void> (no change)         |
 
 ## API Endpoints Required
 
 ### Services Endpoints
 
 ```typescript
-GET    /api/services              // Get all services
-POST   /api/services              // Create service
-PUT    /api/services/{id}         // Update service
-DELETE /api/services/{id}         // Delete service
+GET / api / services; // Get all services
+POST / api / services; // Create service
+PUT / api / services / { id }; // Update service
+DELETE / api / services / { id }; // Delete service
 ```
 
 ### Caches Endpoints
 
 ```typescript
-GET    /api/caches                     // Get all caches
-POST   /api/caches                     // Create cache
-PUT    /api/caches/{serviceId}/{name}  // Update cache
-DELETE /api/caches/{serviceId}/{name}  // Delete cache
+GET / api / caches; // Get all caches
+POST / api / caches; // Create cache
+PUT / api / caches / { serviceId } / { name }; // Update cache
+DELETE / api / caches / { serviceId } / { name }; // Delete cache
 ```
 
 ## Breaking Changes for Components
@@ -97,11 +105,13 @@ DELETE /api/caches/{serviceId}/{name}  // Delete cache
 Components that use `saveService()` or `saveCache()` must now handle Observable returns:
 
 ### Before (Synchronous):
+
 ```typescript
 this.dataService.saveService(serviceData); // Returns void
 ```
 
 ### After (Observable):
+
 ```typescript
 this.dataService.saveService(serviceData).subscribe({
   next: (savedService) => {
@@ -109,20 +119,20 @@ this.dataService.saveService(serviceData).subscribe({
   },
   error: (error) => {
     console.error('Failed to save:', error);
-  }
+  },
 });
 ```
 
 Or with async/await:
+
 ```typescript
-const savedService = await firstValueFrom(
-  this.dataService.saveService(serviceData)
-);
+const savedService = await firstValueFrom(this.dataService.saveService(serviceData));
 ```
 
 ## Components That May Need Updates
 
 Search for usages of these methods in your components:
+
 - `saveService()`
 - `saveCache()`
 
@@ -131,6 +141,7 @@ These will need to be updated to subscribe to the Observable or convert to Promi
 ## Data Flow
 
 ### Old Flow (JSON Files):
+
 ```
 Component → DataService → Update Signal → Done
               ↓
@@ -138,6 +149,7 @@ Component → DataService → Update Signal → Done
 ```
 
 ### New Flow (API):
+
 ```
 Component → DataService → API Call → Update Signal → Component Callback
                             ↓
@@ -147,8 +159,9 @@ Component → DataService → API Call → Update Signal → Component Callback
 ## Authentication
 
 All service and cache endpoints require JWT Bearer token:
+
 ```typescript
-Authorization: Bearer <token>
+Authorization: Bearer<token>;
 ```
 
 Token is automatically included via `getAuthHeaders()` method in DataService.
@@ -156,6 +169,7 @@ Token is automatically included via `getAuthHeaders()` method in DataService.
 ## Error Handling
 
 All API calls include:
+
 - Automatic error logging to activity log
 - User-friendly error notifications
 - Error propagation for component handling
@@ -164,6 +178,7 @@ All API calls include:
 ## Testing Checklist
 
 ### Services
+
 - [ ] Load services list from API
 - [ ] Create new service
 - [ ] Update existing service
@@ -171,6 +186,7 @@ All API calls include:
 - [ ] Error handling (network failure, 401, 404, etc.)
 
 ### Caches
+
 - [ ] Load caches list from API
 - [ ] Filter caches by service ID
 - [ ] Create new cache
@@ -181,6 +197,7 @@ All API calls include:
 ## Migration Notes
 
 1. **Remove JSON Files:** You can now remove:
+
    - `public/services.json`
    - `public/caches.json`
 
@@ -210,6 +227,7 @@ All API calls include:
 ## Documentation
 
 See `COMPLETE-API-REFERENCE.md` for full API endpoint documentation including:
+
 - Request/response schemas
 - PowerShell examples
 - cURL examples

@@ -1,11 +1,13 @@
 # Angular Integration Guide for Volatix Server API
 
 ## Overview
+
 This guide shows how to integrate the Volatix Server API with your Angular application.
 
 ## Project Structure
 
 Your Angular application should have the following service structure:
+
 ```
 src/
   app/
@@ -29,6 +31,7 @@ src/
 ## 1. Create Models
 
 ### `models/agent.model.ts`
+
 ```typescript
 export interface Agent {
   id: string;
@@ -52,6 +55,7 @@ export interface UpdateAgentDto {
 ```
 
 ### `models/service.model.ts`
+
 ```typescript
 export interface Service {
   id: string;
@@ -79,6 +83,7 @@ export interface UpdateServiceDto {
 ```
 
 ### `models/cache.model.ts`
+
 ```typescript
 export interface Cache {
   id: string;
@@ -106,6 +111,7 @@ export interface UpdateCacheDto {
 ```
 
 ### `models/user.model.ts`
+
 ```typescript
 export interface LoginDto {
   email: string;
@@ -128,19 +134,20 @@ export interface User {
 ## 2. Create Auth Service
 
 ### `core/services/auth.service.ts`
+
 ```typescript
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
-import { LoginDto, LoginResponse } from '../../models/user.model';
-import { environment } from '../../../environments/environment';
+import { Injectable } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { Observable, BehaviorSubject, tap } from "rxjs";
+import { LoginDto, LoginResponse } from "../../models/user.model";
+import { environment } from "../../../environments/environment";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class AuthService {
   private baseUrl = `${environment.apiUrl}/auth`;
-  private tokenKey = 'volatix_token';
+  private tokenKey = "volatix_token";
   private currentUserSubject = new BehaviorSubject<LoginResponse | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
@@ -154,9 +161,10 @@ export class AuthService {
   }
 
   login(email: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.baseUrl}/login`, { email, password })
+    return this.http
+      .post<LoginResponse>(`${this.baseUrl}/login`, { email, password })
       .pipe(
-        tap(response => {
+        tap((response) => {
           this.setToken(response.token);
           this.currentUserSubject.next(response);
         })
@@ -185,35 +193,36 @@ export class AuthService {
 ## 3. Create HTTP Interceptor
 
 ### `core/interceptors/auth.interceptor.ts`
+
 ```typescript
-import { Injectable } from '@angular/core';
+import { Injectable } from "@angular/core";
 import {
   HttpRequest,
   HttpHandler,
   HttpEvent,
   HttpInterceptor,
-  HttpErrorResponse
-} from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { AuthService } from '../services/auth.service';
-import { Router } from '@angular/router';
+  HttpErrorResponse,
+} from "@angular/common/http";
+import { Observable, throwError } from "rxjs";
+import { catchError } from "rxjs/operators";
+import { AuthService } from "../services/auth.service";
+import { Router } from "@angular/router";
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
-  intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
+  intercept(
+    request: HttpRequest<unknown>,
+    next: HttpHandler
+  ): Observable<HttpEvent<unknown>> {
     const token = this.authService.getToken();
-    
+
     if (token) {
       request = request.clone({
         setHeaders: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
     }
 
@@ -221,7 +230,7 @@ export class AuthInterceptor implements HttpInterceptor {
       catchError((error: HttpErrorResponse) => {
         if (error.status === 401) {
           this.authService.logout();
-          this.router.navigate(['/login']);
+          this.router.navigate(["/login"]);
         }
         return throwError(() => error);
       })
@@ -231,33 +240,37 @@ export class AuthInterceptor implements HttpInterceptor {
 ```
 
 ### Register Interceptor in `app.config.ts`
+
 ```typescript
-import { ApplicationConfig } from '@angular/core';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { AuthInterceptor } from './core/interceptors/auth.interceptor';
+import { ApplicationConfig } from "@angular/core";
+import { provideHttpClient, withInterceptors } from "@angular/common/http";
+import { AuthInterceptor } from "./core/interceptors/auth.interceptor";
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideHttpClient(
-      withInterceptors([AuthInterceptor])
-    ),
+    provideHttpClient(withInterceptors([AuthInterceptor])),
     // ... other providers
-  ]
+  ],
 };
 ```
 
 ## 4. Create Resource Services
 
 ### `core/services/agent.service.ts`
+
 ```typescript
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Agent, CreateAgentDto, UpdateAgentDto } from '../../models/agent.model';
-import { environment } from '../../../environments/environment';
+import { Injectable } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { Observable } from "rxjs";
+import {
+  Agent,
+  CreateAgentDto,
+  UpdateAgentDto,
+} from "../../models/agent.model";
+import { environment } from "../../../environments/environment";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class AgentService {
   private baseUrl = `${environment.apiUrl}/agents`;
@@ -285,21 +298,29 @@ export class AgentService {
   }
 
   regenerateApiKey(id: string): Observable<{ apiKey: string }> {
-    return this.http.post<{ apiKey: string }>(`${this.baseUrl}/${id}/regenerate-api-key`, {});
+    return this.http.post<{ apiKey: string }>(
+      `${this.baseUrl}/${id}/regenerate-api-key`,
+      {}
+    );
   }
 }
 ```
 
 ### `core/services/service.service.ts`
+
 ```typescript
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Service, CreateServiceDto, UpdateServiceDto } from '../../models/service.model';
-import { environment } from '../../../environments/environment';
+import { Injectable } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { Observable } from "rxjs";
+import {
+  Service,
+  CreateServiceDto,
+  UpdateServiceDto,
+} from "../../models/service.model";
+import { environment } from "../../../environments/environment";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class ServiceService {
   private baseUrl = `${environment.apiUrl}/services`;
@@ -329,15 +350,20 @@ export class ServiceService {
 ```
 
 ### `core/services/cache.service.ts`
+
 ```typescript
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Cache, CreateCacheDto, UpdateCacheDto } from '../../models/cache.model';
-import { environment } from '../../../environments/environment';
+import { Injectable } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { Observable } from "rxjs";
+import {
+  Cache,
+  CreateCacheDto,
+  UpdateCacheDto,
+} from "../../models/cache.model";
+import { environment } from "../../../environments/environment";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class CacheService {
   private baseUrl = `${environment.apiUrl}/caches`;
@@ -369,10 +395,11 @@ export class CacheService {
 ## 5. Create Auth Guard
 
 ### `core/guards/auth.guard.ts`
+
 ```typescript
-import { inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+import { inject } from "@angular/core";
+import { Router } from "@angular/router";
+import { AuthService } from "../services/auth.service";
 
 export const authGuard = () => {
   const authService = inject(AuthService);
@@ -382,7 +409,7 @@ export const authGuard = () => {
     return true;
   }
 
-  router.navigate(['/login']);
+  router.navigate(["/login"]);
   return false;
 };
 ```
@@ -390,33 +417,36 @@ export const authGuard = () => {
 ## 6. Environment Configuration
 
 ### `environments/environment.ts`
+
 ```typescript
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:5046/api'
+  apiUrl: "http://localhost:5046/api",
 };
 ```
 
 ### `environments/environment.prod.ts`
+
 ```typescript
 export const environment = {
   production: true,
-  apiUrl: 'https://your-production-api.com/api'
+  apiUrl: "https://your-production-api.com/api",
 };
 ```
 
 ## 7. Component Example
 
 ### `components/agent-list/agent-list.component.ts`
+
 ```typescript
-import { Component, OnInit } from '@angular/core';
-import { AgentService } from '../../core/services/agent.service';
-import { Agent, CreateAgentDto } from '../../models/agent.model';
+import { Component, OnInit } from "@angular/core";
+import { AgentService } from "../../core/services/agent.service";
+import { Agent, CreateAgentDto } from "../../models/agent.model";
 
 @Component({
-  selector: 'app-agent-list',
-  templateUrl: './agent-list.component.html',
-  styleUrls: ['./agent-list.component.css']
+  selector: "app-agent-list",
+  templateUrl: "./agent-list.component.html",
+  styleUrls: ["./agent-list.component.css"],
 })
 export class AgentListComponent implements OnInit {
   agents: Agent[] = [];
@@ -437,10 +467,10 @@ export class AgentListComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        this.error = 'Failed to load agents';
+        this.error = "Failed to load agents";
         this.loading = false;
         console.error(error);
-      }
+      },
     });
   }
 
@@ -450,20 +480,20 @@ export class AgentListComponent implements OnInit {
         this.agents.push(agent);
       },
       error: (error) => {
-        console.error('Failed to create agent', error);
-      }
+        console.error("Failed to create agent", error);
+      },
     });
   }
 
   deleteAgent(id: string): void {
-    if (confirm('Are you sure you want to delete this agent?')) {
+    if (confirm("Are you sure you want to delete this agent?")) {
       this.agentService.delete(id).subscribe({
         next: () => {
-          this.agents = this.agents.filter(a => a.id !== id);
+          this.agents = this.agents.filter((a) => a.id !== id);
         },
         error: (error) => {
-          console.error('Failed to delete agent', error);
-        }
+          console.error("Failed to delete agent", error);
+        },
       });
     }
   }
@@ -471,15 +501,15 @@ export class AgentListComponent implements OnInit {
   regenerateApiKey(id: string): void {
     this.agentService.regenerateApiKey(id).subscribe({
       next: (response) => {
-        const agent = this.agents.find(a => a.id === id);
+        const agent = this.agents.find((a) => a.id === id);
         if (agent) {
           agent.apiKey = response.apiKey;
         }
-        alert('API Key regenerated successfully');
+        alert("API Key regenerated successfully");
       },
       error: (error) => {
-        console.error('Failed to regenerate API key', error);
-      }
+        console.error("Failed to regenerate API key", error);
+      },
     });
   }
 }
@@ -488,63 +518,77 @@ export class AgentListComponent implements OnInit {
 ## 8. Routing with Auth Guard
 
 ### `app.routes.ts`
+
 ```typescript
-import { Routes } from '@angular/router';
-import { authGuard } from './core/guards/auth.guard';
+import { Routes } from "@angular/router";
+import { authGuard } from "./core/guards/auth.guard";
 
 export const routes: Routes = [
   {
-    path: 'login',
-    loadComponent: () => import('./features/auth/login/login.component')
-      .then(m => m.LoginComponent)
+    path: "login",
+    loadComponent: () =>
+      import("./features/auth/login/login.component").then(
+        (m) => m.LoginComponent
+      ),
   },
   {
-    path: 'dashboard',
-    loadComponent: () => import('./features/dashboard/dashboard.component')
-      .then(m => m.DashboardComponent),
-    canActivate: [authGuard]
+    path: "dashboard",
+    loadComponent: () =>
+      import("./features/dashboard/dashboard.component").then(
+        (m) => m.DashboardComponent
+      ),
+    canActivate: [authGuard],
   },
   {
-    path: 'agents',
-    loadComponent: () => import('./features/agents/agent-list/agent-list.component')
-      .then(m => m.AgentListComponent),
-    canActivate: [authGuard]
+    path: "agents",
+    loadComponent: () =>
+      import("./features/agents/agent-list/agent-list.component").then(
+        (m) => m.AgentListComponent
+      ),
+    canActivate: [authGuard],
   },
   {
-    path: 'services',
-    loadComponent: () => import('./features/services/service-list/service-list.component')
-      .then(m => m.ServiceListComponent),
-    canActivate: [authGuard]
+    path: "services",
+    loadComponent: () =>
+      import("./features/services/service-list/service-list.component").then(
+        (m) => m.ServiceListComponent
+      ),
+    canActivate: [authGuard],
   },
   {
-    path: 'caches',
-    loadComponent: () => import('./features/caches/cache-list/cache-list.component')
-      .then(m => m.CacheListComponent),
-    canActivate: [authGuard]
+    path: "caches",
+    loadComponent: () =>
+      import("./features/caches/cache-list/cache-list.component").then(
+        (m) => m.CacheListComponent
+      ),
+    canActivate: [authGuard],
   },
   {
-    path: '',
-    redirectTo: 'dashboard',
-    pathMatch: 'full'
-  }
+    path: "",
+    redirectTo: "dashboard",
+    pathMatch: "full",
+  },
 ];
 ```
 
 ## Testing
 
 1. **Start the API:**
+
    ```bash
    cd c:\Dev\Volatix-Server\src\api\VolatixServer.Api
    dotnet run
    ```
 
 2. **Start Angular App:**
+
    ```bash
    cd your-angular-app
    ng serve
    ```
 
 3. **Login:**
+
    - Use credentials: `admin@volatix.com` / `admin123`
 
 4. **Test CRUD Operations:**

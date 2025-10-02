@@ -1,14 +1,17 @@
 # Volatix Server API Documentation
 
 ## Base URL
+
 ```
 http://localhost:5046/api
 ```
 
 ## Authentication
+
 All endpoints (except `/auth/login` and `/auth/register`) require JWT Bearer token authentication.
 
 ### Get Token
+
 ```http
 POST /auth/login
 Content-Type: application/json
@@ -20,6 +23,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -28,6 +32,7 @@ Content-Type: application/json
 ```
 
 Use the token in subsequent requests:
+
 ```
 Authorization: Bearer {token}
 ```
@@ -37,12 +42,14 @@ Authorization: Bearer {token}
 ## Agents Endpoints
 
 ### Get All Agents
+
 ```http
 GET /agents
 Authorization: Bearer {token}
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -58,12 +65,14 @@ Authorization: Bearer {token}
 ```
 
 ### Get Agent by ID
+
 ```http
 GET /agents/{id}
 Authorization: Bearer {token}
 ```
 
 ### Create Agent
+
 ```http
 POST /agents
 Authorization: Bearer {token}
@@ -76,6 +85,7 @@ Content-Type: application/json
 ```
 
 **Response:** `201 Created`
+
 ```json
 {
   "id": "123e4567-e89b-12d3-a456-426614174000",
@@ -89,6 +99,7 @@ Content-Type: application/json
 ```
 
 ### Update Agent
+
 ```http
 PUT /agents/{id}
 Authorization: Bearer {token}
@@ -103,6 +114,7 @@ Content-Type: application/json
 **Response:** `200 OK`
 
 ### Delete Agent
+
 ```http
 DELETE /agents/{id}
 Authorization: Bearer {token}
@@ -111,12 +123,14 @@ Authorization: Bearer {token}
 **Response:** `204 No Content`
 
 ### Regenerate Agent API Key
+
 ```http
 POST /agents/{id}/regenerate-api-key
 Authorization: Bearer {token}
 ```
 
 **Response:**
+
 ```json
 {
   "apiKey": "ak_new_generated_key"
@@ -128,12 +142,14 @@ Authorization: Bearer {token}
 ## Services Endpoints
 
 ### Get All Services
+
 ```http
 GET /services
 Authorization: Bearer {token}
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -149,12 +165,14 @@ Authorization: Bearer {token}
 ```
 
 ### Get Service by ID
+
 ```http
 GET /services/{id}
 Authorization: Bearer {token}
 ```
 
 ### Create Service
+
 ```http
 POST /services
 Authorization: Bearer {token}
@@ -171,6 +189,7 @@ Content-Type: application/json
 **Response:** `201 Created`
 
 ### Update Service
+
 ```http
 PUT /services/{id}
 Authorization: Bearer {token}
@@ -187,6 +206,7 @@ Content-Type: application/json
 **Response:** `200 OK`
 
 ### Delete Service
+
 ```http
 DELETE /services/{id}
 Authorization: Bearer {token}
@@ -199,12 +219,14 @@ Authorization: Bearer {token}
 ## Caches Endpoints
 
 ### Get All Caches
+
 ```http
 GET /caches
 Authorization: Bearer {token}
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -220,12 +242,14 @@ Authorization: Bearer {token}
 ```
 
 ### Get Cache by ID
+
 ```http
 GET /caches/{id}
 Authorization: Bearer {token}
 ```
 
 ### Create Cache
+
 ```http
 POST /caches
 Authorization: Bearer {token}
@@ -242,6 +266,7 @@ Content-Type: application/json
 **Response:** `201 Created`
 
 ### Update Cache
+
 ```http
 PUT /caches/{id}
 Authorization: Bearer {token}
@@ -258,6 +283,7 @@ Content-Type: application/json
 **Response:** `200 OK`
 
 ### Delete Cache
+
 ```http
 DELETE /caches/{id}
 Authorization: Bearer {token}
@@ -270,6 +296,7 @@ Authorization: Bearer {token}
 ## Error Responses
 
 ### 400 Bad Request
+
 ```json
 {
   "errors": {
@@ -279,6 +306,7 @@ Authorization: Bearer {token}
 ```
 
 ### 401 Unauthorized
+
 ```json
 {
   "message": "Unauthorized"
@@ -286,6 +314,7 @@ Authorization: Bearer {token}
 ```
 
 ### 404 Not Found
+
 ```json
 {
   "message": "Agent with ID {id} not found"
@@ -293,6 +322,7 @@ Authorization: Bearer {token}
 ```
 
 ### 500 Internal Server Error
+
 ```json
 {
   "message": "An error occurred while processing your request"
@@ -304,6 +334,7 @@ Authorization: Bearer {token}
 ## CORS Configuration
 
 The API allows requests from:
+
 - `http://localhost:4200`
 - `http://localhost:4201`
 - `http://localhost:4202`
@@ -315,6 +346,7 @@ All methods and headers are allowed, and credentials are supported.
 ## Database Structure
 
 ### Cosmos DB Configuration
+
 - **Database:** VolatixDb
 - **Containers:**
   - Agents (partition key: "agents")
@@ -324,7 +356,9 @@ All methods and headers are allowed, and credentials are supported.
   - Items (partition key: "items")
 
 ### Base Entity Properties
+
 All entities inherit from `BaseEntity`:
+
 ```json
 {
   "id": "string (GUID)",
@@ -352,32 +386,32 @@ Access Swagger UI at: `http://localhost:5046/swagger/index.html`
 ```typescript
 // auth.service.ts
 export class AuthService {
-  private baseUrl = 'http://localhost:5046/api';
-  
+  private baseUrl = "http://localhost:5046/api";
+
   login(email: string, password: string): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.baseUrl}/auth/login`, {
       email,
-      password
+      password,
     });
   }
 }
 
 // agent.service.ts
 export class AgentService {
-  private baseUrl = 'http://localhost:5046/api/agents';
-  
+  private baseUrl = "http://localhost:5046/api/agents";
+
   getAll(): Observable<AgentResponse[]> {
     return this.http.get<AgentResponse[]>(this.baseUrl);
   }
-  
+
   create(agent: CreateAgentDto): Observable<AgentResponse> {
     return this.http.post<AgentResponse>(this.baseUrl, agent);
   }
-  
+
   update(id: string, agent: UpdateAgentDto): Observable<AgentResponse> {
     return this.http.put<AgentResponse>(`${this.baseUrl}/${id}`, agent);
   }
-  
+
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }

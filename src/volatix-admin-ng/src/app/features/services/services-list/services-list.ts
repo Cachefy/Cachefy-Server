@@ -25,7 +25,7 @@ export class ServicesList implements OnInit {
   services = signal<Service[]>([]);
   currentPage = signal(1);
   pageSize = 6;
-  
+
   // Form state
   showServiceForm = signal(false);
   editingService = signal<Service | null>(null);
@@ -35,7 +35,7 @@ export class ServicesList implements OnInit {
     instances: 1,
     url: '',
     version: '',
-    description: ''
+    description: '',
   };
 
   get paginatedServices() {
@@ -63,7 +63,7 @@ export class ServicesList implements OnInit {
       error: (error) => {
         console.error('Failed to load services:', error);
         this.notificationService.showError('Failed to load services', error.message);
-      }
+      },
     });
   }
 
@@ -91,7 +91,7 @@ export class ServicesList implements OnInit {
       instances: 1,
       url: '',
       version: '',
-      description: ''
+      description: '',
     };
     this.showServiceForm.set(true);
   }
@@ -104,7 +104,7 @@ export class ServicesList implements OnInit {
       instances: service.instances || 1,
       url: (service as any).url || '',
       version: (service as any).version || '',
-      description: (service as any).description || ''
+      description: (service as any).description || '',
     };
     this.showServiceForm.set(true);
   }
@@ -122,7 +122,7 @@ export class ServicesList implements OnInit {
       instances: 1,
       url: '',
       version: '',
-      description: ''
+      description: '',
     };
   }
 
@@ -149,7 +149,7 @@ export class ServicesList implements OnInit {
       instances: this.serviceForm.instances,
       url: this.serviceForm.url,
       version: this.serviceForm.version,
-      description: this.serviceForm.description
+      description: this.serviceForm.description,
     };
 
     if (this.isEditing) {
@@ -165,13 +165,13 @@ export class ServicesList implements OnInit {
       error: (error) => {
         console.error('Failed to save service:', error);
         // Error notification already shown by DataService
-      }
+      },
     });
   }
 
   async deleteService(service: Service) {
     const confirmed = await this.confirmationService.confirmDelete(service.name);
-    
+
     if (!confirmed) {
       return;
     }
@@ -185,4 +185,3 @@ export class ServicesList implements OnInit {
     }
   }
 }
-

@@ -1,11 +1,13 @@
 # Service CRUD Feature Documentation
 
 ## Overview
+
 Added full CRUD (Create, Read, Update, Delete) functionality to the Services List component with API integration and validation.
 
 ## Features Implemented
 
 ### 1. **Create Service**
+
 - Modal form to add new services
 - Validates required fields
 - Sends POST request to `/api/services`
@@ -13,12 +15,14 @@ Added full CRUD (Create, Read, Update, Delete) functionality to the Services Lis
 - Reloads service list after creation
 
 ### 2. **Read Services**
+
 - Loads services from API on component initialization
 - Displays in paginated table (6 per page)
 - Shows service status with color-coded icons
 - Handles loading errors gracefully
 
 ### 3. **Update Service**
+
 - Edit button opens pre-filled modal form
 - Validates changes before submission
 - Sends PUT request to `/api/services/{id}`
@@ -26,6 +30,7 @@ Added full CRUD (Create, Read, Update, Delete) functionality to the Services Lis
 - Shows success/error notifications
 
 ### 4. **Delete Service**
+
 - Delete button with confirmation dialog
 - Sends DELETE request to `/api/services/{id}`
 - Removes from local list after successful deletion
@@ -36,32 +41,35 @@ Added full CRUD (Create, Read, Update, Delete) functionality to the Services Lis
 ### TypeScript (`services-list.ts`)
 
 **New Properties:**
+
 ```typescript
-showServiceForm = signal(false);      // Controls modal visibility
+showServiceForm = signal(false); // Controls modal visibility
 editingService = signal<Service | null>(null); // Tracks edit mode
-serviceForm = {                       // Form data model
+serviceForm = {
+  // Form data model
   name: '',
   status: 'Healthy',
   instances: 1,
   url: '',
   version: '',
-  description: ''
+  description: '',
 };
 ```
 
 **New Methods:**
 
-| Method | Purpose |
-|--------|---------|
-| `openCreateForm()` | Opens empty form for new service |
-| `openEditForm(service)` | Opens form pre-filled with service data |
-| `closeForm()` | Closes modal and clears form |
-| `clearForm()` | Resets form to default values |
-| `validateForm()` | Client-side validation before API call |
-| `saveService()` | Handles both create and update operations |
-| `deleteService(service)` | Deletes service with confirmation |
+| Method                   | Purpose                                   |
+| ------------------------ | ----------------------------------------- |
+| `openCreateForm()`       | Opens empty form for new service          |
+| `openEditForm(service)`  | Opens form pre-filled with service data   |
+| `closeForm()`            | Closes modal and clears form              |
+| `clearForm()`            | Resets form to default values             |
+| `validateForm()`         | Client-side validation before API call    |
+| `saveService()`          | Handles both create and update operations |
+| `deleteService(service)` | Deletes service with confirmation         |
 
 **Dependencies Injected:**
+
 - `DataService` - API calls
 - `Router` - Navigation
 - `ConfirmationService` - Confirm dialogs
@@ -70,12 +78,14 @@ serviceForm = {                       // Form data model
 ### Template (`services-list.html`)
 
 **Added Components:**
+
 1. **"Add Service" Button** - Top right of table
 2. **Edit Button** - In each table row
 3. **Delete Button** - In each table row
 4. **Modal Form** - Overlay with service form
 
 **Form Fields:**
+
 - Service Name (required)
 - Service URL
 - Status (dropdown: Healthy, Degraded, Down, Maintenance)
@@ -86,6 +96,7 @@ serviceForm = {                       // Form data model
 ### Styles (`services-list.css`)
 
 **New Style Classes:**
+
 - `.modal-overlay` - Dark backdrop with blur
 - `.modal-content` - Modal container
 - `.modal-header` - Title and close button
@@ -141,6 +152,7 @@ Response: 204 No Content
 ### Request Flow
 
 #### Create Service:
+
 ```
 1. User clicks "Add Service"
 2. Modal opens with empty form
@@ -154,6 +166,7 @@ Response: 204 No Content
 ```
 
 #### Update Service:
+
 ```
 1. User clicks "Edit" on table row
 2. Modal opens with pre-filled form
@@ -167,6 +180,7 @@ Response: 204 No Content
 ```
 
 #### Delete Service:
+
 ```
 1. User clicks "Delete" on table row
 2. Confirmation dialog appears
@@ -180,11 +194,13 @@ Response: 204 No Content
 ## Validation
 
 ### Client-Side Validation
+
 - **Service Name**: Required, cannot be empty
 - **Instances**: Must be >= 0
 - All validations show error notifications
 
 ### Server-Side Validation
+
 - API should validate:
   - Name is unique
   - URL format is valid
@@ -194,6 +210,7 @@ Response: 204 No Content
 ### Error Handling
 
 **Network Errors:**
+
 ```typescript
 this.dataService.saveService(data).subscribe({
   next: (service) => {
@@ -202,11 +219,12 @@ this.dataService.saveService(data).subscribe({
   error: (error) => {
     // Error already shown by DataService
     console.error('Failed to save service:', error);
-  }
+  },
 });
 ```
 
 **API Errors:**
+
 - 400 Bad Request → Validation error notification
 - 401 Unauthorized → Redirect to login
 - 404 Not Found → "Service not found" notification
@@ -217,24 +235,28 @@ this.dataService.saveService(data).subscribe({
 ### Visual Feedback
 
 **Status Icons:**
+
 - ✓ Healthy (green)
 - ⚠ Degraded (orange)
 - ✗ Down (red)
 - 🔧 Maintenance (gray)
 
 **Buttons:**
+
 - **Add Service** - Primary blue button with + icon
 - **Edit** - Secondary button with pencil icon
 - **Delete** - Danger red button with trash icon
 - **Details** - Primary button with info icon
 
 **Modal:**
+
 - Dark overlay with blur effect
 - Centered modal with smooth animations
 - Close button (X) in top-right
 - Cancel and Submit buttons in footer
 
 ### Accessibility
+
 - All buttons have descriptive labels
 - Form fields have proper labels
 - Modal can be closed via close button or backdrop click
@@ -244,6 +266,7 @@ this.dataService.saveService(data).subscribe({
 ## Testing Checklist
 
 ### Create Service
+
 - [ ] Open create form
 - [ ] Fill all fields
 - [ ] Submit form
@@ -254,6 +277,7 @@ this.dataService.saveService(data).subscribe({
 - [ ] Test validation: negative instances
 
 ### Update Service
+
 - [ ] Click edit on existing service
 - [ ] Verify form pre-filled with current data
 - [ ] Modify fields
@@ -263,6 +287,7 @@ this.dataService.saveService(data).subscribe({
 - [ ] Verify success notification shown
 
 ### Delete Service
+
 - [ ] Click delete on existing service
 - [ ] Verify confirmation dialog appears
 - [ ] Click cancel - verify service not deleted
@@ -272,12 +297,14 @@ this.dataService.saveService(data).subscribe({
 - [ ] Verify success notification shown
 
 ### Error Handling
+
 - [ ] Test with API down - verify error notification
 - [ ] Test with invalid data - verify validation messages
 - [ ] Test with expired token - verify redirect to login
 - [ ] Test with network error - verify error handling
 
 ### UI/UX
+
 - [ ] Modal opens and closes smoothly
 - [ ] Form fields are properly styled
 - [ ] Buttons have hover effects
@@ -297,8 +324,8 @@ serviceForm = {
   status: 'Healthy',
   instances: 3,
   version: '2.1.0',
-  description: 'Handles all payment processing'
-}
+  description: 'Handles all payment processing',
+};
 
 // Click "Create Service"
 // → POST /api/services

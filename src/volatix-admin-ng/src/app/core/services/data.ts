@@ -50,40 +50,44 @@ export class DataService {
   }
 
   getServices(): Observable<Service[]> {
-    return this.http.get<Service[]>(`${environment.apiUrl}/services`, { headers: this.getAuthHeaders() }).pipe(
-      map((servicesList) => {
-        const processedServices = servicesList.map((s: any) => ({
-          ...s,
-          id: s.id || s.serviceId || this.toSlug(s.name),
-          lastSeen: s.lastSeen
-            ? new Date(s.lastSeen).toLocaleString()
-            : s.lastSeenText || 'Unknown',
-        }));
-        this.services.set(processedServices);
-        this.addLog(`Loaded ${processedServices.length} services from API`);
-        return processedServices;
-      }),
-      catchError((err) => {
-        this.addLog('Error loading services from API: ' + err.message);
-        this.notificationService.showError('Failed to load services', err.message);
-        return of([]);
-      })
-    );
+    return this.http
+      .get<Service[]>(`${environment.apiUrl}/services`, { headers: this.getAuthHeaders() })
+      .pipe(
+        map((servicesList) => {
+          const processedServices = servicesList.map((s: any) => ({
+            ...s,
+            id: s.id || s.serviceId || this.toSlug(s.name),
+            lastSeen: s.lastSeen
+              ? new Date(s.lastSeen).toLocaleString()
+              : s.lastSeenText || 'Unknown',
+          }));
+          this.services.set(processedServices);
+          this.addLog(`Loaded ${processedServices.length} services from API`);
+          return processedServices;
+        }),
+        catchError((err) => {
+          this.addLog('Error loading services from API: ' + err.message);
+          this.notificationService.showError('Failed to load services', err.message);
+          return of([]);
+        })
+      );
   }
 
   getCaches(): Observable<Cache[]> {
-    return this.http.get<Cache[]>(`${environment.apiUrl}/caches`, { headers: this.getAuthHeaders() }).pipe(
-      map((cachesList) => {
-        this.caches.set(cachesList);
-        this.addLog(`Loaded ${cachesList.length} caches from API`);
-        return cachesList;
-      }),
-      catchError((err) => {
-        this.addLog('Error loading caches from API: ' + err.message);
-        this.notificationService.showError('Failed to load caches', err.message);
-        return of([]);
-      })
-    );
+    return this.http
+      .get<Cache[]>(`${environment.apiUrl}/caches`, { headers: this.getAuthHeaders() })
+      .pipe(
+        map((cachesList) => {
+          this.caches.set(cachesList);
+          this.addLog(`Loaded ${cachesList.length} caches from API`);
+          return cachesList;
+        }),
+        catchError((err) => {
+          this.addLog('Error loading caches from API: ' + err.message);
+          this.notificationService.showError('Failed to load caches', err.message);
+          return of([]);
+        })
+      );
   }
 
   getCachesForService(serviceId: string): Observable<Cache[]> {
@@ -109,20 +113,20 @@ export class DataService {
   // Service management
   saveService(service: Omit<Service, 'id'> & { id?: string }): Observable<Service> {
     const isUpdate = !!service.id;
-    const url = isUpdate 
-      ? `${environment.apiUrl}/services/${service.id}` 
+    const url = isUpdate
+      ? `${environment.apiUrl}/services/${service.id}`
       : `${environment.apiUrl}/services`;
-    
-    const method = isUpdate 
+
+    const method = isUpdate
       ? this.http.put<Service>(url, service, { headers: this.getAuthHeaders() })
       : this.http.post<Service>(url, service, { headers: this.getAuthHeaders() });
 
     return method.pipe(
-      map(savedService => {
+      map((savedService) => {
         // Update local services signal
         const services = [...this.services()];
-        const index = services.findIndex(s => s.id === savedService.id);
-        
+        const index = services.findIndex((s) => s.id === savedService.id);
+
         if (index >= 0) {
           services[index] = {
             ...savedService,
@@ -138,17 +142,17 @@ export class DataService {
               : 'Unknown',
           });
         }
-        
+
         this.services.set(services);
         this.addLog(`${isUpdate ? 'Updated' : 'Added'} service: ${savedService.name}`);
-        
+
         // Show success notification
         if (isUpdate) {
           this.notificationService.showUpdateSuccess(`Service "${savedService.name}"`);
         } else {
           this.notificationService.showCreateSuccess(`Service "${savedService.name}"`);
         }
-        
+
         return savedService;
       }),
       catchError((error) => {
@@ -198,16 +202,16 @@ export class DataService {
   // Cache management
   saveCache(cache: Cache & { isUpdate?: boolean }): Observable<Cache> {
     const isUpdate = !!cache.isUpdate;
-    const url = isUpdate 
-      ? `${environment.apiUrl}/caches/${cache.serviceId}/${cache.name}` 
+    const url = isUpdate
+      ? `${environment.apiUrl}/caches/${cache.serviceId}/${cache.name}`
       : `${environment.apiUrl}/caches`;
-    
-    const method = isUpdate 
+
+    const method = isUpdate
       ? this.http.put<Cache>(url, cache, { headers: this.getAuthHeaders() })
       : this.http.post<Cache>(url, cache, { headers: this.getAuthHeaders() });
 
     return method.pipe(
-      map(savedCache => {
+      map((savedCache) => {
         // Update local caches signal
         const caches = [...this.caches()];
         const existingIndex = caches.findIndex(
@@ -250,7 +254,9 @@ export class DataService {
     try {
       // Call API to delete cache
       await firstValueFrom(
-        this.http.delete(`${environment.apiUrl}/caches/${serviceId}/${name}`, { headers: this.getAuthHeaders() })
+        this.http.delete(`${environment.apiUrl}/caches/${serviceId}/${name}`, {
+          headers: this.getAuthHeaders(),
+        })
       );
 
       // Update local caches signal

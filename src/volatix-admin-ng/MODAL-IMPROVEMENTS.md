@@ -1,6 +1,7 @@
 # Modal Improvements - Backdrop Click & Light Theme
 
 ## Overview
+
 Updated the Modal component and service form styles to prevent closing on backdrop click and support light theme colors.
 
 ## Changes Made
@@ -8,11 +9,13 @@ Updated the Modal component and service form styles to prevent closing on backdr
 ### 1. Modal Component (`modal.ts`)
 
 **Added New Input Parameter:**
+
 ```typescript
 closeOnBackdrop = input<boolean>(true); // Control backdrop click behavior
 ```
 
 **Updated Backdrop Click Handler:**
+
 ```typescript
 onBackdropClick(event: Event) {
   if (event.target === event.currentTarget && this.closeOnBackdrop()) {
@@ -22,6 +25,7 @@ onBackdropClick(event: Event) {
 ```
 
 **Benefits:**
+
 - Default behavior unchanged (closes on backdrop click)
 - Can be disabled per modal instance
 - Provides better control for forms that shouldn't be accidentally closed
@@ -29,15 +33,18 @@ onBackdropClick(event: Event) {
 ### 2. Services List Component (`services-list.html`)
 
 **Updated Modal Usage:**
+
 ```html
-<app-modal 
-  [isOpen]="showServiceForm()" 
+<app-modal
+  [isOpen]="showServiceForm()"
   [title]="isEditing ? 'Edit Service' : 'Create New Service'"
   [closeOnBackdrop]="false"
-  (closeModal)="closeForm()">
+  (closeModal)="closeForm()"
+></app-modal>
 ```
 
 **Effect:**
+
 - Clicking outside the modal will NOT close it
 - User must explicitly click Cancel, Close, or Dismiss button
 - Prevents accidental data loss when filling out form
@@ -45,6 +52,7 @@ onBackdropClick(event: Event) {
 ### 3. Form Styles - Light Theme Support (`services-list.css`)
 
 **Form Labels:**
+
 ```css
 /* Dark theme (default) */
 .form-group label {
@@ -58,6 +66,7 @@ onBackdropClick(event: Event) {
 ```
 
 **Form Inputs:**
+
 ```css
 /* Dark theme (default) */
 .form-input {
@@ -75,6 +84,7 @@ onBackdropClick(event: Event) {
 ```
 
 **Placeholder Text:**
+
 ```css
 /* Dark theme */
 .form-input::placeholder {
@@ -88,6 +98,7 @@ onBackdropClick(event: Event) {
 ```
 
 **Modal Actions Border:**
+
 ```css
 /* Dark theme */
 .modal-actions {
@@ -103,55 +114,59 @@ onBackdropClick(event: Event) {
 ## Color Palette Reference
 
 ### Dark Theme (Default)
-| Element | Color | Hex | Usage |
-|---------|-------|-----|-------|
-| Label text | Light gray | `#cbd5e1` | Form labels |
-| Input background | Dark blue | `#0f172a` | Input fields |
-| Input border | Slate | `#334155` | Input borders |
-| Input text | Off-white | `#f1f5f9` | User input |
-| Placeholder | Gray | `#64748b` | Placeholder text |
-| Actions border | Slate | `#334155` | Separator line |
+
+| Element          | Color      | Hex       | Usage            |
+| ---------------- | ---------- | --------- | ---------------- |
+| Label text       | Light gray | `#cbd5e1` | Form labels      |
+| Input background | Dark blue  | `#0f172a` | Input fields     |
+| Input border     | Slate      | `#334155` | Input borders    |
+| Input text       | Off-white  | `#f1f5f9` | User input       |
+| Placeholder      | Gray       | `#64748b` | Placeholder text |
+| Actions border   | Slate      | `#334155` | Separator line   |
 
 ### Light Theme
-| Element | Color | Hex | Usage |
-|---------|-------|-----|-------|
-| Label text | Dark gray | `#374151` | Form labels |
-| Input background | White | `#ffffff` | Input fields |
-| Input border | Light gray | `#d1d5db` | Input borders |
-| Input text | Black | `#111827` | User input |
-| Placeholder | Medium gray | `#9ca3af` | Placeholder text |
-| Actions border | Light gray | `#e5e7eb` | Separator line |
+
+| Element          | Color       | Hex       | Usage            |
+| ---------------- | ----------- | --------- | ---------------- |
+| Label text       | Dark gray   | `#374151` | Form labels      |
+| Input background | White       | `#ffffff` | Input fields     |
+| Input border     | Light gray  | `#d1d5db` | Input borders    |
+| Input text       | Black       | `#111827` | User input       |
+| Placeholder      | Medium gray | `#9ca3af` | Placeholder text |
+| Actions border   | Light gray  | `#e5e7eb` | Separator line   |
 
 ## Usage Examples
 
 ### Prevent Backdrop Close (Service Form)
+
 ```html
-<app-modal 
+<app-modal
   [isOpen]="showForm()"
   [title]="'Edit Service'"
   [closeOnBackdrop]="false"
-  (closeModal)="handleClose()">
+  (closeModal)="handleClose()"
+>
   <!-- Form content -->
 </app-modal>
 ```
 
 ### Allow Backdrop Close (Info Modal)
+
 ```html
-<app-modal 
+<app-modal
   [isOpen]="showInfo()"
   [title]="'Information'"
   [closeOnBackdrop]="true"
-  (closeModal)="handleClose()">
+  (closeModal)="handleClose()"
+>
   <!-- Info content -->
 </app-modal>
 ```
 
 ### Default Behavior (No closeOnBackdrop specified)
+
 ```html
-<app-modal 
-  [isOpen]="showModal()"
-  [title]="'Modal Title'"
-  (closeModal)="handleClose()">
+<app-modal [isOpen]="showModal()" [title]="'Modal Title'" (closeModal)="handleClose()">
   <!-- Content -->
 </app-modal>
 <!-- Defaults to closeOnBackdrop="true" -->
@@ -160,13 +175,16 @@ onBackdropClick(event: Event) {
 ## Accessibility & UX Improvements
 
 ### Preventing Accidental Closure
+
 **Before:**
+
 - User fills out form
 - Accidentally clicks outside modal
 - Form closes, data lost
 - User frustrated
 
 **After:**
+
 - User fills out form
 - Clicks outside modal
 - Nothing happens
@@ -174,12 +192,15 @@ onBackdropClick(event: Event) {
 - No accidental data loss
 
 ### Light Theme Readability
+
 **Before:**
+
 - Light theme had dark input backgrounds
 - Poor contrast and readability
 - Labels hard to read
 
 **After:**
+
 - Light theme has white input backgrounds
 - Proper contrast ratios
 - Labels use dark gray for readability
@@ -188,6 +209,7 @@ onBackdropClick(event: Event) {
 ## Testing Checklist
 
 ### Modal Backdrop Behavior
+
 - [ ] Service form: Click outside modal - should NOT close
 - [ ] Service form: Click Cancel button - should close
 - [ ] Service form: Click Close button (header) - should close
@@ -195,6 +217,7 @@ onBackdropClick(event: Event) {
 - [ ] Other modals: Verify they still close on backdrop click (if needed)
 
 ### Light Theme Form Styles
+
 - [ ] Switch to light theme
 - [ ] Open service form
 - [ ] Verify labels are dark gray and readable
@@ -207,6 +230,7 @@ onBackdropClick(event: Event) {
 - [ ] Check select dropdowns - verify readable
 
 ### Dark Theme Form Styles (Regression Test)
+
 - [ ] Switch to dark theme
 - [ ] Open service form
 - [ ] Verify labels are light gray
@@ -217,11 +241,13 @@ onBackdropClick(event: Event) {
 ## Browser Compatibility
 
 Tested and compatible with:
+
 - ✅ Chrome/Edge (Chromium)
 - ✅ Firefox
 - ✅ Safari
 
 CSS features used:
+
 - `:root.light` selector (widely supported)
 - CSS custom properties (modern browsers)
 - Standard CSS colors and layouts
@@ -229,18 +255,22 @@ CSS features used:
 ## Future Enhancements
 
 1. **Keyboard Shortcuts**
+
    - ESC key to close (respect closeOnBackdrop setting)
    - CTRL+Enter to submit form
 
 2. **Animation Preferences**
+
    - Respect `prefers-reduced-motion`
    - Smoother modal transitions
 
 3. **Focus Management**
+
    - Trap focus within modal
    - Return focus to trigger element on close
 
 4. **Confirmation on Close**
+
    - Detect dirty form state
    - Confirm before closing if form has unsaved changes
 
