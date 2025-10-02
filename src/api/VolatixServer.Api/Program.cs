@@ -140,11 +140,12 @@ using (var scope = app.Services.CreateScope())
     var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
     try
     {
-     //   await authService.CreateUserAsync("admin@volatix.com", "admin123", "Admin");
+        await authService.CreateUserAsync("admin@volatix.com", "admin123", "Admin");
+        Console.WriteLine("Default admin user created successfully.");
     }
-    catch (InvalidOperationException)
+    catch (InvalidOperationException ex)
     {
-        // User already exists
+        Console.WriteLine($"User creation skipped: {ex.Message}");
     }
 }
 

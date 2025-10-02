@@ -10,5 +10,6 @@ namespace VolatixServer.Infrastructure.Repositories
         Task<T> UpdateAsync(T entity);
         Task DeleteAsync(string id);
         Task<IEnumerable<T>> QueryAsync(string query);
+        Task<IEnumerable<T>> QueryAsync(string query, object parameters);
     }
 }

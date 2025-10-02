@@ -30,7 +30,8 @@ namespace VolatixServer.Service.Services
         public async Task<LoginResponseDto> LoginAsync(LoginDto loginDto)
         {
             var users = await _userRepository.QueryAsync(
-                $"SELECT * FROM c WHERE c.email = @email"
+                "SELECT * FROM c WHERE c.email = @email",
+                new { email = loginDto.Email }
             );
             
             var user = users.FirstOrDefault();
@@ -52,7 +53,8 @@ namespace VolatixServer.Service.Services
         public async Task<User> CreateUserAsync(string email, string password, string role = "Admin")
         {
             var existingUsers = await _userRepository.QueryAsync(
-                $"SELECT * FROM c WHERE c.email = @email"
+                "SELECT * FROM c WHERE c.email = @email",
+                new { email = email }
             );
             
             if (existingUsers.Any())
@@ -72,8 +74,8 @@ namespace VolatixServer.Service.Services
 
         private string GenerateJwtToken(User user)
         {
-            var jwtKey = _configuration["Jwt:Key"];
-            var jwtIssuer = _configuration["Jwt:Issuer"];
+            var jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is not configured");
+            var jwtIssuer = _configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT Issuer is not configured");
             var jwtExpireHours = int.Parse(_configuration["Jwt:ExpireHours"] ?? "24");
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));

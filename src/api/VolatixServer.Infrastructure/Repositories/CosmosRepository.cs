@@ -55,7 +55,11 @@ namespace VolatixServer.Infrastructure.Repositories
         {
             try
             {
-                var response = await _container.ReadItemAsync<T>(id, new PartitionKey(typeof(T).Name.ToLower() + "s"));
+                // Create a dummy instance to get the correct partition key
+                var dummyInstance = Activator.CreateInstance<T>();
+                var partitionKeyValue = dummyInstance.PartitionKey;
+                
+                var response = await _container.ReadItemAsync<T>(id, new PartitionKey(partitionKeyValue));
                 return response.Resource;
             }
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -83,12 +87,43 @@ namespace VolatixServer.Infrastructure.Repositories
 
         public async Task DeleteAsync(string id)
         {
-            await _container.DeleteItemAsync<T>(id, new PartitionKey(typeof(T).Name.ToLower() + "s"));
+            // Create a dummy instance to get the correct partition key
+            var dummyInstance = Activator.CreateInstance<T>();
+            var partitionKeyValue = dummyInstance.PartitionKey;
+            
+            await _container.DeleteItemAsync<T>(id, new PartitionKey(partitionKeyValue));
         }
 
         public async Task<IEnumerable<T>> QueryAsync(string query)
         {
             var queryDefinition = new QueryDefinition(query);
+            var queryIterator = _container.GetItemQueryIterator<T>(queryDefinition);
+            
+            var results = new List<T>();
+            
+            while (queryIterator.HasMoreResults)
+            {
+                var response = await queryIterator.ReadNextAsync();
+                results.AddRange(response);
+            }
+            
+            return results;
+        }
+
+        public async Task<IEnumerable<T>> QueryAsync(string query, object parameters)
+        {
+            var queryDefinition = new QueryDefinition(query);
+            
+            // Add parameters using reflection
+            if (parameters != null)
+            {
+                var properties = parameters.GetType().GetProperties();
+                foreach (var property in properties)
+                {
+                    queryDefinition.WithParameter($"@{property.Name.ToLower()}", property.GetValue(parameters));
+                }
+            }
+
             var queryIterator = _container.GetItemQueryIterator<T>(queryDefinition);
             
             var results = new List<T>();
