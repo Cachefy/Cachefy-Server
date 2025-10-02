@@ -1,14 +1,30 @@
 ﻿using Microsoft.Azure.Cosmos;
 using VolatixServer.Infrastructure.Models;
+using VolatixServer.Infrastructure.Services;
 
 namespace VolatixServer.Infrastructure.Repositories
 {
     public class CosmosRepository<T> : IRepository<T> where T : BaseEntity
     {
         private readonly Container _container;
+        private readonly CosmosClient _cosmosClient;
+        private readonly string _databaseName;
+        private readonly string _containerName;
         
+        public CosmosRepository(CosmosClient cosmosClient, string databaseName, IContainerMappingService containerMappingService)
+        {
+            _cosmosClient = cosmosClient;
+            _databaseName = databaseName;
+            _containerName = containerMappingService.GetContainerName<T>();
+            _container = cosmosClient.GetContainer(databaseName, _containerName);
+        }
+
+        // Backward compatibility constructor
         public CosmosRepository(CosmosClient cosmosClient, string databaseName, string containerName)
         {
+            _cosmosClient = cosmosClient;
+            _databaseName = databaseName;
+            _containerName = containerName;
             _container = cosmosClient.GetContainer(databaseName, containerName);
         }
 
@@ -44,7 +60,7 @@ namespace VolatixServer.Infrastructure.Repositories
             }
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                return null;
+                return null!; // Returning null when item is not found - callers should handle null checks
             }
         }
 

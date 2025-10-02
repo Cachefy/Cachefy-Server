@@ -4,9 +4,12 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using VolatixServer.Infrastructure.Configuration;
 using VolatixServer.Infrastructure.Repositories;
+using VolatixServer.Infrastructure.Services;
 using VolatixServer.Service.Services;
 using UserModel = VolatixServer.Infrastructure.Models.User;
 using AgentModel = VolatixServer.Infrastructure.Models.Agent;
+using ServiceModel = VolatixServer.Infrastructure.Models.Service;
+using CacheModel = VolatixServer.Infrastructure.Models.Cache;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,25 +24,55 @@ builder.Services.AddSingleton<CosmosClient>(sp =>
     return new CosmosClient(cosmosSettings.ConnectionString);
 });
 
+// Container Mapping Service
+builder.Services.AddSingleton<IContainerMappingService, ContainerMappingService>();
+
 // Repositories
 builder.Services.AddScoped<IRepository<UserModel>>(sp =>
 {
     var cosmosClient = sp.GetRequiredService<CosmosClient>();
     var cosmosSettings = builder.Configuration.GetSection("CosmosDb").Get<CosmosDbSettings>()!;
-    return new CosmosRepository<UserModel>(cosmosClient, cosmosSettings.DatabaseName, cosmosSettings.ContainerName);
+    var containerMappingService = sp.GetRequiredService<IContainerMappingService>();
+    return new CosmosRepository<UserModel>(cosmosClient, cosmosSettings.DatabaseName, containerMappingService);
 });
 
 builder.Services.AddScoped<IRepository<AgentModel>>(sp =>
 {
     var cosmosClient = sp.GetRequiredService<CosmosClient>();
     var cosmosSettings = builder.Configuration.GetSection("CosmosDb").Get<CosmosDbSettings>()!;
-    return new CosmosRepository<AgentModel>(cosmosClient, cosmosSettings.DatabaseName, cosmosSettings.ContainerName);
+    var containerMappingService = sp.GetRequiredService<IContainerMappingService>();
+    return new CosmosRepository<AgentModel>(cosmosClient, cosmosSettings.DatabaseName, containerMappingService);
+});
+
+builder.Services.AddScoped<IRepository<ServiceModel>>(sp =>
+{
+    var cosmosClient = sp.GetRequiredService<CosmosClient>();
+    var cosmosSettings = builder.Configuration.GetSection("CosmosDb").Get<CosmosDbSettings>()!;
+    var containerMappingService = sp.GetRequiredService<IContainerMappingService>();
+    return new CosmosRepository<ServiceModel>(cosmosClient, cosmosSettings.DatabaseName, containerMappingService);
+});
+
+builder.Services.AddScoped<IRepository<CacheModel>>(sp =>
+{
+    var cosmosClient = sp.GetRequiredService<CosmosClient>();
+    var cosmosSettings = builder.Configuration.GetSection("CosmosDb").Get<CosmosDbSettings>()!;
+    var containerMappingService = sp.GetRequiredService<IContainerMappingService>();
+    return new CosmosRepository<CacheModel>(cosmosClient, cosmosSettings.DatabaseName, containerMappingService);
 });
 
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAgentService, AgentService>();
 builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
+
+// Cosmos DB Initialization Service
+builder.Services.AddScoped<ICosmosDbInitializationService>(sp =>
+{
+    var cosmosClient = sp.GetRequiredService<CosmosClient>();
+    var cosmosSettings = builder.Configuration.GetSection("CosmosDb").Get<CosmosDbSettings>()!;
+    var containerMappingService = sp.GetRequiredService<IContainerMappingService>();
+    return new CosmosDbInitializationService(cosmosClient, cosmosSettings, containerMappingService);
+});
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -93,6 +126,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Initialize Cosmos DB (create database and container if they don't exist)
+using (var scope = app.Services.CreateScope())
+{
+    var cosmosInitService = scope.ServiceProvider.GetRequiredService<ICosmosDbInitializationService>();
+    await cosmosInitService.InitializeAsync();
+}
 
 // Seed default user
 using (var scope = app.Services.CreateScope())
