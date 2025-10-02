@@ -2,6 +2,7 @@
 using Microsoft.Azure.Cosmos;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using VolatixServer.Api.Middleware;
 using VolatixServer.Infrastructure.Configuration;
 using VolatixServer.Infrastructure.Repositories;
 using VolatixServer.Infrastructure.Services;
@@ -123,6 +124,9 @@ if (app.Environment.IsDevelopment())
 
 // CORS must be placed before authentication and authorization
 app.UseCors("AllowAngularApp");
+
+// API Key validation middleware (must be before authentication)
+app.UseApiKeyValidation();
 
 // Comment out HTTPS redirection in development to avoid CORS preflight issues
 // app.UseHttpsRedirection();
