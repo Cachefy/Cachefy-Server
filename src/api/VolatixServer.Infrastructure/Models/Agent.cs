@@ -9,8 +9,9 @@ namespace VolatixServer.Infrastructure.Models
         [Required]
         public string Name { get; set; }
         
-        [JsonProperty("status")]
-        public string Status { get; set; } = "Active";
+        [JsonProperty("url")]
+        [Required]
+        public string Url { get; set; }
         
         [JsonProperty("apiKey")]
         public string ApiKey { get; set; }

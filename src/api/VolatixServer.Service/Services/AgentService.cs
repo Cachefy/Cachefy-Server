@@ -36,7 +36,7 @@ namespace VolatixServer.Service.Services
             var agent = await _agentRepository.GetByIdAsync(id);
             if (agent == null)
                 throw new KeyNotFoundException($"Agent with ID {id} not found");
-                
+
             return MapToResponseDto(agent);
         }
 
@@ -45,7 +45,7 @@ namespace VolatixServer.Service.Services
             var agent = new Agent
             {
                 Name = createAgentDto.Name,
-                Status = createAgentDto.Status,
+                Url = createAgentDto.Url,
                 ApiKey = _apiKeyService.GenerateApiKey(),
                 IsApiKeyActive = true
             };
@@ -57,14 +57,13 @@ namespace VolatixServer.Service.Services
         public async Task<AgentResponseDto> UpdateAgentAsync(string id, UpdateAgentDto updateAgentDto)
         {
             var agent = await _agentRepository.GetByIdAsync(id);
+
             if (agent == null)
                 throw new KeyNotFoundException($"Agent with ID {id} not found");
 
-            if (!string.IsNullOrEmpty(updateAgentDto.Name))
-                agent.Name = updateAgentDto.Name;
-                
-            if (!string.IsNullOrEmpty(updateAgentDto.Status))
-                agent.Status = updateAgentDto.Status;
+            agent.Name = updateAgentDto.Name;
+
+            agent.Url = updateAgentDto.Url;
 
             var updatedAgent = await _agentRepository.UpdateAsync(agent);
             return MapToResponseDto(updatedAgent);
@@ -83,7 +82,7 @@ namespace VolatixServer.Service.Services
 
             agent.ApiKey = _apiKeyService.GenerateApiKey();
             agent.IsApiKeyActive = true;
-            
+
             await _agentRepository.UpdateAsync(agent);
             return agent.ApiKey;
         }
@@ -94,7 +93,7 @@ namespace VolatixServer.Service.Services
             {
                 Id = agent.Id,
                 Name = agent.Name,
-                Status = agent.Status,
+                Url = agent.Url,
                 ApiKey = agent.ApiKey,
                 IsApiKeyActive = agent.IsApiKeyActive,
                 CreatedAt = agent.CreatedAt,

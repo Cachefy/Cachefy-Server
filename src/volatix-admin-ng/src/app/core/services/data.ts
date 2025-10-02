@@ -1,7 +1,7 @@
 import { Injectable, signal, Inject, PLATFORM_ID } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of, BehaviorSubject } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, of, BehaviorSubject, firstValueFrom } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 
 import { Service } from '../models/service.model';
@@ -10,6 +10,8 @@ import { Agent } from '../models/agent.model';
 import { NotificationService } from './notification.service';
 import { ConfirmationService } from './confirmation.service';
 import { ApiKeyService } from './api-key.service';
+import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -28,9 +30,23 @@ export class DataService {
     @Inject(PLATFORM_ID) private platformId: Object,
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService,
-    private apiKeyService: ApiKeyService
+    private apiKeyService: ApiKeyService,
+    private authService: AuthService
   ) {
     this.loadAgents();
+  }
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.authService.authState().token;
+    if (token) {
+      return new HttpHeaders({
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      });
+    }
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+    });
   }
 
   getServices(): Observable<Service[]> {
@@ -214,76 +230,84 @@ export class DataService {
     return this.agents();
   }
 
-  saveAgent(agent: Omit<Agent, 'id' | 'apiKey'> & { id?: string }): {
+  loadAgentsFromApi(): Observable<Agent[]> {
+    return this.http
+      .get<Agent[]>(`${environment.apiUrl}/agents`, { headers: this.getAuthHeaders() })
+      .pipe(
+        map((agents) => {
+          // Transform API response to match our Agent model
+          const transformedAgents = agents.map((agent) => ({
+            ...agent,
+            apiKeyGenerated: agent.createdAt,
+          }));
+          this.agents.set(transformedAgents);
+          this.addLog(`Loaded ${transformedAgents.length} agents from API`);
+          return transformedAgents;
+        }),
+        catchError((error) => {
+          this.addLog(`Error loading agents from API: ${error.message}`);
+          this.notificationService.showError('Failed to load agents', error.message);
+          return of([]);
+        })
+      );
+  }
+
+  saveAgent(agent: Omit<Agent, 'id' | 'apiKey'> & { id?: string }): Observable<{
     agent: Agent;
     isNewKey: boolean;
-  } {
-    try {
-      const agents = [...this.agents()];
-      const now = new Date().toISOString();
-      let isUpdate = false;
-      let generatedApiKey = '';
-      let isNewKey = false;
+  }> {
+    const isUpdate = !!agent.id;
+    const url = isUpdate
+      ? `${environment.apiUrl}/agents/${agent.id}`
+      : `${environment.apiUrl}/agents`;
 
-      if (agent.id) {
-        const index = agents.findIndex((a) => a.id === agent.id);
+    const method = isUpdate
+      ? this.http.put<Agent>(
+          url,
+          { name: agent.name, url: agent.url },
+          { headers: this.getAuthHeaders() }
+        )
+      : this.http.post<Agent>(
+          url,
+          { name: agent.name, url: agent.url },
+          { headers: this.getAuthHeaders() }
+        );
+
+    return method.pipe(
+      map((savedAgent) => {
+        // Update local agents signal
+        const agents = [...this.agents()];
+        const index = agents.findIndex((a) => a.id === savedAgent.id);
+
         if (index >= 0) {
-          // For updates, keep existing API key
-          agents[index] = {
-            ...agents[index],
-            ...agent,
-            updatedAt: now,
-          };
-          this.addLog(`Updated agent: ${agent.name}`);
-          isUpdate = true;
-          generatedApiKey = agents[index].apiKey;
+          agents[index] = savedAgent;
+        } else {
+          agents.push(savedAgent);
         }
-      } else {
-        // For new agents, generate API key
-        const id = this.uniqueAgentId(agent.name);
-        generatedApiKey = this.apiKeyService.generateApiKey();
-        isNewKey = true;
 
-        const newAgent: Agent = {
-          ...agent,
-          id,
-          apiKey: generatedApiKey,
-          apiKeyGenerated: now,
-          createdAt: now,
-          updatedAt: now,
-        };
+        this.agents.set(agents);
+        this.addLog(`${isUpdate ? 'Updated' : 'Added'} agent: ${savedAgent.name}`);
 
-        agents.push(newAgent);
-        this.addLog(`Added agent: ${agent.name} with new API key`);
-      }
+        // Show success notification
+        if (isUpdate) {
+          this.notificationService.showUpdateSuccess(`Agent "${savedAgent.name}"`);
+        } else {
+          this.notificationService.showCreateSuccess(`Agent "${savedAgent.name}"`);
+        }
 
-      this.agents.set(agents);
-      this.saveAgentsToStorage();
-
-      // Show success notification
-      if (isUpdate) {
-        this.notificationService.showUpdateSuccess(`Agent "${agent.name}"`);
-      } else {
-        this.notificationService.showCreateSuccess(`Agent "${agent.name}"`);
-      }
-
-      // Return the saved agent and key generation info
-      const savedAgent = agents.find(
-        (a) => a.id === (agent.id || this.uniqueAgentId(agent.name)) || a.name === agent.name
-      )!;
-
-      return { agent: savedAgent, isNewKey };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      if (agent.id) {
-        this.notificationService.showUpdateError(`Agent "${agent.name}"`, errorMessage);
-      } else {
-        this.notificationService.showCreateError(`Agent "${agent.name}"`, errorMessage);
-      }
-
-      // Return error state
-      throw error;
-    }
+        return { agent: savedAgent, isNewKey: !isUpdate };
+      }),
+      catchError((error) => {
+        const errorMessage = error.message || 'Unknown error occurred';
+        if (isUpdate) {
+          this.notificationService.showUpdateError(`Agent "${agent.name}"`, errorMessage);
+        } else {
+          this.notificationService.showCreateError(`Agent "${agent.name}"`, errorMessage);
+        }
+        this.addLog(`Error saving agent: ${errorMessage}`);
+        throw error;
+      })
+    );
   }
 
   async revokeApiKey(agentId: string): Promise<{ agent: Agent; newApiKey: string } | null> {
@@ -301,38 +325,35 @@ export class DataService {
     }
 
     try {
+      // Call API to regenerate API key
+      const response = await firstValueFrom(
+        this.http.post<Agent>(
+          `${environment.apiUrl}/agents/${agentId}/regenerate-api-key`,
+          {},
+          { headers: this.getAuthHeaders() }
+        )
+      );
+
+      // Update local agents signal
       const agents = [...this.agents()];
       const agentIndex = agents.findIndex((a) => a.id === agentId);
 
-      if (agentIndex === -1) {
-        throw new Error('Agent not found');
+      if (agentIndex >= 0) {
+        agents[agentIndex] = response;
+        this.agents.set(agents);
       }
 
-      const agent = agents[agentIndex];
-      const newApiKey = this.apiKeyService.generateApiKey();
-      const now = new Date().toISOString();
-
-      // Update agent with new API key
-      agents[agentIndex] = {
-        ...agent,
-        apiKey: newApiKey,
-        apiKeyGenerated: now,
-        updatedAt: now,
-      };
-
-      this.agents.set(agents);
-      this.saveAgentsToStorage();
-      this.addLog(`Revoked API key for agent: ${agent.name}`);
-
+      this.addLog(`Revoked API key for agent: ${response.name}`);
       this.notificationService.showInfo(
         'API Key Revoked',
-        `New API key generated for "${agent.name}"`
+        `New API key generated for "${response.name}"`
       );
 
-      return { agent: agents[agentIndex], newApiKey };
+      return { agent: response, newApiKey: response.apiKey };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       this.notificationService.showError('API Key Revocation Failed', errorMessage);
+      this.addLog(`Error revoking API key: ${errorMessage}`);
       return null;
     }
   }
@@ -348,9 +369,14 @@ export class DataService {
     }
 
     try {
+      // Call API to delete agent
+      await firstValueFrom(
+        this.http.delete(`${environment.apiUrl}/agents/${id}`, { headers: this.getAuthHeaders() })
+      );
+
+      // Update local agents signal
       const agents = this.agents().filter((a) => a.id !== id);
       this.agents.set(agents);
-      this.saveAgentsToStorage();
 
       if (agent) {
         this.addLog(`Deleted agent: ${agent.name}`);
@@ -359,6 +385,7 @@ export class DataService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       this.notificationService.showDeleteError(`Agent "${agentName}"`, errorMessage);
+      this.addLog(`Error deleting agent: ${errorMessage}`);
     }
   }
 
@@ -420,48 +447,21 @@ export class DataService {
   }
 
   private loadAgents(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      try {
-        const stored = localStorage.getItem(this.AGENTS_KEY);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed)) {
-            this.agents.set(parsed);
-            return;
-          }
-        }
-      } catch (e) {
-        // Fallback to empty array
-      }
-    }
-
-    // Try loading from agents.json (optional)
-    this.http
-      .get<Agent[] | { agents: Agent[] }>('/agents.json')
-      .pipe(
-        map((data) => (Array.isArray(data) ? data : (data as any).agents || [])),
-        catchError(() => of([]))
-      )
-      .subscribe((agents) => {
-        if (agents.length > 0) {
-          this.agents.set(agents);
-          this.saveAgentsToStorage();
-          this.addLog('Agents loaded from agents.json');
-        }
-      });
+    // Agents will be loaded via loadAgentsFromApi() after login
+    // No longer using localStorage or JSON files for agents
   }
 
-  private saveAgentsToStorage(): void {
-    if (!isPlatformBrowser(this.platformId)) {
-      return;
-    }
-
-    try {
-      localStorage.setItem(this.AGENTS_KEY, JSON.stringify(this.agents()));
-    } catch (e) {
-      console.error('Failed to save agents to localStorage:', e);
-    }
-  }
+  // No longer needed - agents are managed by API
+  // private saveAgentsToStorage(): void {
+  //   if (!isPlatformBrowser(this.platformId)) {
+  //     return;
+  //   }
+  //   try {
+  //     localStorage.setItem(this.AGENTS_KEY, JSON.stringify(this.agents()));
+  //   } catch (e) {
+  //     console.error('Failed to save agents to localStorage:', e);
+  //   }
+  // }
 
   private uniqueAgentId(name: string): string {
     let base = this.toSlug(name || 'agent');
@@ -560,7 +560,7 @@ export class DataService {
       });
 
       this.agents.set(mergedAgents);
-      this.saveAgentsToStorage();
+      // Note: Import functionality should ideally call API to persist agents
 
       this.addLog(`Imported ${importedCount} new agents, updated ${updatedCount} existing agents`);
       this.notificationService.showSuccess(

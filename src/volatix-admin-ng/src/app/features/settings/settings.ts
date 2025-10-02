@@ -48,8 +48,19 @@ export class Settings implements OnInit {
   }
 
   loadAgents() {
-    const agents = this.dataService.getAgents();
-    this.agents.set(agents);
+    // First get cached agents for immediate display
+    const cachedAgents = this.dataService.getAgents();
+    this.agents.set(cachedAgents);
+
+    // Then load from API to get latest data
+    this.dataService.loadAgentsFromApi().subscribe({
+      next: (agents) => {
+        this.agents.set(agents);
+      },
+      error: (error) => {
+        console.error('Failed to load agents from API:', error);
+      },
+    });
   }
 
   async saveAgent() {
@@ -63,8 +74,13 @@ export class Settings implements OnInit {
     };
 
     try {
-      // The saveAgent method now returns agent info and key generation status
-      const result = await this.dataService.saveAgent(agentData);
+      // The saveAgent method now returns an Observable
+      const result = await new Promise<{ agent: Agent; isNewKey: boolean }>((resolve, reject) => {
+        this.dataService.saveAgent(agentData).subscribe({
+          next: (result) => resolve(result),
+          error: (error) => reject(error),
+        });
+      });
 
       this.loadAgents();
       this.clearForm();

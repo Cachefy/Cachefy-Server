@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, of, throwError } from 'rxjs';
 import { map, delay, catchError, tap } from 'rxjs/operators';
 import { User, LoginCredentials, AuthResponse, AuthState, UserRole } from '../models/user.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -106,28 +107,57 @@ export class AuthService {
   login(credentials: LoginCredentials): Observable<AuthResponse> {
     this.updateAuthState({ ...this._authState(), loading: true, error: null });
 
-    // Simulate API call with delay
-    return this.simulateAuthRequest(credentials).pipe(
-      tap((response) => {
-        if (response.success && response.user && response.token) {
-          this.setAuthData(response.user, response.token);
-        } else {
+    // Call real API
+    return this.http
+      .post<{ token: string; email: string }>(`${environment.apiUrl}/auth/login`, {
+        email: credentials.username,
+        password: credentials.password,
+      })
+      .pipe(
+        map((response) => {
+          // Create user object from response
+          const emailParts = response.email.split('@');
+          const user: User = {
+            id: 'api-user',
+            username: response.email,
+            email: response.email,
+            firstName: emailParts[0],
+            lastName: '',
+            role: UserRole.ADMIN,
+            isActive: true,
+            createdAt: new Date(),
+            lastLogin: new Date(),
+          };
+
+          return {
+            success: true,
+            user: user,
+            token: response.token,
+            message: 'Login successful',
+          };
+        }),
+        tap((authResponse) => {
+          if (authResponse.success && authResponse.user && authResponse.token) {
+            this.setAuthData(authResponse.user, authResponse.token);
+          } else {
+            this.updateAuthState({
+              ...this._authState(),
+              loading: false,
+              error: authResponse.message || 'Login failed',
+            });
+          }
+        }),
+        catchError((error) => {
+          const errorMessage =
+            error.error?.message || error.message || 'An error occurred during login';
           this.updateAuthState({
             ...this._authState(),
             loading: false,
-            error: response.message || 'Login failed',
+            error: errorMessage,
           });
-        }
-      }),
-      catchError((error) => {
-        this.updateAuthState({
-          ...this._authState(),
-          loading: false,
-          error: error.message || 'An error occurred during login',
-        });
-        return throwError(() => error);
-      })
-    );
+          return throwError(() => new Error(errorMessage));
+        })
+      );
   }
 
   /**

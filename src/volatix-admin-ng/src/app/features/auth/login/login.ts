@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { DataService } from '../../../core/services/data';
 import { LoginCredentials } from '../../../core/models/user.model';
 
 @Component({
@@ -31,7 +32,11 @@ export class Login {
     { username: 'demo', password: 'demo123', role: 'Demo User' },
   ];
 
-  constructor(private authService: AuthService, private router: Router) {
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private dataService: DataService
+  ) {
     // Auto-redirect if already authenticated
     effect(() => {
       if (this.authService.isAuthenticated()) {
@@ -63,7 +68,17 @@ export class Login {
     this.authService.login(this.credentials()).subscribe({
       next: (response) => {
         if (response.success) {
-          this.router.navigate(['/dashboard']);
+          // Load agents from API after successful login
+          this.dataService.loadAgentsFromApi().subscribe({
+            next: () => {
+              this.router.navigate(['/dashboard']);
+            },
+            error: (error) => {
+              console.error('Failed to load agents:', error);
+              // Navigate anyway even if agents fail to load
+              this.router.navigate(['/dashboard']);
+            },
+          });
         }
       },
       error: (error) => {

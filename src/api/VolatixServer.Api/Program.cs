@@ -119,8 +119,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// CORS must be placed before authentication and authorization
 app.UseCors("AllowAngularApp");
+
+// Comment out HTTPS redirection in development to avoid CORS preflight issues
+// app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
