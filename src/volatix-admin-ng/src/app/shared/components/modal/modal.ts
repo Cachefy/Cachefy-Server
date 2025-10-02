@@ -9,6 +9,7 @@ import { Component, input, output } from '@angular/core';
 export class Modal {
   isOpen = input<boolean>(false);
   title = input<string>('Modal');
+  closeOnBackdrop = input<boolean>(true); // New input to control backdrop click behavior
 
   closeModal = output<void>();
 
@@ -17,7 +18,7 @@ export class Modal {
   }
 
   onBackdropClick(event: Event) {
-    if (event.target === event.currentTarget) {
+    if (event.target === event.currentTarget && this.closeOnBackdrop()) {
       this.onClose();
     }
   }

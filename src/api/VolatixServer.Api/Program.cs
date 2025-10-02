@@ -64,6 +64,8 @@ builder.Services.AddScoped<IRepository<CacheModel>>(sp =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAgentService, AgentService>();
 builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
+builder.Services.AddScoped<IServiceService, ServiceService>();
+builder.Services.AddScoped<ICacheService, CacheService>();
 
 // Cosmos DB Initialization Service
 builder.Services.AddScoped<ICosmosDbInitializationService>(sp =>

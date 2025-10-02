@@ -50,9 +50,8 @@ export class DataService {
   }
 
   getServices(): Observable<Service[]> {
-    return this.http.get<Service[] | { services: Service[] }>('/services.json').pipe(
-      map((data) => {
-        const servicesList = Array.isArray(data) ? data : (data as any).services || [];
+    return this.http.get<Service[]>(`${environment.apiUrl}/services`, { headers: this.getAuthHeaders() }).pipe(
+      map((servicesList) => {
         const processedServices = servicesList.map((s: any) => ({
           ...s,
           id: s.id || s.serviceId || this.toSlug(s.name),
@@ -61,25 +60,27 @@ export class DataService {
             : s.lastSeenText || 'Unknown',
         }));
         this.services.set(processedServices);
-        this.addLog('Services loaded from services.json');
+        this.addLog(`Loaded ${processedServices.length} services from API`);
         return processedServices;
       }),
       catchError((err) => {
-        this.addLog('Error loading services JSON: ' + err.message);
+        this.addLog('Error loading services from API: ' + err.message);
+        this.notificationService.showError('Failed to load services', err.message);
         return of([]);
       })
     );
   }
 
   getCaches(): Observable<Cache[]> {
-    return this.http.get<Cache[] | { caches: Cache[] }>('/caches.json').pipe(
-      map((data) => {
-        const cachesList = Array.isArray(data) ? data : (data as any).caches || [];
+    return this.http.get<Cache[]>(`${environment.apiUrl}/caches`, { headers: this.getAuthHeaders() }).pipe(
+      map((cachesList) => {
         this.caches.set(cachesList);
+        this.addLog(`Loaded ${cachesList.length} caches from API`);
         return cachesList;
       }),
       catchError((err) => {
-        this.addLog('Error loading caches JSON: ' + err.message);
+        this.addLog('Error loading caches from API: ' + err.message);
+        this.notificationService.showError('Failed to load caches', err.message);
         return of([]);
       })
     );
@@ -106,45 +107,61 @@ export class DataService {
   }
 
   // Service management
-  saveService(service: Omit<Service, 'id'> & { id?: string }): void {
-    try {
-      const services = [...this.services()];
-      const now = new Date().toISOString();
-      let isUpdate = false;
+  saveService(service: Omit<Service, 'id'> & { id?: string }): Observable<Service> {
+    const isUpdate = !!service.id;
+    const url = isUpdate 
+      ? `${environment.apiUrl}/services/${service.id}` 
+      : `${environment.apiUrl}/services`;
+    
+    const method = isUpdate 
+      ? this.http.put<Service>(url, service, { headers: this.getAuthHeaders() })
+      : this.http.post<Service>(url, service, { headers: this.getAuthHeaders() });
 
-      if (service.id) {
-        const index = services.findIndex((s) => s.id === service.id);
+    return method.pipe(
+      map(savedService => {
+        // Update local services signal
+        const services = [...this.services()];
+        const index = services.findIndex(s => s.id === savedService.id);
+        
         if (index >= 0) {
-          services[index] = { ...services[index], ...service };
-          this.addLog(`Updated service: ${service.name}`);
-          isUpdate = true;
+          services[index] = {
+            ...savedService,
+            lastSeen: savedService.lastSeen
+              ? new Date(savedService.lastSeen).toLocaleString()
+              : 'Unknown',
+          };
+        } else {
+          services.push({
+            ...savedService,
+            lastSeen: savedService.lastSeen
+              ? new Date(savedService.lastSeen).toLocaleString()
+              : 'Unknown',
+          });
         }
-      } else {
-        const id = this.toSlug(service.name);
-        services.push({
-          ...service,
-          id,
-          lastSeen: now,
-        });
-        this.addLog(`Added service: ${service.name}`);
-      }
-
-      this.services.set(services);
-
-      // Show success notification
-      if (isUpdate) {
-        this.notificationService.showUpdateSuccess(`Service "${service.name}"`);
-      } else {
-        this.notificationService.showCreateSuccess(`Service "${service.name}"`);
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      if (service.id) {
-        this.notificationService.showUpdateError(`Service "${service.name}"`, errorMessage);
-      } else {
-        this.notificationService.showCreateError(`Service "${service.name}"`, errorMessage);
-      }
-    }
+        
+        this.services.set(services);
+        this.addLog(`${isUpdate ? 'Updated' : 'Added'} service: ${savedService.name}`);
+        
+        // Show success notification
+        if (isUpdate) {
+          this.notificationService.showUpdateSuccess(`Service "${savedService.name}"`);
+        } else {
+          this.notificationService.showCreateSuccess(`Service "${savedService.name}"`);
+        }
+        
+        return savedService;
+      }),
+      catchError((error) => {
+        const errorMessage = error.message || 'Unknown error occurred';
+        if (isUpdate) {
+          this.notificationService.showUpdateError(`Service "${service.name}"`, errorMessage);
+        } else {
+          this.notificationService.showCreateError(`Service "${service.name}"`, errorMessage);
+        }
+        this.addLog(`Error saving service: ${errorMessage}`);
+        throw error;
+      })
+    );
   }
 
   async deleteService(id: string): Promise<void> {
@@ -158,6 +175,12 @@ export class DataService {
     }
 
     try {
+      // Call API to delete service
+      await firstValueFrom(
+        this.http.delete(`${environment.apiUrl}/services/${id}`, { headers: this.getAuthHeaders() })
+      );
+
+      // Update local services signal
       const services = this.services().filter((s) => s.id !== id);
       this.services.set(services);
 
@@ -168,38 +191,53 @@ export class DataService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       this.notificationService.showDeleteError(`Service "${serviceName}"`, errorMessage);
+      this.addLog(`Error deleting service: ${errorMessage}`);
     }
   }
 
   // Cache management
-  saveCache(cache: Cache & { isUpdate?: boolean }): void {
-    try {
-      const caches = [...this.caches()];
-      const existingIndex = caches.findIndex(
-        (c) => c.name === cache.name && c.serviceId === cache.serviceId
-      );
+  saveCache(cache: Cache & { isUpdate?: boolean }): Observable<Cache> {
+    const isUpdate = !!cache.isUpdate;
+    const url = isUpdate 
+      ? `${environment.apiUrl}/caches/${cache.serviceId}/${cache.name}` 
+      : `${environment.apiUrl}/caches`;
+    
+    const method = isUpdate 
+      ? this.http.put<Cache>(url, cache, { headers: this.getAuthHeaders() })
+      : this.http.post<Cache>(url, cache, { headers: this.getAuthHeaders() });
 
-      if (existingIndex >= 0 || cache.isUpdate) {
+    return method.pipe(
+      map(savedCache => {
+        // Update local caches signal
+        const caches = [...this.caches()];
+        const existingIndex = caches.findIndex(
+          (c) => c.name === savedCache.name && c.serviceId === savedCache.serviceId
+        );
+
         if (existingIndex >= 0) {
-          caches[existingIndex] = { ...caches[existingIndex], ...cache };
+          caches[existingIndex] = savedCache;
+          this.addLog(`Updated cache: ${savedCache.name}`);
+          this.notificationService.showUpdateSuccess(`Cache "${savedCache.name}"`);
+        } else {
+          caches.push(savedCache);
+          this.addLog(`Added cache: ${savedCache.name}`);
+          this.notificationService.showCreateSuccess(`Cache "${savedCache.name}"`);
         }
-        this.addLog(`Updated cache: ${cache.name}`);
-        this.notificationService.showUpdateSuccess(`Cache "${cache.name}"`);
-      } else {
-        caches.push(cache);
-        this.addLog(`Added cache: ${cache.name}`);
-        this.notificationService.showCreateSuccess(`Cache "${cache.name}"`);
-      }
 
-      this.caches.set(caches);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      if (cache.isUpdate) {
-        this.notificationService.showUpdateError(`Cache "${cache.name}"`, errorMessage);
-      } else {
-        this.notificationService.showCreateError(`Cache "${cache.name}"`, errorMessage);
-      }
-    }
+        this.caches.set(caches);
+        return savedCache;
+      }),
+      catchError((error) => {
+        const errorMessage = error.message || 'Unknown error occurred';
+        if (isUpdate) {
+          this.notificationService.showUpdateError(`Cache "${cache.name}"`, errorMessage);
+        } else {
+          this.notificationService.showCreateError(`Cache "${cache.name}"`, errorMessage);
+        }
+        this.addLog(`Error saving cache: ${errorMessage}`);
+        throw error;
+      })
+    );
   }
 
   async deleteCache(name: string, serviceId: string): Promise<void> {
@@ -210,6 +248,12 @@ export class DataService {
     }
 
     try {
+      // Call API to delete cache
+      await firstValueFrom(
+        this.http.delete(`${environment.apiUrl}/caches/${serviceId}/${name}`, { headers: this.getAuthHeaders() })
+      );
+
+      // Update local caches signal
       const deletedCache = this.caches().find((c) => c.name === name && c.serviceId === serviceId);
       const caches = this.caches().filter((c) => !(c.name === name && c.serviceId === serviceId));
 
@@ -222,6 +266,7 @@ export class DataService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       this.notificationService.showDeleteError(`Cache "${name}"`, errorMessage);
+      this.addLog(`Error deleting cache: ${errorMessage}`);
     }
   }
 
