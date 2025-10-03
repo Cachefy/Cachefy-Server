@@ -17,6 +17,9 @@ namespace VolatixServer.Infrastructure.Models
         
         [JsonProperty("description")]
         public string Description { get; set; }
+        
+        [JsonProperty("agentId")]
+        public string? AgentId { get; set; }
 
         public Service()
         {

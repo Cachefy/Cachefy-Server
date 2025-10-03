@@ -72,5 +72,60 @@ namespace VolatixServer.Api.Controllers
                 return NotFound(new { message = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Flush all cache for a specific service
+        /// </summary>
+        /// <param name="serviceId">The GUID of the service</param>
+        /// <returns>ServiceFabricAgentResponse from the external API</returns>
+        [HttpPost("flushall/{serviceId}")]
+        public async Task<ActionResult<ServiceFabricAgentResponse>> FlushAllCache(string serviceId)
+        {
+            try
+            {
+                var result = await _cacheService.FlushAllCacheAsync(serviceId);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Clear cache by key for a specific service
+        /// </summary>
+        /// <param name="serviceId">The GUID of the service</param>
+        /// <param name="cacheKey">The cache key to clear</param>
+        /// <returns>ServiceFabricAgentResponse from the external API</returns>
+        [HttpDelete("clear/{serviceId}/{cacheKey}")]
+        public async Task<ActionResult<ServiceFabricAgentResponse>> ClearCacheByKey(string serviceId, string cacheKey)
+        {
+            try
+            {
+                var result = await _cacheService.ClearCacheByKeyAsync(serviceId, cacheKey);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
     }
 }

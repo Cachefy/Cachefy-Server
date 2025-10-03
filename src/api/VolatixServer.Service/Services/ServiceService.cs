@@ -44,7 +44,8 @@ namespace VolatixServer.Service.Services
                 Name = createServiceDto.Name,
                 Description = createServiceDto.Description,
                 Port = createServiceDto.Port,
-                Status = createServiceDto.Status
+                Status = createServiceDto.Status,
+                AgentId = createServiceDto.AgentId
             };
 
             var createdService = await _serviceRepository.CreateAsync(service);
@@ -68,6 +69,9 @@ namespace VolatixServer.Service.Services
                 
             if (!string.IsNullOrEmpty(updateServiceDto.Status))
                 service.Status = updateServiceDto.Status;
+                
+            if (updateServiceDto.AgentId != null)
+                service.AgentId = updateServiceDto.AgentId;
 
             var updatedService = await _serviceRepository.UpdateAsync(service);
             return MapToResponseDto(updatedService);
@@ -87,6 +91,7 @@ namespace VolatixServer.Service.Services
                 Description = service.Description,
                 Port = service.Port,
                 Status = service.Status,
+                AgentId = service.AgentId,
                 CreatedAt = service.CreatedAt,
                 UpdatedAt = service.UpdatedAt
             };

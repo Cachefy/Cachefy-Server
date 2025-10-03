@@ -1,6 +1,10 @@
 using VolatixServer.Infrastructure.Models;
 using VolatixServer.Infrastructure.Repositories;
 using VolatixServer.Service.DTOs;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 
 namespace VolatixServer.Service.Services
 {
@@ -11,15 +15,27 @@ namespace VolatixServer.Service.Services
         Task<CacheResponseDto> CreateCacheAsync(CreateCacheDto createCacheDto);
         Task<CacheResponseDto> UpdateCacheAsync(string id, UpdateCacheDto updateCacheDto);
         Task DeleteCacheAsync(string id);
+        Task<ServiceFabricAgentResponse> FlushAllCacheAsync(string serviceId);
+        Task<ServiceFabricAgentResponse> ClearCacheByKeyAsync(string serviceId, string cacheKey);
     }
 
     public class CacheService : ICacheService
     {
         private readonly IRepository<Cache> _cacheRepository;
+        private readonly IRepository<Infrastructure.Models.Service> _serviceRepository;
+        private readonly IRepository<Agent> _agentRepository;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public CacheService(IRepository<Cache> cacheRepository)
+        public CacheService(
+            IRepository<Cache> cacheRepository,
+            IRepository<Infrastructure.Models.Service> serviceRepository,
+            IRepository<Agent> agentRepository,
+            IHttpClientFactory httpClientFactory)
         {
             _cacheRepository = cacheRepository;
+            _serviceRepository = serviceRepository;
+            _agentRepository = agentRepository;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<IEnumerable<CacheResponseDto>> GetAllCachesAsync()
@@ -90,6 +106,104 @@ namespace VolatixServer.Service.Services
                 CreatedAt = cache.CreatedAt,
                 UpdatedAt = cache.UpdatedAt
             };
+        }
+
+        public async Task<ServiceFabricAgentResponse> FlushAllCacheAsync(string serviceId)
+        {
+            // Get the service
+            var service = await _serviceRepository.GetByIdAsync(serviceId);
+            if (service == null)
+                throw new KeyNotFoundException($"Service with ID {serviceId} not found");
+
+            // Check if service has an agent
+            if (string.IsNullOrEmpty(service.AgentId))
+                throw new InvalidOperationException($"Service {service.Name} does not have an associated agent");
+
+            // Get the agent
+            var agent = await _agentRepository.GetByIdAsync(service.AgentId);
+            if (agent == null)
+                throw new KeyNotFoundException($"Agent with ID {service.AgentId} not found");
+
+            // Check if agent is active
+            if (!agent.IsApiKeyActive)
+                throw new InvalidOperationException($"Agent {agent.Name} API key is not active");
+
+            // Make HTTP request to external API
+            var client = _httpClientFactory.CreateClient();
+            client.DefaultRequestHeaders.Add("X-Api-Key", agent.ApiKey);
+
+            var url = $"{agent.Url.TrimEnd('/')}/api/cache/{service.Name}/flushall";
+
+            try
+            {
+                var response = await client.PostAsync(url, null);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new InvalidOperationException($"Failed to flush cache for service {service.Name}. Status: {response.StatusCode}");
+                }
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var agentResponse = JsonSerializer.Deserialize<ServiceFabricAgentResponse>(responseContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                return agentResponse ?? throw new InvalidOperationException("Failed to deserialize agent response");
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new InvalidOperationException($"Failed to flush cache for service {service.Name}: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<ServiceFabricAgentResponse> ClearCacheByKeyAsync(string serviceId, string cacheKey)
+        {
+            // Get the service
+            var service = await _serviceRepository.GetByIdAsync(serviceId);
+            if (service == null)
+                throw new KeyNotFoundException($"Service with ID {serviceId} not found");
+
+            // Check if service has an agent
+            if (string.IsNullOrEmpty(service.AgentId))
+                throw new InvalidOperationException($"Service {service.Name} does not have an associated agent");
+
+            // Get the agent
+            var agent = await _agentRepository.GetByIdAsync(service.AgentId);
+            if (agent == null)
+                throw new KeyNotFoundException($"Agent with ID {service.AgentId} not found");
+
+            // Check if agent is active
+            if (!agent.IsApiKeyActive)
+                throw new InvalidOperationException($"Agent {agent.Name} API key is not active");
+
+            // Make HTTP request to external API
+            var client = _httpClientFactory.CreateClient();
+            client.DefaultRequestHeaders.Add("X-Api-Key", agent.ApiKey);
+
+            var url = $"{agent.Url.TrimEnd('/')}/api/cache/{service.Name}/clear/{cacheKey}";
+
+            try
+            {
+                var response = await client.DeleteAsync(url);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new InvalidOperationException($"Failed to clear cache key '{cacheKey}' for service {service.Name}. Status: {response.StatusCode}");
+                }
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var agentResponse = JsonSerializer.Deserialize<ServiceFabricAgentResponse>(responseContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                return agentResponse ?? throw new InvalidOperationException("Failed to deserialize agent response");
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new InvalidOperationException($"Failed to clear cache key '{cacheKey}' for service {service.Name}: {ex.Message}", ex);
+            }
         }
     }
 }

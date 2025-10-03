@@ -96,6 +96,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// Add HttpClient factory for external API calls
+builder.Services.AddHttpClient();
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -143,7 +146,7 @@ using (var scope = app.Services.CreateScope())
     await cosmosInitService.InitializeAsync();
 }
 
-// Seed default user
+// Seed default userls
 using (var scope = app.Services.CreateScope())
 {
     var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
