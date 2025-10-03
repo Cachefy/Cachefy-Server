@@ -23,6 +23,7 @@ export class ServiceDetail implements OnInit {
   currentPage = signal(1);
   itemsPerPage = 10;
   isFlushingCaches = signal(false);
+  removingCache = signal<string | null>(null);
 
   // Computed properties
   totalPages = computed(() => Math.ceil(this.caches().length / this.itemsPerPage));
@@ -165,6 +166,34 @@ export class ServiceDetail implements OnInit {
   private loadCachesForService(serviceId: string) {
     this.dataService.getCachesForService(serviceId).subscribe((caches) => {
       this.caches.set(caches);
+    });
+  }
+
+  async removeCacheByKey(cacheKey: string) {
+    const service = this.service();
+    if (!service) return;
+
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Remove Cache',
+      message: `Are you sure you want to remove the cache "${cacheKey}"? This action cannot be undone.`,
+      confirmText: 'Remove',
+      cancelText: 'Cancel',
+      type: 'warning',
+    });
+
+    if (!confirmed) return;
+
+    this.removingCache.set(cacheKey);
+
+    this.dataService.clearCache(service.id!, cacheKey).subscribe({
+      next: () => {
+        // Reload caches after removal
+        this.loadCachesForService(service.id!);
+        this.removingCache.set(null);
+      },
+      error: () => {
+        this.removingCache.set(null);
+      },
     });
   }
 }

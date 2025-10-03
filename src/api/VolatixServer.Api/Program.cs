@@ -103,7 +103,9 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:4200", "http://localhost:4201", "http://localhost:4202")
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials();
+              .AllowCredentials()
+              .SetIsOriginAllowedToAllowWildcardSubdomains()
+              .WithExposedHeaders("*");
     });
 });
 

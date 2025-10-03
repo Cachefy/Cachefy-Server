@@ -61,7 +61,7 @@ export class Dashboard implements OnInit {
 
     this.clearingCache.set(cache.name);
 
-    this.dataService.clearCache(cache.name).subscribe({
+    this.dataService.clearCache(cache.serviceId, cache.name).subscribe({
       next: () => {
         // Reload caches after clearing
         this.loadData();

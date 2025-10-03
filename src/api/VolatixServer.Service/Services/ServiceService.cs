@@ -8,7 +8,9 @@ namespace VolatixServer.Service.Services
     {
         Task<IEnumerable<ServiceResponseDto>> GetAllServicesAsync();
         Task<ServiceResponseDto> GetServiceByIdAsync(string id);
+        Task<ServiceResponseDto?> GetServiceByNameAsync(string name);
         Task<ServiceResponseDto> CreateServiceAsync(CreateServiceDto createServiceDto);
+        Task<ServiceResponseDto> RegisterOrUpdateServiceAsync(CreateServiceDto createServiceDto);
         Task<ServiceResponseDto> UpdateServiceAsync(string id, UpdateServiceDto updateServiceDto);
         Task DeleteServiceAsync(string id);
     }
@@ -37,6 +39,15 @@ namespace VolatixServer.Service.Services
             return MapToResponseDto(service);
         }
 
+        public async Task<ServiceResponseDto?> GetServiceByNameAsync(string name)
+        {
+            var query = "SELECT * FROM c WHERE c.name = @name";
+            var services = await _serviceRepository.QueryAsync(query, new { name });
+            var service = services.FirstOrDefault();
+            
+            return service != null ? MapToResponseDto(service) : null;
+        }
+
         public async Task<ServiceResponseDto> CreateServiceAsync(CreateServiceDto createServiceDto)
         {
             var service = new Infrastructure.Models.Service
@@ -49,6 +60,31 @@ namespace VolatixServer.Service.Services
 
             var createdService = await _serviceRepository.CreateAsync(service);
             return MapToResponseDto(createdService);
+        }
+
+        public async Task<ServiceResponseDto> RegisterOrUpdateServiceAsync(CreateServiceDto createServiceDto)
+        {
+            // Check if service with the same name already exists
+            var existingService = await GetServiceByNameAsync(createServiceDto.Name);
+
+            if (existingService != null)
+            {
+                // Service exists, update the UpdatedAt timestamp
+                var updateDto = new UpdateServiceDto
+                {
+                    Name = createServiceDto.Name,
+                    Status = createServiceDto.Status,
+                    Version = createServiceDto.Version,
+                    AgentId = createServiceDto.AgentId
+                };
+
+                return await UpdateServiceAsync(existingService.Id, updateDto);
+            }
+            else
+            {
+                // Create new service
+                return await CreateServiceAsync(createServiceDto);
+            }
         }
 
         public async Task<ServiceResponseDto> UpdateServiceAsync(string id, UpdateServiceDto updateServiceDto)

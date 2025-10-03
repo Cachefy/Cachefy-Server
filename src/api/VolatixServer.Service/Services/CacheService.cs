@@ -10,10 +10,10 @@ namespace VolatixServer.Service.Services
 {
     public interface ICacheService
     {
-        Task<ServiceFabricAgentResponse> GetAllCachesAsync(string serviceId);
-        Task<ServiceFabricAgentResponse> GetCacheByKeyAsync(string serviceId, string cacheKey);
-        Task<ServiceFabricAgentResponse> FlushAllCacheAsync(string serviceId);
-        Task<ServiceFabricAgentResponse> ClearCacheByKeyAsync(string serviceId, string cacheKey);
+        Task<List<AgentResponse>> GetAllCachesAsync(string serviceId);
+        Task<List<AgentResponse>> GetCacheByKeyAsync(string serviceId, string cacheKey);
+        Task<List<AgentResponse>> FlushAllCacheAsync(string serviceId);
+        Task<List<AgentResponse>> ClearCacheByKeyAsync(string serviceId, string cacheKey);
     }
 
     public class CacheService : ICacheService
@@ -32,7 +32,7 @@ namespace VolatixServer.Service.Services
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<ServiceFabricAgentResponse> GetAllCachesAsync(string serviceId)
+        public async Task<List<AgentResponse>> GetAllCachesAsync(string serviceId)
         {
             // Get the service
             var service = await _serviceRepository.GetByIdAsync(serviceId);
@@ -56,7 +56,7 @@ namespace VolatixServer.Service.Services
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Add("X-Api-Key", agent.ApiKey);
 
-            var url = $"{agent.Url.TrimEnd('/')}/api/cache/{service.Name}";
+            var url = $"{agent.Url.TrimEnd('/')}/api/cache/keys?serviceIdentifier={service.Name}";
 
             try
             {
@@ -68,7 +68,7 @@ namespace VolatixServer.Service.Services
                 }
 
                 var responseContent = await response.Content.ReadAsStringAsync();
-                var agentResponse = JsonSerializer.Deserialize<ServiceFabricAgentResponse>(responseContent, new JsonSerializerOptions
+                var agentResponse = JsonSerializer.Deserialize<List<AgentResponse>>(responseContent, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
@@ -81,7 +81,7 @@ namespace VolatixServer.Service.Services
             }
         }
 
-        public async Task<ServiceFabricAgentResponse> GetCacheByKeyAsync(string serviceId, string cacheKey)
+        public async Task<List<AgentResponse>> GetCacheByKeyAsync(string serviceId, string cacheKey)
         {
             // Get the service
             var service = await _serviceRepository.GetByIdAsync(serviceId);
@@ -105,7 +105,7 @@ namespace VolatixServer.Service.Services
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Add("X-Api-Key", agent.ApiKey);
 
-            var url = $"{agent.Url.TrimEnd('/')}/api/cache/{service.Name}/{cacheKey}";
+            var url = $"{agent.Url.TrimEnd('/')}/api/cache?serviceIdentifier={service.Name}&key={cacheKey}";
 
             try
             {
@@ -117,7 +117,7 @@ namespace VolatixServer.Service.Services
                 }
 
                 var responseContent = await response.Content.ReadAsStringAsync();
-                var agentResponse = JsonSerializer.Deserialize<ServiceFabricAgentResponse>(responseContent, new JsonSerializerOptions
+                var agentResponse = JsonSerializer.Deserialize<List<AgentResponse>>(responseContent, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
@@ -130,7 +130,7 @@ namespace VolatixServer.Service.Services
             }
         }
 
-        public async Task<ServiceFabricAgentResponse> FlushAllCacheAsync(string serviceId)
+        public async Task<List<AgentResponse>> FlushAllCacheAsync(string serviceId)
         {
             // Get the service
             var service = await _serviceRepository.GetByIdAsync(serviceId);
@@ -154,11 +154,11 @@ namespace VolatixServer.Service.Services
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Add("X-Api-Key", agent.ApiKey);
 
-            var url = $"{agent.Url.TrimEnd('/')}/api/cache/{service.Name}/flushall";
+            var url = $"{agent.Url.TrimEnd('/')}/api/cache/flushall?serviceIdentifier={service.Name}";
 
             try
             {
-                var response = await client.PostAsync(url, null);
+                var response = await client.DeleteAsync(url);
                 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -166,7 +166,7 @@ namespace VolatixServer.Service.Services
                 }
 
                 var responseContent = await response.Content.ReadAsStringAsync();
-                var agentResponse = JsonSerializer.Deserialize<ServiceFabricAgentResponse>(responseContent, new JsonSerializerOptions
+                var agentResponse = JsonSerializer.Deserialize<List<AgentResponse>>(responseContent, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
@@ -179,7 +179,7 @@ namespace VolatixServer.Service.Services
             }
         }
 
-        public async Task<ServiceFabricAgentResponse> ClearCacheByKeyAsync(string serviceId, string cacheKey)
+        public async Task<List<AgentResponse>> ClearCacheByKeyAsync(string serviceId, string cacheKey)
         {
             // Get the service
             var service = await _serviceRepository.GetByIdAsync(serviceId);
@@ -203,7 +203,7 @@ namespace VolatixServer.Service.Services
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Add("X-Api-Key", agent.ApiKey);
 
-            var url = $"{agent.Url.TrimEnd('/')}/api/cache/{service.Name}/clear/{cacheKey}";
+            var url = $"{agent.Url.TrimEnd('/')}/api/cache?serviceIdentifier={service.Name}&key={cacheKey}";
 
             try
             {
@@ -215,7 +215,7 @@ namespace VolatixServer.Service.Services
                 }
 
                 var responseContent = await response.Content.ReadAsStringAsync();
-                var agentResponse = JsonSerializer.Deserialize<ServiceFabricAgentResponse>(responseContent, new JsonSerializerOptions
+                var agentResponse = JsonSerializer.Deserialize<List<AgentResponse>>(responseContent, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });

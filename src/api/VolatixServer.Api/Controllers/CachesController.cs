@@ -21,9 +21,9 @@ namespace VolatixServer.Api.Controllers
         /// Get all caches for a specific service from the external API
         /// </summary>
         /// <param name="serviceId">The GUID of the service</param>
-        /// <returns>ServiceFabricAgentResponse with all caches</returns>
-        [HttpGet("{serviceId}")]
-        public async Task<ActionResult<ServiceFabricAgentResponse>> GetAllCaches(string serviceId)
+        /// <returns>List of AgentResponse with all caches</returns>
+        [HttpGet("keys")]
+        public async Task<ActionResult<List<AgentResponse>>> GetAllCaches([FromQuery] string serviceId)
         {
             try
             {
@@ -48,14 +48,14 @@ namespace VolatixServer.Api.Controllers
         /// Get a specific cache by key for a service from the external API
         /// </summary>
         /// <param name="serviceId">The GUID of the service</param>
-        /// <param name="cacheKey">The cache key to retrieve</param>
-        /// <returns>ServiceFabricAgentResponse with cache details</returns>
-        [HttpGet("{serviceId}/{cacheKey}")]
-        public async Task<ActionResult<ServiceFabricAgentResponse>> GetCacheByKey(string serviceId, string cacheKey)
+        /// <param name="key">The cache key to retrieve</param>
+        /// <returns>List of AgentResponse with cache details</returns>
+        [HttpGet]
+        public async Task<ActionResult<List<AgentResponse>>> GetCacheByKey([FromQuery] string serviceId, [FromQuery] string key)
         {
             try
             {
-                var result = await _cacheService.GetCacheByKeyAsync(serviceId, cacheKey);
+                var result = await _cacheService.GetCacheByKeyAsync(serviceId, key);
                 return Ok(result);
             }
             catch (KeyNotFoundException ex)
@@ -76,9 +76,9 @@ namespace VolatixServer.Api.Controllers
         /// Flush all cache for a specific service
         /// </summary>
         /// <param name="serviceId">The GUID of the service</param>
-        /// <returns>ServiceFabricAgentResponse from the external API</returns>
-        [HttpPost("flushall/{serviceId}")]
-        public async Task<ActionResult<ServiceFabricAgentResponse>> FlushAllCache(string serviceId)
+        /// <returns>List of AgentResponse from the external API</returns>
+        [HttpDelete("flushall")]
+        public async Task<ActionResult<List<AgentResponse>>> FlushAllCache([FromQuery] string serviceId)
         {
             try
             {
@@ -103,14 +103,14 @@ namespace VolatixServer.Api.Controllers
         /// Clear cache by key for a specific service
         /// </summary>
         /// <param name="serviceId">The GUID of the service</param>
-        /// <param name="cacheKey">The cache key to clear</param>
-        /// <returns>ServiceFabricAgentResponse from the external API</returns>
-        [HttpDelete("clear/{serviceId}/{cacheKey}")]
-        public async Task<ActionResult<ServiceFabricAgentResponse>> ClearCacheByKey(string serviceId, string cacheKey)
+        /// <param name="key">The cache key to clear</param>
+        /// <returns>List of AgentResponse from the external API</returns>
+        [HttpDelete("clear")]
+        public async Task<ActionResult<List<AgentResponse>>> ClearCacheByKey([FromQuery] string serviceId, [FromQuery] string key)
         {
             try
             {
-                var result = await _cacheService.ClearCacheByKeyAsync(serviceId, cacheKey);
+                var result = await _cacheService.ClearCacheByKeyAsync(serviceId, key);
                 return Ok(result);
             }
             catch (KeyNotFoundException ex)

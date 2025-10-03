@@ -92,12 +92,18 @@ export class DataService {
 
   getCachesForService(serviceId: string): Observable<string[]> {
     return this.http
-      .get<string[]>(`${environment.apiUrl}/services/${serviceId}/caches`, {
-        headers: this.getAuthHeaders(),
-      })
+      .get<Array<{ cacheKeys: string[] }>>(
+        `${environment.apiUrl}/caches/keys?serviceId=${serviceId}`,
+        {
+          headers: this.getAuthHeaders(),
+        }
+      )
       .pipe(
-        tap((cacheNames) => {
-          this.addLog(`Loaded ${cacheNames.length} caches for service ${serviceId}`);
+        map((response) => {
+          // API returns an array with one object containing cacheKeys
+          const cacheKeys = response?.[0]?.cacheKeys || [];
+          this.addLog(`Loaded ${cacheKeys.length} caches for service ${serviceId}`);
+          return cacheKeys;
         }),
         catchError((err) => {
           this.addLog(`Error loading caches for service ${serviceId}: ${err.message}`);
@@ -107,21 +113,36 @@ export class DataService {
       );
   }
 
-  clearCache(cacheName: string): Observable<void> {
+  getCacheByKey(serviceId: string, key: string): Observable<any> {
     return this.http
-      .delete<void>(`${environment.apiUrl}/caches/${cacheName}/clear`, {
+      .get<any>(`${environment.apiUrl}/caches?serviceId=${serviceId}&key=${key}`, {
+        headers: this.getAuthHeaders(),
+      })
+      .pipe(
+        map((response) => {
+          this.addLog(`Loaded cache ${key} for service ${serviceId}`);
+          return response;
+        }),
+        catchError((err) => {
+          this.addLog(`Error loading cache ${key} for service ${serviceId}: ${err.message}`);
+          this.notificationService.showError('Failed to load cache', err.message);
+          throw err;
+        })
+      );
+  }
+
+  clearCache(serviceId: string, key: string): Observable<void> {
+    return this.http
+      .delete<void>(`${environment.apiUrl}/caches/clear?serviceId=${serviceId}&key=${key}`, {
         headers: this.getAuthHeaders(),
       })
       .pipe(
         tap(() => {
-          this.addLog(`Cleared cache: ${cacheName}`);
-          this.notificationService.showSuccess(
-            'Cache Cleared',
-            `Cache "${cacheName}" has been cleared`
-          );
+          this.addLog(`Cleared cache: ${key}`);
+          this.notificationService.showSuccess('Cache Cleared', `Cache "${key}" has been cleared`);
         }),
         catchError((err) => {
-          this.addLog(`Error clearing cache ${cacheName}: ${err.message}`);
+          this.addLog(`Error clearing cache ${key}: ${err.message}`);
           this.notificationService.showError('Failed to clear cache', err.message);
           throw err;
         })
@@ -130,13 +151,9 @@ export class DataService {
 
   flushServiceCaches(serviceId: string): Observable<void> {
     return this.http
-      .post<void>(
-        `${environment.apiUrl}/services/${serviceId}/flush-caches`,
-        {},
-        {
-          headers: this.getAuthHeaders(),
-        }
-      )
+      .delete<void>(`${environment.apiUrl}/caches/flushall?serviceId=${serviceId}`, {
+        headers: this.getAuthHeaders(),
+      })
       .pipe(
         tap(() => {
           this.addLog(`Flushed all caches for service: ${serviceId}`);
@@ -293,8 +310,8 @@ export class DataService {
     );
   }
 
-  async deleteCache(name: string, serviceId: string): Promise<void> {
-    const confirmed = await this.confirmationService.confirmDelete(`Cache "${name}"`);
+  async deleteCache(key: string, serviceId: string): Promise<void> {
+    const confirmed = await this.confirmationService.confirmDelete(`Cache "${key}"`);
 
     if (!confirmed) {
       return;
@@ -303,14 +320,14 @@ export class DataService {
     try {
       // Call API to delete cache
       await firstValueFrom(
-        this.http.delete(`${environment.apiUrl}/caches/${serviceId}/${name}`, {
+        this.http.delete(`${environment.apiUrl}/caches?serviceId=${serviceId}&key=${key}`, {
           headers: this.getAuthHeaders(),
         })
       );
 
       // Update local caches signal
-      const deletedCache = this.caches().find((c) => c.name === name && c.serviceId === serviceId);
-      const caches = this.caches().filter((c) => !(c.name === name && c.serviceId === serviceId));
+      const deletedCache = this.caches().find((c) => c.name === key && c.serviceId === serviceId);
+      const caches = this.caches().filter((c) => !(c.name === key && c.serviceId === serviceId));
 
       this.caches.set(caches);
 
@@ -320,7 +337,7 @@ export class DataService {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      this.notificationService.showDeleteError(`Cache "${name}"`, errorMessage);
+      this.notificationService.showDeleteError(`Cache "${key}"`, errorMessage);
       this.addLog(`Error deleting cache: ${errorMessage}`);
     }
   }

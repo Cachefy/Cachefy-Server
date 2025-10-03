@@ -24,15 +24,16 @@ namespace VolatixServer.Api.Controllers
         /// This endpoint requires a valid API Key in the X-Api-Key header.
         /// The API Key must belong to an active agent.
         /// The agent ID is automatically extracted from the API Key and associated with the service.
+        /// If a service with the same name already exists, only the UpdatedAt timestamp will be updated.
         /// </remarks>
         /// <param name="createServiceDto">Service registration details (agentId is ignored if provided)</param>
-        /// <returns>The created service</returns>
+        /// <returns>The created or updated service</returns>
         [HttpPost("register-service")]
         public async Task<ActionResult<ServiceResponseDto>> RegisterService([FromBody] CreateServiceDto createServiceDto)
         {
             try
             {
-                _logger.LogInformation("Service registration request received");
+                _logger.LogInformation("Service registration request received for '{ServiceName}'", createServiceDto.Name);
 
                 // Get the agent from HttpContext (set by ApiKeyValidationMiddleware)
                 var agent = HttpContext.Items["Agent"] as Infrastructure.Models.Agent;
@@ -47,30 +48,26 @@ namespace VolatixServer.Api.Controllers
                 createServiceDto.AgentId = agent.Id;
 
                 _logger.LogInformation(
-                    "Registering service '{ServiceName}' for agent '{AgentName}' (ID: {AgentId})",
+                    "Processing service '{ServiceName}' for agent '{AgentName}' (ID: {AgentId})",
                     createServiceDto.Name,
                     agent.Name,
                     agent.Id
                 );
 
-                // Create the service
-                var service = await _serviceService.CreateServiceAsync(createServiceDto);
+                // Register or update the service
+                var service = await _serviceService.RegisterOrUpdateServiceAsync(createServiceDto);
 
                 _logger.LogInformation(
-                    "Service '{ServiceName}' registered successfully with ID: {ServiceId}",
+                    "Service '{ServiceName}' processed successfully with ID: {ServiceId}",
                     service.Name,
                     service.Id
                 );
 
-                return CreatedAtAction(
-                    nameof(RegisterService),
-                    new { id = service.Id },
-                    service
-                );
+                return Ok(service);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error registering service");
+                _logger.LogError(ex, "Error registering service '{ServiceName}'", createServiceDto.Name);
                 return StatusCode(500, new { message = "An error occurred while registering the service" });
             }
         }
