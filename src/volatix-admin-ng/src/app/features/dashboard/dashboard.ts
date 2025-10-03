@@ -1,11 +1,13 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { DataService } from '../../core/services/data';
 import { NotificationService } from '../../core/services/notification.service';
 import { ConfirmationService } from '../../core/services/confirmation.service';
+import { Cache } from '../../core/models/cache.model';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -21,6 +23,8 @@ export class Dashboard implements OnInit {
   });
 
   logs = signal<string[]>([]);
+  caches = signal<Cache[]>([]);
+  clearingCache = signal<string | null>(null);
 
   ngOnInit() {
     this.loadData();
@@ -29,7 +33,8 @@ export class Dashboard implements OnInit {
   loadData() {
     // Load services and caches to compute metrics
     this.dataService.getServices().subscribe(() => {
-      this.dataService.getCaches().subscribe(() => {
+      this.dataService.getCaches().subscribe((caches) => {
+        this.caches.set(caches);
         this.updateMetrics();
       });
     });
@@ -41,6 +46,31 @@ export class Dashboard implements OnInit {
   updateMetrics() {
     const newMetrics = this.dataService.getDashboardMetrics();
     this.metrics.set(newMetrics);
+  }
+
+  async clearCache(cache: Cache) {
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Clear Cache',
+      message: `Are you sure you want to clear the cache "${cache.name}"? This action cannot be undone.`,
+      confirmText: 'Clear Cache',
+      cancelText: 'Cancel',
+      type: 'warning',
+    });
+
+    if (!confirmed) return;
+
+    this.clearingCache.set(cache.name);
+
+    this.dataService.clearCache(cache.name).subscribe({
+      next: () => {
+        // Reload caches after clearing
+        this.loadData();
+        this.clearingCache.set(null);
+      },
+      error: () => {
+        this.clearingCache.set(null);
+      },
+    });
   }
 
   // Demo methods for testing notifications

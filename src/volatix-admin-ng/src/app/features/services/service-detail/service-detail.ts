@@ -3,8 +3,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../../core/services/data';
 import { Service } from '../../../core/models/service.model';
-import { Cache } from '../../../core/models/cache.model';
 import { Pagination } from '../../../shared/components/pagination/pagination';
+import { ConfirmationService } from '../../../core/services/confirmation.service';
 
 @Component({
   selector: 'app-service-detail',
@@ -16,11 +16,13 @@ export class ServiceDetail implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   public dataService = inject(DataService);
+  private confirmationService = inject(ConfirmationService);
 
   service = signal<Service | null>(null);
-  caches = signal<Cache[]>([]);
+  caches = signal<string[]>([]);
   currentPage = signal(1);
   itemsPerPage = 10;
+  isFlushingCaches = signal(false);
 
   // Computed properties
   totalPages = computed(() => Math.ceil(this.caches().length / this.itemsPerPage));
@@ -128,5 +130,41 @@ export class ServiceDetail implements OnInit {
       default:
         return '';
     }
+  }
+
+  async flushAllCaches() {
+    const service = this.service();
+    if (!service) return;
+
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Flush All Caches',
+      message: `Are you sure you want to flush all ${this.caches().length} cache(s) for ${
+        service.name
+      }? This action cannot be undone.`,
+      confirmText: 'Flush All',
+      cancelText: 'Cancel',
+      type: 'warning',
+    });
+
+    if (!confirmed) return;
+
+    this.isFlushingCaches.set(true);
+
+    this.dataService.flushServiceCaches(service.id!).subscribe({
+      next: () => {
+        // Reload caches after flush
+        this.loadCachesForService(service.id!);
+        this.isFlushingCaches.set(false);
+      },
+      error: () => {
+        this.isFlushingCaches.set(false);
+      },
+    });
+  }
+
+  private loadCachesForService(serviceId: string) {
+    this.dataService.getCachesForService(serviceId).subscribe((caches) => {
+      this.caches.set(caches);
+    });
   }
 }

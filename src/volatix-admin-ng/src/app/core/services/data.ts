@@ -90,18 +90,67 @@ export class DataService {
       );
   }
 
-  getCachesForService(serviceId: string): Observable<Cache[]> {
-    return this.getCaches().pipe(
-      map((caches) => {
-        const filteredCaches = caches.filter((c) => {
-          const cSid = String(c.serviceId || '').toLowerCase();
-          const target = String(serviceId || '').toLowerCase();
-          return cSid === target || (c.serviceName && this.toSlug(c.serviceName) === target);
-        });
-        this.addLog(`Loaded ${filteredCaches.length} caches for ${serviceId}`);
-        return filteredCaches;
+  getCachesForService(serviceId: string): Observable<string[]> {
+    return this.http
+      .get<string[]>(`${environment.apiUrl}/services/${serviceId}/caches`, {
+        headers: this.getAuthHeaders(),
       })
-    );
+      .pipe(
+        tap((cacheNames) => {
+          this.addLog(`Loaded ${cacheNames.length} caches for service ${serviceId}`);
+        }),
+        catchError((err) => {
+          this.addLog(`Error loading caches for service ${serviceId}: ${err.message}`);
+          this.notificationService.showError('Failed to load service caches', err.message);
+          return of([]);
+        })
+      );
+  }
+
+  clearCache(cacheName: string): Observable<void> {
+    return this.http
+      .delete<void>(`${environment.apiUrl}/caches/${cacheName}/clear`, {
+        headers: this.getAuthHeaders(),
+      })
+      .pipe(
+        tap(() => {
+          this.addLog(`Cleared cache: ${cacheName}`);
+          this.notificationService.showSuccess(
+            'Cache Cleared',
+            `Cache "${cacheName}" has been cleared`
+          );
+        }),
+        catchError((err) => {
+          this.addLog(`Error clearing cache ${cacheName}: ${err.message}`);
+          this.notificationService.showError('Failed to clear cache', err.message);
+          throw err;
+        })
+      );
+  }
+
+  flushServiceCaches(serviceId: string): Observable<void> {
+    return this.http
+      .post<void>(
+        `${environment.apiUrl}/services/${serviceId}/flush-caches`,
+        {},
+        {
+          headers: this.getAuthHeaders(),
+        }
+      )
+      .pipe(
+        tap(() => {
+          this.addLog(`Flushed all caches for service: ${serviceId}`);
+          this.notificationService.showSuccess(
+            'Caches Flushed',
+            `All caches for service have been flushed`
+          );
+        }),
+        catchError((err) => {
+          this.addLog(`Error flushing caches for service ${serviceId}: ${err.message}`);
+          this.notificationService.showError('Failed to flush caches', err.message);
+          throw err;
+        })
+      );
   }
 
   getServiceById(id: string): Service | undefined {

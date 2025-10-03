@@ -12,11 +12,8 @@ namespace VolatixServer.Infrastructure.Models
         [JsonProperty("status")]
         public string Status { get; set; } = "Running";
         
-        [JsonProperty("port")]
-        public int Port { get; set; }
-        
-        [JsonProperty("description")]
-        public string Description { get; set; }
+        [JsonProperty("version")]
+        public string Version { get; set; }
         
         [JsonProperty("agentId")]
         public string? AgentId { get; set; }

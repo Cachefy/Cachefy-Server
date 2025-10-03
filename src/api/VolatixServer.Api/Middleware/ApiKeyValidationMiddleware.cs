@@ -50,6 +50,9 @@ namespace VolatixServer.Api.Middleware
                     return;
                 }
 
+                // Store the agent in HttpContext for use in controllers
+                context.Items["Agent"] = agent;
+
                 // API Key is valid, proceed to the next middleware/controller
                 await _next(context);
             }

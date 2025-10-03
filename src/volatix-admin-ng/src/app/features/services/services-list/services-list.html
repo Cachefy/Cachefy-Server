@@ -9,6 +9,7 @@
             <th class="p-2 w-64">Service</th>
             <th class="p-2 w-24">Status</th>
             <th class="p-2 w-24">Instances</th>
+            <th class="p-2 w-24">Version</th>
             <th class="p-2 w-48">Last seen</th>
             <th class="p-2 col-actions">Actions</th>
           </tr>
@@ -32,6 +33,7 @@
               } }
             </td>
             <td class="p-2">{{ service.instances || '—' }}</td>
+            <td class="p-2">{{ service.version || '—' }}</td>
             <td class="p-2">{{ service.lastSeen || 'Unknown' }}</td>
             <td class="p-2 col-actions">
               <div class="table-actions">

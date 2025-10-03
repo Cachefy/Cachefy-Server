@@ -42,9 +42,8 @@ namespace VolatixServer.Service.Services
             var service = new Infrastructure.Models.Service
             {
                 Name = createServiceDto.Name,
-                Description = createServiceDto.Description,
-                Port = createServiceDto.Port,
                 Status = createServiceDto.Status,
+                Version = createServiceDto.Version,
                 AgentId = createServiceDto.AgentId
             };
 
@@ -61,11 +60,8 @@ namespace VolatixServer.Service.Services
             if (!string.IsNullOrEmpty(updateServiceDto.Name))
                 service.Name = updateServiceDto.Name;
                 
-            if (!string.IsNullOrEmpty(updateServiceDto.Description))
-                service.Description = updateServiceDto.Description;
-                
-            if (updateServiceDto.Port.HasValue)
-                service.Port = updateServiceDto.Port.Value;
+            if (!string.IsNullOrEmpty(updateServiceDto.Version))
+                service.Version = updateServiceDto.Version;
                 
             if (!string.IsNullOrEmpty(updateServiceDto.Status))
                 service.Status = updateServiceDto.Status;
@@ -88,8 +84,7 @@ namespace VolatixServer.Service.Services
             {
                 Id = service.Id,
                 Name = service.Name,
-                Description = service.Description,
-                Port = service.Port,
+                Version = service.Version,
                 Status = service.Status,
                 AgentId = service.AgentId,
                 CreatedAt = service.CreatedAt,
