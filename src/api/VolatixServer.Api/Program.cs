@@ -10,7 +10,6 @@ using VolatixServer.Service.Services;
 using UserModel = VolatixServer.Infrastructure.Models.User;
 using AgentModel = VolatixServer.Infrastructure.Models.Agent;
 using ServiceModel = VolatixServer.Infrastructure.Models.Service;
-using CacheModel = VolatixServer.Infrastructure.Models.Cache;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,14 +50,6 @@ builder.Services.AddScoped<IRepository<ServiceModel>>(sp =>
     var cosmosSettings = builder.Configuration.GetSection("CosmosDb").Get<CosmosDbSettings>()!;
     var containerMappingService = sp.GetRequiredService<IContainerMappingService>();
     return new CosmosRepository<ServiceModel>(cosmosClient, cosmosSettings.DatabaseName, containerMappingService);
-});
-
-builder.Services.AddScoped<IRepository<CacheModel>>(sp =>
-{
-    var cosmosClient = sp.GetRequiredService<CosmosClient>();
-    var cosmosSettings = builder.Configuration.GetSection("CosmosDb").Get<CosmosDbSettings>()!;
-    var containerMappingService = sp.GetRequiredService<IContainerMappingService>();
-    return new CosmosRepository<CacheModel>(cosmosClient, cosmosSettings.DatabaseName, containerMappingService);
 });
 
 // Services

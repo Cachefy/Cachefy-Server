@@ -1,9 +1,11 @@
 # Callback API - Automatic Agent ID Assignment
 
 ## Date
+
 October 3, 2025
 
 ## Overview
+
 Updated the `/api/callback/register-service` endpoint to automatically extract the Agent ID from the API Key instead of requiring it in the request body. This improves security and simplifies the API for service registration.
 
 ---
@@ -17,6 +19,7 @@ Updated the `/api/callback/register-service` endpoint to automatically extract t
 **Change:** Store the authenticated agent in `HttpContext.Items` for use in controllers.
 
 **Before:**
+
 ```csharp
 if (agent == null)
 {
@@ -31,6 +34,7 @@ await _next(context);
 ```
 
 **After:**
+
 ```csharp
 if (agent == null)
 {
@@ -58,6 +62,7 @@ await _next(context);
 **Change:** Extract agent from `HttpContext.Items` and automatically set the `AgentId` on the service.
 
 **Before:**
+
 ```csharp
 [HttpPost("register-service")]
 public async Task<ActionResult<ServiceResponseDto>> RegisterService([FromBody] CreateServiceDto createServiceDto)
@@ -90,6 +95,7 @@ public async Task<ActionResult<ServiceResponseDto>> RegisterService([FromBody] C
 ```
 
 **After:**
+
 ```csharp
 [HttpPost("register-service")]
 public async Task<ActionResult<ServiceResponseDto>> RegisterService([FromBody] CreateServiceDto createServiceDto)
@@ -140,7 +146,8 @@ public async Task<ActionResult<ServiceResponseDto>> RegisterService([FromBody] C
 }
 ```
 
-**Purpose:** 
+**Purpose:**
+
 - Automatically associates the service with the agent that owns the API Key
 - Prevents clients from spoofing agent IDs
 - Simplifies the request body (no need to include `agentId`)
@@ -156,17 +163,19 @@ public async Task<ActionResult<ServiceResponseDto>> RegisterService([FromBody] C
 **Authentication:** API Key via `X-Api-Key` header (required)
 
 ### Old Request Body
+
 ```json
 {
   "name": "MyService",
   "description": "My service description",
   "port": 8080,
   "status": "Running",
-  "agentId": "agent-id-here"  // ← REQUIRED before
+  "agentId": "agent-id-here" // ← REQUIRED before
 }
 ```
 
 ### New Request Body
+
 ```json
 {
   "name": "MyService",
@@ -184,20 +193,24 @@ public async Task<ActionResult<ServiceResponseDto>> RegisterService([FromBody] C
 ## Benefits
 
 ### 1. **Enhanced Security**
+
 - Prevents API Key spoofing (clients can't register services under other agents)
 - Agent ID is derived from the authenticated API Key, not user input
 - Eliminates potential for authorization bypass
 
 ### 2. **Simplified API**
+
 - Clients no longer need to know or provide the agent ID
 - One less field to include in the request body
 - Reduces client-side errors
 
 ### 3. **Better Logging**
+
 - Added logging that shows which agent is registering which service
 - Easier to audit and troubleshoot service registrations
 
 ### 4. **Improved Developer Experience**
+
 - Clearer intent: "This API Key authorizes you to register services for Agent X"
 - Less confusion about what agent ID to use
 - Automatic association reduces boilerplate code
@@ -268,6 +281,7 @@ curl -X POST http://localhost:5046/api/callback/register-service \
 ```
 
 **Response:**
+
 ```json
 {
   "id": "service-guid-here",
@@ -275,7 +289,7 @@ curl -X POST http://localhost:5046/api/callback/register-service \
   "description": "Handles order processing",
   "port": 9000,
   "status": "Running",
-  "agentId": "agent-guid-from-api-key",  // ← Automatically set!
+  "agentId": "agent-guid-from-api-key", // ← Automatically set!
   "createdAt": "2025-10-03T10:30:00Z",
   "updatedAt": "2025-10-03T10:30:00Z"
 }
@@ -288,56 +302,58 @@ curl -X POST http://localhost:5046/api/callback/register-service \
 ### For Existing Clients
 
 **Option 1: Remove agentId from request body (Recommended)**
+
 ```javascript
 // Before
-const response = await fetch('/api/callback/register-service', {
-  method: 'POST',
+const response = await fetch("/api/callback/register-service", {
+  method: "POST",
   headers: {
-    'X-Api-Key': apiKey,
-    'Content-Type': 'application/json'
+    "X-Api-Key": apiKey,
+    "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    name: 'MyService',
-    description: 'Service description',
+    name: "MyService",
+    description: "Service description",
     port: 8080,
-    status: 'Running',
-    agentId: 'some-agent-id'  // ← Remove this
-  })
+    status: "Running",
+    agentId: "some-agent-id", // ← Remove this
+  }),
 });
 
 // After
-const response = await fetch('/api/callback/register-service', {
-  method: 'POST',
+const response = await fetch("/api/callback/register-service", {
+  method: "POST",
   headers: {
-    'X-Api-Key': apiKey,
-    'Content-Type': 'application/json'
+    "X-Api-Key": apiKey,
+    "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    name: 'MyService',
-    description: 'Service description',
+    name: "MyService",
+    description: "Service description",
     port: 8080,
-    status: 'Running'
+    status: "Running",
     // agentId removed - it's automatic!
-  })
+  }),
 });
 ```
 
 **Option 2: Keep agentId in request body (Backward Compatible)**
+
 ```javascript
 // This still works, but the agentId will be ignored and overridden
-const response = await fetch('/api/callback/register-service', {
-  method: 'POST',
+const response = await fetch("/api/callback/register-service", {
+  method: "POST",
   headers: {
-    'X-Api-Key': apiKey,
-    'Content-Type': 'application/json'
+    "X-Api-Key": apiKey,
+    "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    name: 'MyService',
-    description: 'Service description',
+    name: "MyService",
+    description: "Service description",
     port: 8080,
-    status: 'Running',
-    agentId: 'ignored-value'  // This will be overridden
-  })
+    status: "Running",
+    agentId: "ignored-value", // This will be overridden
+  }),
 });
 ```
 
@@ -346,6 +362,7 @@ const response = await fetch('/api/callback/register-service', {
 ## Security Implications
 
 ### Before (Security Risk)
+
 ```
 Client sends:
 - API Key: "ak_agent1_key"
@@ -355,6 +372,7 @@ Result: Service registered under Agent 2, even though Agent 1's key was used!
 ```
 
 ### After (Secure)
+
 ```
 Client sends:
 - API Key: "ak_agent1_key"
@@ -368,6 +386,7 @@ Result: Service registered under Agent 1 (from API Key), agentId parameter ignor
 ## Testing
 
 ### Test 1: Register service without agentId
+
 ```powershell
 $response = Invoke-RestMethod -Uri "http://localhost:5046/api/callback/register-service" `
     -Method Post `
@@ -382,6 +401,7 @@ Write-Host "Agent ID: $($response.agentId)"
 ```
 
 ### Test 2: Try to register service with wrong agentId (should be overridden)
+
 ```powershell
 $response = Invoke-RestMethod -Uri "http://localhost:5046/api/callback/register-service" `
     -Method Post `
@@ -396,6 +416,7 @@ Write-Host "Agent ID: $($response.agentId)"
 ```
 
 ### Test 3: Register without API Key (should fail)
+
 ```powershell
 try {
     $response = Invoke-RestMethod -Uri "http://localhost:5046/api/callback/register-service" `
@@ -430,9 +451,11 @@ This makes it easy to see which agent registered which service.
 ## Error Scenarios
 
 ### 1. Missing API Key
+
 **Request:** No `X-Api-Key` header
 
 **Response (401 Unauthorized):**
+
 ```json
 {
   "message": "API Key is missing"
@@ -440,9 +463,11 @@ This makes it easy to see which agent registered which service.
 ```
 
 ### 2. Invalid API Key
+
 **Request:** Invalid `X-Api-Key` header
 
 **Response (401 Unauthorized):**
+
 ```json
 {
   "message": "Invalid API Key"
@@ -450,9 +475,11 @@ This makes it easy to see which agent registered which service.
 ```
 
 ### 3. Inactive API Key
+
 **Request:** API Key exists but `isApiKeyActive = false`
 
 **Response (401 Unauthorized):**
+
 ```json
 {
   "message": "Invalid API Key"
@@ -460,9 +487,11 @@ This makes it easy to see which agent registered which service.
 ```
 
 ### 4. Agent not in HttpContext (should never happen)
+
 **Request:** Valid API Key but agent not stored in context
 
 **Response (400 Bad Request):**
+
 ```json
 {
   "message": "Agent information is missing"

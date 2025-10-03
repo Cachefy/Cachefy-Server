@@ -10,102 +10,124 @@ namespace VolatixServer.Service.Services
 {
     public interface ICacheService
     {
-        Task<IEnumerable<CacheResponseDto>> GetAllCachesAsync();
-        Task<CacheResponseDto> GetCacheByIdAsync(string id);
-        Task<CacheResponseDto> CreateCacheAsync(CreateCacheDto createCacheDto);
-        Task<CacheResponseDto> UpdateCacheAsync(string id, UpdateCacheDto updateCacheDto);
-        Task DeleteCacheAsync(string id);
+        Task<ServiceFabricAgentResponse> GetAllCachesAsync(string serviceId);
+        Task<ServiceFabricAgentResponse> GetCacheByKeyAsync(string serviceId, string cacheKey);
         Task<ServiceFabricAgentResponse> FlushAllCacheAsync(string serviceId);
         Task<ServiceFabricAgentResponse> ClearCacheByKeyAsync(string serviceId, string cacheKey);
     }
 
     public class CacheService : ICacheService
     {
-        private readonly IRepository<Cache> _cacheRepository;
         private readonly IRepository<Infrastructure.Models.Service> _serviceRepository;
         private readonly IRepository<Agent> _agentRepository;
         private readonly IHttpClientFactory _httpClientFactory;
 
         public CacheService(
-            IRepository<Cache> cacheRepository,
             IRepository<Infrastructure.Models.Service> serviceRepository,
             IRepository<Agent> agentRepository,
             IHttpClientFactory httpClientFactory)
         {
-            _cacheRepository = cacheRepository;
             _serviceRepository = serviceRepository;
             _agentRepository = agentRepository;
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<IEnumerable<CacheResponseDto>> GetAllCachesAsync()
+        public async Task<ServiceFabricAgentResponse> GetAllCachesAsync(string serviceId)
         {
-            var caches = await _cacheRepository.GetAllAsync();
-            return caches.Select(MapToResponseDto);
-        }
+            // Get the service
+            var service = await _serviceRepository.GetByIdAsync(serviceId);
+            if (service == null)
+                throw new KeyNotFoundException($"Service with ID {serviceId} not found");
 
-        public async Task<CacheResponseDto> GetCacheByIdAsync(string id)
-        {
-            var cache = await _cacheRepository.GetByIdAsync(id);
-            if (cache == null)
-                throw new KeyNotFoundException($"Cache with ID {id} not found");
-                
-            return MapToResponseDto(cache);
-        }
+            // Check if service has an agent
+            if (string.IsNullOrEmpty(service.AgentId))
+                throw new InvalidOperationException($"Service {service.Name} does not have an associated agent");
 
-        public async Task<CacheResponseDto> CreateCacheAsync(CreateCacheDto createCacheDto)
-        {
-            var cache = new Cache
+            // Get the agent
+            var agent = await _agentRepository.GetByIdAsync(service.AgentId);
+            if (agent == null)
+                throw new KeyNotFoundException($"Agent with ID {service.AgentId} not found");
+
+            // Check if agent is active
+            if (!agent.IsApiKeyActive)
+                throw new InvalidOperationException($"Agent {agent.Name} API key is not active");
+
+            // Make HTTP request to external API
+            var client = _httpClientFactory.CreateClient();
+            client.DefaultRequestHeaders.Add("X-Api-Key", agent.ApiKey);
+
+            var url = $"{agent.Url.TrimEnd('/')}/api/cache/{service.Name}";
+
+            try
             {
-                Name = createCacheDto.Name,
-                Size = createCacheDto.Size,
-                Type = createCacheDto.Type,
-                Status = createCacheDto.Status
-            };
-
-            var createdCache = await _cacheRepository.CreateAsync(cache);
-            return MapToResponseDto(createdCache);
-        }
-
-        public async Task<CacheResponseDto> UpdateCacheAsync(string id, UpdateCacheDto updateCacheDto)
-        {
-            var cache = await _cacheRepository.GetByIdAsync(id);
-            if (cache == null)
-                throw new KeyNotFoundException($"Cache with ID {id} not found");
-
-            if (!string.IsNullOrEmpty(updateCacheDto.Name))
-                cache.Name = updateCacheDto.Name;
+                var response = await client.GetAsync(url);
                 
-            if (!string.IsNullOrEmpty(updateCacheDto.Size))
-                cache.Size = updateCacheDto.Size;
-                
-            if (!string.IsNullOrEmpty(updateCacheDto.Type))
-                cache.Type = updateCacheDto.Type;
-                
-            if (!string.IsNullOrEmpty(updateCacheDto.Status))
-                cache.Status = updateCacheDto.Status;
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new InvalidOperationException($"Failed to get caches for service {service.Name}. Status: {response.StatusCode}");
+                }
 
-            var updatedCache = await _cacheRepository.UpdateAsync(cache);
-            return MapToResponseDto(updatedCache);
-        }
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var agentResponse = JsonSerializer.Deserialize<ServiceFabricAgentResponse>(responseContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
 
-        public async Task DeleteCacheAsync(string id)
-        {
-            await _cacheRepository.DeleteAsync(id);
-        }
-
-        private static CacheResponseDto MapToResponseDto(Cache cache)
-        {
-            return new CacheResponseDto
+                return agentResponse ?? throw new InvalidOperationException("Failed to deserialize agent response");
+            }
+            catch (HttpRequestException ex)
             {
-                Id = cache.Id,
-                Name = cache.Name,
-                Size = cache.Size,
-                Type = cache.Type,
-                Status = cache.Status,
-                CreatedAt = cache.CreatedAt,
-                UpdatedAt = cache.UpdatedAt
-            };
+                throw new InvalidOperationException($"Failed to get caches for service {service.Name}: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<ServiceFabricAgentResponse> GetCacheByKeyAsync(string serviceId, string cacheKey)
+        {
+            // Get the service
+            var service = await _serviceRepository.GetByIdAsync(serviceId);
+            if (service == null)
+                throw new KeyNotFoundException($"Service with ID {serviceId} not found");
+
+            // Check if service has an agent
+            if (string.IsNullOrEmpty(service.AgentId))
+                throw new InvalidOperationException($"Service {service.Name} does not have an associated agent");
+
+            // Get the agent
+            var agent = await _agentRepository.GetByIdAsync(service.AgentId);
+            if (agent == null)
+                throw new KeyNotFoundException($"Agent with ID {service.AgentId} not found");
+
+            // Check if agent is active
+            if (!agent.IsApiKeyActive)
+                throw new InvalidOperationException($"Agent {agent.Name} API key is not active");
+
+            // Make HTTP request to external API
+            var client = _httpClientFactory.CreateClient();
+            client.DefaultRequestHeaders.Add("X-Api-Key", agent.ApiKey);
+
+            var url = $"{agent.Url.TrimEnd('/')}/api/cache/{service.Name}/{cacheKey}";
+
+            try
+            {
+                var response = await client.GetAsync(url);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new InvalidOperationException($"Failed to get cache key '{cacheKey}' for service {service.Name}. Status: {response.StatusCode}");
+                }
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var agentResponse = JsonSerializer.Deserialize<ServiceFabricAgentResponse>(responseContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                return agentResponse ?? throw new InvalidOperationException("Failed to deserialize agent response");
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new InvalidOperationException($"Failed to get cache key '{cacheKey}' for service {service.Name}: {ex.Message}", ex);
+            }
         }
 
         public async Task<ServiceFabricAgentResponse> FlushAllCacheAsync(string serviceId)

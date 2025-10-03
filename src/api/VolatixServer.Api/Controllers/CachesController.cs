@@ -17,59 +17,58 @@ namespace VolatixServer.Api.Controllers
             _cacheService = cacheService;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<CacheResponseDto>>> GetAllCaches()
-        {
-            var caches = await _cacheService.GetAllCachesAsync();
-            return Ok(caches);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<CacheResponseDto>> GetCache(string id)
+        /// <summary>
+        /// Get all caches for a specific service from the external API
+        /// </summary>
+        /// <param name="serviceId">The GUID of the service</param>
+        /// <returns>ServiceFabricAgentResponse with all caches</returns>
+        [HttpGet("{serviceId}")]
+        public async Task<ActionResult<ServiceFabricAgentResponse>> GetAllCaches(string serviceId)
         {
             try
             {
-                var cache = await _cacheService.GetCacheByIdAsync(id);
-                return Ok(cache);
+                var result = await _cacheService.GetAllCachesAsync(serviceId);
+                return Ok(result);
             }
             catch (KeyNotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
             }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
-        [HttpPost]
-        public async Task<ActionResult<CacheResponseDto>> CreateCache([FromBody] CreateCacheDto createCacheDto)
-        {
-            var cache = await _cacheService.CreateCacheAsync(createCacheDto);
-            return CreatedAtAction(nameof(GetCache), new { id = cache.Id }, cache);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<ActionResult<CacheResponseDto>> UpdateCache(string id, [FromBody] UpdateCacheDto updateCacheDto)
+        /// <summary>
+        /// Get a specific cache by key for a service from the external API
+        /// </summary>
+        /// <param name="serviceId">The GUID of the service</param>
+        /// <param name="cacheKey">The cache key to retrieve</param>
+        /// <returns>ServiceFabricAgentResponse with cache details</returns>
+        [HttpGet("{serviceId}/{cacheKey}")]
+        public async Task<ActionResult<ServiceFabricAgentResponse>> GetCacheByKey(string serviceId, string cacheKey)
         {
             try
             {
-                var cache = await _cacheService.UpdateCacheAsync(id, updateCacheDto);
-                return Ok(cache);
+                var result = await _cacheService.GetCacheByKeyAsync(serviceId, cacheKey);
+                return Ok(result);
             }
             catch (KeyNotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
             }
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteCache(string id)
-        {
-            try
+            catch (InvalidOperationException ex)
             {
-                await _cacheService.DeleteCacheAsync(id);
-                return NoContent();
+                return BadRequest(new { message = ex.Message });
             }
-            catch (KeyNotFoundException ex)
+            catch (Exception ex)
             {
-                return NotFound(new { message = ex.Message });
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 
