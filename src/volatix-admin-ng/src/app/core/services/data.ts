@@ -7,6 +7,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Service } from '../models/service.model';
 import { Cache } from '../models/cache.model';
 import { Agent } from '../models/agent.model';
+import { AgentResponse } from '../models/agent-response.model';
 import { NotificationService } from './notification.service';
 import { ConfirmationService } from './confirmation.service';
 import { ApiKeyService } from './api-key.service';
@@ -73,54 +74,38 @@ export class DataService {
       );
   }
 
-  getCaches(): Observable<Cache[]> {
+  getCachesForService(serviceId: string): Observable<AgentResponse[] | Cache[]> {
+    // When serviceId is provided, return AgentResponse[] for service details
     return this.http
-      .get<Cache[]>(`${environment.apiUrl}/caches`, { headers: this.getAuthHeaders() })
-      .pipe(
-        map((cachesList) => {
-          this.caches.set(cachesList);
-          this.addLog(`Loaded ${cachesList.length} caches from API`);
-          return cachesList;
-        }),
-        catchError((err) => {
-          this.addLog('Error loading caches from API: ' + err.message);
-          this.notificationService.showError('Failed to load caches', err.message);
-          return of([]);
-        })
-      );
-  }
-
-  getCachesForService(serviceId: string): Observable<string[]> {
-    return this.http
-      .get<Array<{ cacheKeys: string[] }>>(
-        `${environment.apiUrl}/caches/keys?serviceId=${serviceId}`,
-        {
-          headers: this.getAuthHeaders(),
-        }
-      )
-      .pipe(
-        map((response) => {
-          // API returns an array with one object containing cacheKeys
-          const cacheKeys = response?.[0]?.cacheKeys || [];
-          this.addLog(`Loaded ${cacheKeys.length} caches for service ${serviceId}`);
-          return cacheKeys;
-        }),
-        catchError((err) => {
-          this.addLog(`Error loading caches for service ${serviceId}: ${err.message}`);
-          this.notificationService.showError('Failed to load service caches', err.message);
-          return of([]);
-        })
-      );
-  }
-
-  getCacheByKey(serviceId: string, key: string): Observable<any> {
-    return this.http
-      .get<any>(`${environment.apiUrl}/caches?serviceId=${serviceId}&key=${key}`, {
+      .get<AgentResponse[]>(`${environment.apiUrl}/caches/keys?serviceId=${serviceId}`, {
         headers: this.getAuthHeaders(),
       })
       .pipe(
         map((response) => {
-          this.addLog(`Loaded cache ${key} for service ${serviceId}`);
+          this.addLog(`Loaded ${response.length} agent responses for service ${serviceId}`);
+          return response;
+        }),
+        catchError((err) => {
+          this.addLog(`Error loading agent responses for service ${serviceId}: ${err.message}`);
+          this.notificationService.showError('Failed to load agent responses', err.message);
+          return of([]);
+        })
+      );
+  }
+
+  getCacheByKey(serviceId: string, key: string, id?: string): Observable<any> {
+    let url = `${environment.apiUrl}/caches?serviceId=${serviceId}&key=${key}`;
+    if (id) {
+      url += `&id=${id}`;
+    }
+    
+    return this.http
+      .get<any>(url, {
+        headers: this.getAuthHeaders(),
+      })
+      .pipe(
+        map((response) => {
+          this.addLog(`Loaded cache ${key} for service ${serviceId}${id ? ` with id ${id}` : ''}`);
           return response;
         }),
         catchError((err) => {

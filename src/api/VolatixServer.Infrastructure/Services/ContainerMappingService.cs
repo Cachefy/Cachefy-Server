@@ -21,7 +21,6 @@ namespace VolatixServer.Infrastructure.Services
                 { typeof(User), "Users" },
                 { typeof(Agent), "Agents" },
                 { typeof(Service), "Services" },
-                { typeof(Cache), "Caches" }
             };
         }
 

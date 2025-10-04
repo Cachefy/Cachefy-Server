@@ -25,18 +25,24 @@ export class Dashboard implements OnInit {
   logs = signal<string[]>([]);
   caches = signal<Cache[]>([]);
   clearingCache = signal<string | null>(null);
+  isLoading = signal(false);
 
   ngOnInit() {
     this.loadData();
   }
 
   loadData() {
-    // Load services and caches to compute metrics
-    this.dataService.getServices().subscribe(() => {
-      this.dataService.getCaches().subscribe((caches) => {
-        this.caches.set(caches);
+    this.isLoading.set(true);
+    
+    // Load services to compute metrics
+    this.dataService.getServices().subscribe({
+      next: () => {
         this.updateMetrics();
-      });
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.isLoading.set(false);
+      }
     });
 
     // Get logs

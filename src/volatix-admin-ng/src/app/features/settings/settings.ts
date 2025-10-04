@@ -29,6 +29,8 @@ export class Settings implements OnInit {
   itemsPerPage = 10;
   editingAgent = signal<Agent | null>(null);
   apiKeyModalData = signal<ApiKeyDisplayData | null>(null);
+  isLoading = signal(false);
+  isSaving = signal(false);
 
   agentForm = {
     name: '',
@@ -48,6 +50,8 @@ export class Settings implements OnInit {
   }
 
   loadAgents() {
+    this.isLoading.set(true);
+    
     // First get cached agents for immediate display
     const cachedAgents = this.dataService.getAgents();
     this.agents.set(cachedAgents);
@@ -56,9 +60,11 @@ export class Settings implements OnInit {
     this.dataService.loadAgentsFromApi().subscribe({
       next: (agents) => {
         this.agents.set(agents);
+        this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Failed to load agents from API:', error);
+        this.isLoading.set(false);
       },
     });
   }
@@ -67,6 +73,8 @@ export class Settings implements OnInit {
     if (!this.validateForm()) {
       return;
     }
+
+    this.isSaving.set(true);
 
     const agentData = {
       ...this.agentForm,
@@ -84,6 +92,7 @@ export class Settings implements OnInit {
 
       this.loadAgents();
       this.clearForm();
+      this.isSaving.set(false);
 
       // Show API key modal if a new key was generated
       if (result.isNewKey) {
@@ -97,6 +106,7 @@ export class Settings implements OnInit {
       }
     } catch (error) {
       console.error('Failed to save agent:', error);
+      this.isSaving.set(false);
     }
   }
 

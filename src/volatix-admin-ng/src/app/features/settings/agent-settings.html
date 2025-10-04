@@ -28,8 +28,11 @@
       <div class="row">
         <div class="form-group button-group" style="flex: 1">
           <div class="button-container" style="display: flex; gap: 12px">
-            <button class="btn primary btn-ripple" (click)="saveAgent()">
-              @if (editingAgent()) {
+            <button class="btn primary btn-ripple" (click)="saveAgent()" [disabled]="isSaving()">
+              @if (isSaving()) {
+              <div style="display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite;"></div>
+              Saving...
+              } @else if (editingAgent()) {
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
@@ -107,7 +110,13 @@
           </button>
         </div>
       </div>
-      @if (paginatedAgents().length > 0) {
+      
+      @if (isLoading()) {
+        <div style="text-align: center; padding: 48px; color: var(--muted);">
+          <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid var(--glass-border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <div style="margin-top: 16px; font-size: 14px;">Loading agents...</div>
+        </div>
+      } @else if (paginatedAgents().length > 0) {
       <table class="min-w-full table-fixed text-sm">
         <thead>
           <tr class="text-left text-xs text-slate-400 border-b border-slate-800">

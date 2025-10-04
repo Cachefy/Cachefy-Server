@@ -3,18 +3,24 @@
     <div class="card">
       <h2 class="text-app" style="margin-bottom: 1rem">Registered services</h2>
 
-      <table class="min-w-full table-fixed text-sm">
-        <thead>
-          <tr class="text-left text-xs text-slate-400 border-b border-slate-800">
-            <th class="p-2 w-64">Service</th>
-            <th class="p-2 w-24">Status</th>
-            <th class="p-2 w-24">Instances</th>
-            <th class="p-2 w-24">Version</th>
-            <th class="p-2 w-48">Last seen</th>
-            <th class="p-2 col-actions">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+      @if (isLoading()) {
+        <div style="text-align: center; padding: 48px; color: var(--muted);">
+          <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid var(--glass-border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <div style="margin-top: 16px; font-size: 14px;">Loading services...</div>
+        </div>
+      } @else {
+        <table class="min-w-full table-fixed text-sm">
+          <thead>
+            <tr class="text-left text-xs text-slate-400 border-b border-slate-800">
+              <th class="p-2 w-64">Service</th>
+              <th class="p-2 w-24">Status</th>
+              <th class="p-2 w-24">Instances</th>
+              <th class="p-2 w-24">Version</th>
+              <th class="p-2 w-48">Last seen</th>
+              <th class="p-2 col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
           @for (service of paginatedServices; track service.id || service.name) {
           <tr>
             <td class="p-2">{{ service.name }}</td>
@@ -79,6 +85,7 @@
         (nextClick)="onPageChange(currentPage() + 1)"
       >
       </app-pagination>
+      }
     </div>
   </section>
 

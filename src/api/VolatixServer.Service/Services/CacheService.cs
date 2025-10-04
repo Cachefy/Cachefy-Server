@@ -11,7 +11,7 @@ namespace VolatixServer.Service.Services
     public interface ICacheService
     {
         Task<List<AgentResponse>> GetAllCachesAsync(string serviceId);
-        Task<List<AgentResponse>> GetCacheByKeyAsync(string serviceId, string cacheKey);
+        Task<object> GetCacheByKeyAsync(string serviceId, string cacheKey, string id);
         Task<List<AgentResponse>> FlushAllCacheAsync(string serviceId);
         Task<List<AgentResponse>> ClearCacheByKeyAsync(string serviceId, string cacheKey);
     }
@@ -81,7 +81,7 @@ namespace VolatixServer.Service.Services
             }
         }
 
-        public async Task<List<AgentResponse>> GetCacheByKeyAsync(string serviceId, string cacheKey)
+        public async Task<object> GetCacheByKeyAsync(string serviceId, string cacheKey, string id)
         {
             // Get the service
             var service = await _serviceRepository.GetByIdAsync(serviceId);
@@ -105,7 +105,7 @@ namespace VolatixServer.Service.Services
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Add("X-Api-Key", agent.ApiKey);
 
-            var url = $"{agent.Url.TrimEnd('/')}/api/cache?serviceIdentifier={service.Name}&key={cacheKey}";
+            var url = $"{agent.Url.TrimEnd('/')}/api/cache?serviceIdentifier={service.Name}&key={cacheKey}&id={id}";
 
             try
             {
@@ -122,7 +122,14 @@ namespace VolatixServer.Service.Services
                     PropertyNameCaseInsensitive = true
                 });
 
-                return agentResponse ?? throw new InvalidOperationException("Failed to deserialize agent response");
+                if(agentResponse != null)
+                {
+                    var cache = agentResponse.FirstOrDefault(f => f.Id == id)?.CacheResult;
+
+                    return cache;
+                }
+                
+                return string.Empty;
             }
             catch (HttpRequestException ex)
             {

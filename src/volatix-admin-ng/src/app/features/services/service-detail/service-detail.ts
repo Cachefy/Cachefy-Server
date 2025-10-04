@@ -3,12 +3,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../../core/services/data';
 import { Service } from '../../../core/models/service.model';
+import { AgentResponse } from '../../../core/models/agent-response.model';
 import { Pagination } from '../../../shared/components/pagination/pagination';
 import { ConfirmationService } from '../../../core/services/confirmation.service';
+import { Modal } from '../../../shared/components/modal/modal';
 
 @Component({
   selector: 'app-service-detail',
-  imports: [CommonModule, Pagination],
+  imports: [CommonModule, Pagination, Modal],
   templateUrl: './service-detail.html',
   styleUrl: './service-detail.css',
 })
@@ -19,30 +21,85 @@ export class ServiceDetail implements OnInit {
   private confirmationService = inject(ConfirmationService);
 
   service = signal<Service | null>(null);
-  caches = signal<string[]>([]);
+  agentResponses = signal<AgentResponse[]>([]);
   currentPage = signal(1);
   itemsPerPage = 10;
   isFlushingCaches = signal(false);
   removingCache = signal<string | null>(null);
+  isLoading = signal(false);
+  isLoadingCaches = signal(false);
+  expandedParameters = signal<Set<number>>(new Set());
+  
+  // Cache detail modal
+  cacheDetailModalOpen = signal(false);
+  cacheDetailData = signal<any>(null);
+  cacheDetailLoading = signal(false);
+  currentCacheKey = signal<string>('');
+  currentAgentResponseId = signal<string>('');
 
   // Computed properties
-  totalPages = computed(() => Math.ceil(this.caches().length / this.itemsPerPage));
-  paginatedCaches = computed(() => {
+  totalPages = computed(() => Math.ceil(this.agentResponses().length / this.itemsPerPage));
+  
+  formattedCacheDetail = computed(() => {
+    const data = this.cacheDetailData();
+    if (!data) return '';
+    
+    // If it's already a string, check if it's a JSON string
+    if (typeof data === 'string') {
+      try {
+        const parsed = JSON.parse(data);
+        return JSON.stringify(parsed, null, 2);
+      } catch {
+        // Not valid JSON, return as is
+        return data;
+      }
+    }
+    
+    // If it's an object or array, stringify with formatting
+    if (typeof data === 'object') {
+      return JSON.stringify(data, null, 2);
+    }
+    
+    // For primitives (number, boolean, etc.), convert to string
+    return String(data);
+  });
+
+  cacheDetailType = computed(() => {
+    const data = this.cacheDetailData();
+    if (!data) return 'empty';
+    
+    if (typeof data === 'string') {
+      try {
+        JSON.parse(data);
+        return 'json';
+      } catch {
+        return 'string';
+      }
+    }
+    
+    if (typeof data === 'object') {
+      return Array.isArray(data) ? 'array' : 'json';
+    }
+    
+    return 'primitive';
+  });
+
+  paginatedAgentResponses = computed(() => {
     const start = (this.currentPage() - 1) * this.itemsPerPage;
     const end = start + this.itemsPerPage;
-    return this.caches().slice(start, end);
+    return this.agentResponses().slice(start, end);
   });
 
   serviceSnapshot = computed(() => {
     const svc = this.service();
-    const cachesData = this.caches();
+    const responses = this.agentResponses();
     if (!svc) return {};
 
     return {
       serviceId: svc.id,
       service: svc,
-      caches: cachesData,
-      totalCaches: cachesData.length,
+      agentResponses: responses,
+      totalAgents: responses.length,
       generatedAt: new Date().toISOString(),
     };
   });
@@ -55,25 +112,41 @@ export class ServiceDetail implements OnInit {
   }
 
   private loadServiceData(serviceId: string) {
+    this.isLoading.set(true);
+    
     // Load services first to get the service details
-    this.dataService.getServices().subscribe((services) => {
-      const foundService = services.find(
-        (s) =>
-          s.id === serviceId ||
-          s.serviceId === serviceId ||
-          this.dataService.toSlug(s.name) === serviceId
-      );
+    this.dataService.getServices().subscribe({
+      next: (services) => {
+        const foundService = services.find(
+          (s) =>
+            s.id === serviceId ||
+            s.serviceId === serviceId ||
+            this.dataService.toSlug(s.name) === serviceId
+        );
 
-      if (foundService) {
-        this.service.set(foundService);
+        if (foundService) {
+          this.service.set(foundService);
+          this.isLoading.set(false);
 
-        // Load caches for this service
-        this.dataService.getCachesForService(serviceId).subscribe((caches) => {
-          this.caches.set(caches);
-        });
-      } else {
-        // Service not found, redirect back to services list
-        this.router.navigate(['/services']);
+          // Load agent responses for this service
+          this.isLoadingCaches.set(true);
+          this.dataService.getCachesForService(serviceId).subscribe({
+            next: (responses) => {
+              this.agentResponses.set(responses as AgentResponse[]);
+              this.isLoadingCaches.set(false);
+            },
+            error: () => {
+              this.isLoadingCaches.set(false);
+            }
+          });
+        } else {
+          // Service not found, redirect back to services list
+          this.isLoading.set(false);
+          this.router.navigate(['/services']);
+        }
+      },
+      error: () => {
+        this.isLoading.set(false);
       }
     });
   }
@@ -137,9 +210,15 @@ export class ServiceDetail implements OnInit {
     const service = this.service();
     if (!service) return;
 
+    // Count total cache keys across all agent responses
+    const totalCaches = this.agentResponses().reduce(
+      (sum, response) => sum + (response.cacheKeys?.length || 0),
+      0
+    );
+
     const confirmed = await this.confirmationService.confirm({
       title: 'Flush All Caches',
-      message: `Are you sure you want to flush all ${this.caches().length} cache(s) for ${
+      message: `Are you sure you want to flush all ${totalCaches} cache(s) for ${
         service.name
       }? This action cannot be undone.`,
       confirmText: 'Flush All',
@@ -154,7 +233,7 @@ export class ServiceDetail implements OnInit {
     this.dataService.flushServiceCaches(service.id!).subscribe({
       next: () => {
         // Reload caches after flush
-        this.loadCachesForService(service.id!);
+        this.loadAgentResponsesForService(service.id!);
         this.isFlushingCaches.set(false);
       },
       error: () => {
@@ -163,9 +242,17 @@ export class ServiceDetail implements OnInit {
     });
   }
 
-  private loadCachesForService(serviceId: string) {
-    this.dataService.getCachesForService(serviceId).subscribe((caches) => {
-      this.caches.set(caches);
+  private loadAgentResponsesForService(serviceId: string) {
+    this.isLoadingCaches.set(true);
+    
+    this.dataService.getCachesForService(serviceId).subscribe({
+      next: (responses) => {
+        this.agentResponses.set(responses as AgentResponse[]);
+        this.isLoadingCaches.set(false);
+      },
+      error: () => {
+        this.isLoadingCaches.set(false);
+      }
     });
   }
 
@@ -188,12 +275,62 @@ export class ServiceDetail implements OnInit {
     this.dataService.clearCache(service.id!, cacheKey).subscribe({
       next: () => {
         // Reload caches after removal
-        this.loadCachesForService(service.id!);
+        this.loadAgentResponsesForService(service.id!);
         this.removingCache.set(null);
       },
       error: () => {
         this.removingCache.set(null);
       },
+    });
+  }
+
+  toggleParametersExpanded(index: number) {
+    const expanded = new Set(this.expandedParameters());
+    if (expanded.has(index)) {
+      expanded.delete(index);
+    } else {
+      expanded.add(index);
+    }
+    this.expandedParameters.set(expanded);
+  }
+
+  isParametersExpanded(index: number): boolean {
+    return this.expandedParameters().has(index);
+  }
+
+  openCacheDetail(cacheKey: string, agentResponseId: string) {
+    const service = this.service();
+    if (!service) return;
+
+    this.currentCacheKey.set(cacheKey);
+    this.currentAgentResponseId.set(agentResponseId);
+    this.cacheDetailModalOpen.set(true);
+    this.cacheDetailLoading.set(true);
+    this.cacheDetailData.set(null);
+
+    this.dataService.getCacheByKey(service.id!, cacheKey, agentResponseId).subscribe({
+      next: (data) => {
+        this.cacheDetailData.set(data);
+        this.cacheDetailLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Failed to load cache details:', error);
+        this.cacheDetailLoading.set(false);
+      }
+    });
+  }
+
+  closeCacheDetailModal() {
+    this.cacheDetailModalOpen.set(false);
+    this.cacheDetailData.set(null);
+    this.currentCacheKey.set('');
+    this.currentAgentResponseId.set('');
+  }
+
+  copyCacheDetailJSON() {
+    const formatted = this.formattedCacheDetail();
+    navigator.clipboard.writeText(formatted).then(() => {
+      console.log('Cache detail copied to clipboard');
     });
   }
 }

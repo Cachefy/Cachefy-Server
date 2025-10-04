@@ -26,7 +26,7 @@ namespace VolatixServer.Api.Controllers
         public async Task<ActionResult<List<AgentResponse>>> GetAllCaches([FromQuery] string serviceId)
         {
             try
-            {
+           {
                 var result = await _cacheService.GetAllCachesAsync(serviceId);
                 return Ok(result);
             }
@@ -51,11 +51,11 @@ namespace VolatixServer.Api.Controllers
         /// <param name="key">The cache key to retrieve</param>
         /// <returns>List of AgentResponse with cache details</returns>
         [HttpGet]
-        public async Task<ActionResult<List<AgentResponse>>> GetCacheByKey([FromQuery] string serviceId, [FromQuery] string key)
+        public async Task<ActionResult<object>> GetCacheByKey([FromQuery] string serviceId, [FromQuery] string key, [FromQuery] string id)
         {
             try
             {
-                var result = await _cacheService.GetCacheByKeyAsync(serviceId, key);
+                var result = await _cacheService.GetCacheByKeyAsync(serviceId, key, id);
                 return Ok(result);
             }
             catch (KeyNotFoundException ex)

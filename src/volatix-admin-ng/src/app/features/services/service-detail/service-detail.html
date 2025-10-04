@@ -1,6 +1,14 @@
 <div id="page-service" class="page">
   <div class="grid">
     <section>
+      @if (isLoading()) {
+        <div class="card">
+          <div style="text-align: center; padding: 48px; color: var(--muted);">
+            <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid var(--glass-border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+            <div style="margin-top: 16px; font-size: 14px;">Loading service details...</div>
+          </div>
+        </div>
+      } @else {
       <div class="card">
         <div class="row" style="align-items: center; justify-content: space-between">
           <div class="text-app" style="font-weight: 700">Service details</div>
@@ -46,16 +54,9 @@
       </div>
 
       <div class="card" style="margin-top: 16px">
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-          "
-        >
-          <h2 class="text-app">Caches for this service</h2>
-          @if (caches().length > 0) {
+        <div class="row" style="align-items: center; justify-content: space-between; margin-bottom: 16px">
+          <h2 class="text-app" style="margin: 0">Agent Responses for this service</h2>
+          @if (agentResponses().length > 0) {
           <button
             class="btn danger sm btn-ripple"
             (click)="flushAllCaches()"
@@ -73,50 +74,151 @@
           </button>
           }
         </div>
-        @if (paginatedCaches().length > 0) {
-        <table class="min-w-full table-fixed text-sm">
-          <thead>
-            <tr class="text-left text-xs text-slate-400 border-b border-slate-800">
-              <th class="p-2">Cache Name</th>
-              <th class="p-2 col-actions">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (cacheName of paginatedCaches(); track cacheName) {
-            <tr class="border-b border-slate-800 hover:bg-slate-800/50">
-              <td class="p-2">{{ cacheName }}</td>
-              <td class="p-2 col-actions">
-                <button
-                  class="btn danger sm btn-ripple"
-                  (click)="removeCacheByKey(cacheName)"
-                  [disabled]="removingCache() === cacheName"
+        
+        @if (isLoadingCaches()) {
+          <div style="text-align: center; padding: 32px; color: var(--muted);">
+            <div style="display: inline-block; width: 32px; height: 32px; border: 3px solid var(--glass-border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+            <div style="margin-top: 12px; font-size: 14px;">Loading agent responses...</div>
+          </div>
+        } @else if (paginatedAgentResponses().length > 0) {
+          @for (agentResponse of paginatedAgentResponses(); track $index) {
+            <div style="margin-bottom: 24px; padding: 16px; border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(255, 255, 255, 0.02);">
+              
+              <!-- Collapsible Agent Response Details -->
+              <div style="margin-bottom: 20px;">
+                <div 
+                  (click)="toggleParametersExpanded($index)" 
+                  style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 8px 12px; margin: 0 -12px 12px -12px; border-radius: 8px; background: rgba(255, 255, 255, 0.03); transition: background 0.2s;"
+                  [style.background]="isParametersExpanded($index) ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.03)'"
                 >
-                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                  {{ removingCache() === cacheName ? 'Removing...' : 'Remove' }}
-                </button>
-              </td>
-            </tr>
-            }
-          </tbody>
-        </table>
+                  <h3 style="font-size: 14px; font-weight: 600; color: var(--muted); margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <svg 
+                      width="16" 
+                      height="16" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                      style="transition: transform 0.2s;"
+                      [style.transform]="isParametersExpanded($index) ? 'rotate(90deg)' : 'rotate(0deg)'"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                    Agent Response Details
+                    <span style="display: inline-block; background: rgba(255, 255, 255, 0.1); padding: 2px 8px; border-radius: 12px; font-size: 11px;">
+                      {{ (agentResponse.parametersDetails?.length || 0) + (agentResponse.cacheKeys?.length || 0) }} items
+                    </span>
+                  </h3>
+                  <span style="font-size: 12px; color: var(--muted); opacity: 0.7;">{{ isParametersExpanded($index) ? 'Click to collapse' : 'Click to expand' }}</span>
+                </div>
+                
+                @if (isParametersExpanded($index)) {
+                  <!-- Parameters Details Section -->
+                  @if (agentResponse.parametersDetails && agentResponse.parametersDetails.length > 0) {
+                    <div style="margin-bottom: 20px;">
+                      <h4 style="font-size: 13px; font-weight: 600; color: var(--accent); margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px;">Parameters</h4>
+                      @for (param of agentResponse.parametersDetails; track param.name) {
+                        <div style="margin-bottom: 16px;">
+                          <div style="font-weight: 600; color: var(--muted); margin-bottom: 8px; font-size: 13px;">{{ param.name }}</div>
+                          <div style="display: grid; grid-template-columns: 200px 1fr; gap: 8px; background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--glass-border);">
+                            @for (paramEntry of param.parameters | keyvalue; track paramEntry.key) {
+                              <div style="color: var(--muted); font-size: 13px; padding: 4px 0;">{{ paramEntry.key }}</div>
+                              <div style="color: var(--vol-appname-text); font-size: 13px; padding: 4px 0;">{{ paramEntry.value }}</div>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  }
 
-        @if (totalPages() > 1) {
-        <app-pagination
-          [currentPage]="currentPage()"
-          [totalPages]="totalPages()"
-          (pageChange)="onPageChange($event)"
-        ></app-pagination>
-        } } @else {
-        <div class="text-center text-slate-400 py-8">No caches found for this service</div>
+                  <!-- Cache Keys Section -->
+                  @if (agentResponse.cacheKeys && agentResponse.cacheKeys.length > 0) {
+                    <div style="margin-bottom: 20px;">
+                      <h4 style="font-size: 13px; font-weight: 600; color: var(--accent); margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Cache Keys
+                        <span style="display: inline-block; background: rgba(255, 255, 255, 0.1); padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px; text-transform: none; letter-spacing: normal;">{{ agentResponse.cacheKeys.length }}</span>
+                      </h4>
+                      <table>
+                        <thead>
+                          <tr>
+                            <th style="font-size: 12px;">Cache Name</th>
+                            <th class="col-actions" style="font-size: 12px;">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (cacheName of agentResponse.cacheKeys; track cacheName) {
+                            <tr>
+                              <td>{{ cacheName }}</td>
+                              <td class="col-actions">
+                                <div class="table-actions">
+                                  <button
+                                    class="btn primary sm btn-ripple"
+                                    (click)="openCacheDetail(cacheName, agentResponse.id)"
+                                  >
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                      />
+                                      <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                      />
+                                    </svg>
+                                    Details
+                                  </button>
+                                  <button
+                                    class="btn danger sm btn-ripple"
+                                    (click)="removeCacheByKey(cacheName)"
+                                    [disabled]="removingCache() === cacheName"
+                                  >
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                      />
+                                    </svg>
+                                    {{ removingCache() === cacheName ? 'Removing...' : 'Remove' }}
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+
+                  <!-- Cache Result Section -->
+                  @if (agentResponse.cacheResult) {
+                    <div>
+                      <h4 style="font-size: 13px; font-weight: 600; color: var(--accent); margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px;">Cache Result</h4>
+                      <pre class="pre" style="max-height: 300px; overflow: auto;">{{ agentResponse.cacheResult | json }}</pre>
+                    </div>
+                  }
+                }
+              </div>
+
+            </div>
+          }
+
+          @if (totalPages() > 1) {
+            <app-pagination
+              [currentPage]="currentPage()"
+              [totalPages]="totalPages()"
+              (pageChange)="onPageChange($event)"
+            ></app-pagination>
+          }
+        } @else {
+          <div style="text-align: center; color: var(--muted); padding: 32px 0;">No agent responses found for this service</div>
         }
       </div>
+      }
     </section>
 
     <aside>
@@ -131,10 +233,13 @@
             font-family: monospace;
             font-size: 12px;
             min-height: 100px;
+            max-height: calc(100vh - 200px);
             color: var(--muted);
             background: rgba(255, 255, 255, 0.04);
             padding: 10px;
             border-radius: 8px;
+            overflow-y: auto;
+            overflow-x: auto;
           "
           >{{ serviceSnapshot() | json }}</pre
         >
@@ -165,4 +270,62 @@
       </div>
     </aside>
   </div>
+
+  <!-- Cache Detail Modal -->
+  <app-modal 
+    [isOpen]="cacheDetailModalOpen()" 
+    [title]="'Cache Details: ' + currentCacheKey()"
+    (closeModal)="closeCacheDetailModal()"
+  >
+    <div style="padding: 16px;">
+      @if (cacheDetailLoading()) {
+        <div style="text-align: center; padding: 32px; color: var(--muted);">
+          <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid var(--glass-border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <div style="margin-top: 16px; font-size: 14px;">Loading cache details...</div>
+        </div>
+      } @else if (cacheDetailData()) {
+        <div style="margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <h3 style="font-size: 14px; font-weight: 600; color: var(--muted); margin: 0;">Cache Content</h3>
+              <span style="display: inline-block; background: rgba(255, 255, 255, 0.1); padding: 2px 8px; border-radius: 12px; font-size: 11px; color: var(--muted); text-transform: uppercase;">
+                {{ cacheDetailType() }}
+              </span>
+            </div>
+            <button class="btn primary sm btn-ripple" (click)="copyCacheDetailJSON()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+              Copy
+            </button>
+          </div>
+          <pre 
+            class="pre" 
+            style="
+              max-height: 500px; 
+              overflow: auto; 
+              background: rgba(255, 255, 255, 0.04); 
+              padding: 16px; 
+              border-radius: 8px;
+              border: 1px solid var(--glass-border);
+              font-family: 'Courier New', monospace;
+              font-size: 13px;
+              line-height: 1.5;
+              white-space: pre-wrap;
+              word-break: break-word;
+            "
+          >{{ formattedCacheDetail() }}</pre>
+        </div>
+      } @else {
+        <div style="text-align: center; padding: 32px; color: var(--muted);">
+          No cache data available
+        </div>
+      }
+    </div>
+  </app-modal>
 </div>

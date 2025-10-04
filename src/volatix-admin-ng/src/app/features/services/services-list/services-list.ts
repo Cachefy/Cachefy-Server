@@ -21,6 +21,7 @@ export class ServicesList implements OnInit {
   services = signal<Service[]>([]);
   currentPage = signal(1);
   pageSize = 6;
+  isLoading = signal(false);
 
   get paginatedServices() {
     const start = (this.currentPage() - 1) * this.pageSize;
@@ -36,13 +37,17 @@ export class ServicesList implements OnInit {
   }
 
   loadServices() {
+    this.isLoading.set(true);
+    
     this.dataService.getServices().subscribe({
       next: (services) => {
         this.services.set(services);
+        this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Failed to load services:', error);
         this.notificationService.showError('Failed to load services', error.message);
+        this.isLoading.set(false);
       },
     });
   }
