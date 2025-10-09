@@ -7,4 +7,8 @@ export interface Service {
   instances?: number;
   lastSeen?: string;
   lastSeenText?: string;
+  agentId?: string;
+  agentName?: string;
+  description?: string;
+  url?: string;
 }

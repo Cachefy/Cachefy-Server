@@ -171,3 +171,248 @@ select.form-input {
 :root.light .modal-actions {
   border-top: 1px solid #e5e7eb;
 }
+
+/* Agent Selection Styles */
+.agent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.agent-card {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.agent-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.agent-card.selected {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2);
+}
+
+.agent-card.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.agent-icon {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+
+.agent-icon.all-services {
+  background: linear-gradient(135deg, var(--accent), #f59e0b);
+}
+
+.agent-icon .icon {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.status-indicator {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-primary);
+}
+
+.status-indicator.online {
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.status-indicator.offline {
+  background: #ef4444;
+}
+
+.status-indicator.loading {
+  background: #f59e0b;
+  animation: pulse-loading 1.5s ease-in-out infinite;
+}
+
+.agent-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.agent-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agent-info p {
+  margin: 0 0 8px 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.agent-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.agent-badge.all {
+  background: rgba(255, 193, 7, 0.2);
+  color: var(--accent);
+}
+
+.agent-badge.online {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.agent-badge.offline {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.agent-badge.loading {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.spinner-tiny {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(245, 158, 11, 0.3);
+  border-top-color: #f59e0b;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes pulse-loading {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.95);
+  }
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.table-info {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.selected-agent-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: 14px;
+}
+
+.btn-clear-filter {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+  margin-left: 4px;
+}
+
+.btn-clear-filter:hover {
+  background: rgba(255, 193, 7, 0.2);
+}
+
+.agent-info-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-icon-small {
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+.service-name-cell strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.service-name-cell small {
+  color: var(--muted);
+  font-size: 12px;
+  display: block;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+}
+
+.empty-state p {
+  margin-bottom: 0;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .agent-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}

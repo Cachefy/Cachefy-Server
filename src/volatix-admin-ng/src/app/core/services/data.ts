@@ -98,7 +98,7 @@ export class DataService {
     if (id) {
       url += `&id=${id}`;
     }
-    
+
     return this.http
       .get<any>(url, {
         headers: this.getAuthHeaders(),
@@ -352,6 +352,118 @@ export class DataService {
           return of([]);
         })
       );
+  }
+
+  pingAgent(agentId: string): Observable<{ status: 'online' | 'offline'; agentId: string; statusCode?: number; message?: string }> {
+    // Set loading state for this agent
+    const agents = [...this.agents()];
+    const agentIndex = agents.findIndex((a) => a.id === agentId);
+    
+    if (agentIndex >= 0) {
+      agents[agentIndex] = { ...agents[agentIndex], isLoading: true };
+      this.agents.set(agents);
+    }
+
+    return this.http
+      .get<{ statusCode: number; message?: string }>(`${environment.apiUrl}/agents/${agentId}/ping`, {
+        headers: this.getAuthHeaders(),
+      })
+      .pipe(
+        map((response) => {
+          // StatusCode can be: 200 (ok), 404 (not found), 503 (service unavailable), 408 (timeout)
+          const isOnline = response.statusCode === 200;
+          const status: 'online' | 'offline' = isOnline ? 'online' : 'offline';
+
+          // Update the agent's status in local state and clear loading
+          const agents = [...this.agents()];
+          const agentIndex = agents.findIndex((a) => a.id === agentId);
+
+          if (agentIndex >= 0) {
+            agents[agentIndex] = { ...agents[agentIndex], status, isLoading: false };
+            this.agents.set(agents);
+          }
+
+          const statusMessage = response.message || this.getStatusMessage(response.statusCode);
+          this.addLog(`Pinged agent ${agentId}: ${status} (${response.statusCode} - ${statusMessage})`);
+          
+          return { 
+            status, 
+            agentId, 
+            statusCode: response.statusCode, 
+            message: statusMessage 
+          };
+        }),
+        catchError((error) => {
+          // If ping fails (network error, etc.), agent is offline and clear loading
+          const agents = [...this.agents()];
+          const agentIndex = agents.findIndex((a) => a.id === agentId);
+
+          if (agentIndex >= 0) {
+            agents[agentIndex] = { ...agents[agentIndex], status: 'offline', isLoading: false };
+            this.agents.set(agents);
+          }
+
+          this.addLog(`Agent ${agentId} ping failed: ${error.message}`);
+          return of({ 
+            status: 'offline' as const, 
+            agentId, 
+            statusCode: error.status || 0, 
+            message: error.message || 'Network error' 
+          });
+        })
+      );
+  }
+
+  private getStatusMessage(statusCode: number): string {
+    switch (statusCode) {
+      case 200:
+        return 'OK';
+      case 404:
+        return 'Not Found';
+      case 503:
+        return 'Service Unavailable';
+      case 408:
+        return 'Request Timeout';
+      default:
+        return 'Unknown Status';
+    }
+  }
+
+  pingAllAgents(): Observable<{ status: 'online' | 'offline'; agentId: string; statusCode?: number; message?: string }[]> {
+    const agents = this.agents();
+    if (agents.length === 0) {
+      return of([]);
+    }
+
+    // Create an array of ping observables
+    const pingObservables = agents.map((agent) => this.pingAgent(agent.id));
+
+    // Use forkJoin to execute all pings in parallel
+    return new Observable((observer) => {
+      const results: { status: 'online' | 'offline'; agentId: string; statusCode?: number; message?: string }[] = [];
+      let completed = 0;
+
+      pingObservables.forEach((ping$) => {
+        ping$.subscribe({
+          next: (result) => {
+            results.push(result);
+            completed++;
+
+            if (completed === pingObservables.length) {
+              observer.next(results);
+              observer.complete();
+            }
+          },
+          error: (error) => {
+            completed++;
+            if (completed === pingObservables.length) {
+              observer.next(results);
+              observer.complete();
+            }
+          },
+        });
+      });
+    });
   }
 
   saveAgent(agent: Omit<Agent, 'id' | 'apiKey'> & { id?: string }): Observable<{

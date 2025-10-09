@@ -53,6 +53,73 @@
         </div>
       </div>
 
+      <!-- Agent Status Card -->
+      @if (serviceAgent()) {
+      <div class="card" style="margin-top: 16px;">
+        <div class="row" style="align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <h2 class="text-app" style="margin: 0;">Agent Status</h2>
+          <button class="btn secondary sm btn-ripple" (click)="refreshAgentStatus()" [disabled]="agentStatus() === 'loading'">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            {{ agentStatus() === 'loading' ? 'Checking...' : 'Refresh' }}
+          </button>
+        </div>
+
+        <div class="agent-status-container">
+          <div class="agent-icon-large">
+            <span class="icon">🐳</span>
+            @if (agentStatus() === 'loading') {
+              <div class="status-indicator loading"></div>
+            } @else if (agentStatus() === 'online') {
+              <div class="status-indicator online"></div>
+            } @else {
+              <div class="status-indicator offline"></div>
+            }
+          </div>
+
+          <div class="agent-details">
+            <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: var(--text-primary);">
+              {{ serviceAgent()!.name }}
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: 120px 1fr; gap: 8px; font-size: 14px;">
+              <div style="color: var(--muted);">Status:</div>
+              <div>
+                @if (agentStatus() === 'loading') {
+                  <span class="agent-badge loading">
+                    <span class="spinner-small"></span>
+                    CHECKING...
+                  </span>
+                } @else if (agentStatus() === 'online') {
+                  <span class="agent-badge online">
+                    ✓ ONLINE
+                  </span>
+                } @else {
+                  <span class="agent-badge offline">
+                    ✗ OFFLINE
+                  </span>
+                }
+              </div>
+
+              <div style="color: var(--muted);">URL:</div>
+              <div style="color: var(--text);">{{ serviceAgent()!.url }}</div>
+
+              @if (agentStatusMessage()) {
+                <div style="color: var(--muted);">Message:</div>
+                <div style="color: var(--text);">{{ agentStatusMessage() }}</div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+
       <div class="card" style="margin-top: 16px">
         <div class="row" style="align-items: center; justify-content: space-between; margin-bottom: 16px">
           <h2 class="text-app" style="margin: 0">Agent Responses for this service</h2>

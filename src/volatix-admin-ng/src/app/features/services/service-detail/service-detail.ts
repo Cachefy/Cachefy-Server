@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../../core/services/data';
 import { Service } from '../../../core/models/service.model';
+import { Agent } from '../../../core/models/agent.model';
 import { AgentResponse } from '../../../core/models/agent-response.model';
 import { Pagination } from '../../../shared/components/pagination/pagination';
 import { ConfirmationService } from '../../../core/services/confirmation.service';
@@ -29,6 +30,11 @@ export class ServiceDetail implements OnInit {
   isLoading = signal(false);
   isLoadingCaches = signal(false);
   expandedParameters = signal<Set<number>>(new Set());
+  
+  // Agent status
+  serviceAgent = signal<Agent | null>(null);
+  agentStatus = signal<'online' | 'offline' | 'loading'>('loading');
+  agentStatusMessage = signal<string>('');
   
   // Cache detail modal
   cacheDetailModalOpen = signal(false);
@@ -128,6 +134,11 @@ export class ServiceDetail implements OnInit {
           this.service.set(foundService);
           this.isLoading.set(false);
 
+          // Load agent information if service has agentId
+          if (foundService.agentId) {
+            this.loadAgentStatus(foundService.agentId);
+          }
+
           // Load agent responses for this service
           this.isLoadingCaches.set(true);
           this.dataService.getCachesForService(serviceId).subscribe({
@@ -149,6 +160,53 @@ export class ServiceDetail implements OnInit {
         this.isLoading.set(false);
       }
     });
+  }
+
+  private loadAgentStatus(agentId: string) {
+    this.agentStatus.set('loading');
+    
+    // Get agent details
+    const agents = this.dataService.getAgents();
+    const agent = agents.find(a => a.id === agentId);
+    
+    if (agent) {
+      this.serviceAgent.set(agent);
+    }
+
+    // Ping agent to get current status
+    this.dataService.pingAgent(agentId).subscribe({
+      next: (result) => {
+        this.agentStatus.set(result.status);
+        this.agentStatusMessage.set(result.message || '');
+        
+        // Get the updated agent from dataService after ping
+        const updatedAgents = this.dataService.getAgents();
+        const updatedAgent = updatedAgents.find(a => a.id === agentId);
+        
+        if (updatedAgent) {
+          this.serviceAgent.set(updatedAgent);
+        }
+      },
+      error: (error) => {
+        this.agentStatus.set('offline');
+        this.agentStatusMessage.set(error.message || 'Failed to ping agent');
+        
+        // Get the updated agent from dataService after ping error
+        const updatedAgents = this.dataService.getAgents();
+        const updatedAgent = updatedAgents.find(a => a.id === agentId);
+        
+        if (updatedAgent) {
+          this.serviceAgent.set(updatedAgent);
+        }
+      }
+    });
+  }
+
+  refreshAgentStatus() {
+    const service = this.service();
+    if (service?.agentId) {
+      this.loadAgentStatus(service.agentId);
+    }
   }
 
   goBack() {

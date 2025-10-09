@@ -86,5 +86,24 @@ namespace VolatixServer.Api.Controllers
                 return NotFound(new { message = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Ping an agent to check if it's reachable
+        /// </summary>
+        /// <param name="id">The agent ID</param>
+        /// <returns>HTTP status code from the agent's health endpoint</returns>
+        [HttpGet("{id}/ping")]
+        public async Task<ActionResult<AgentPingResponseDto>> PingAgent(string id)
+        {
+            try
+            {
+                var result = await _agentService.PingAgentAsync(id); 
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
     }
 }
