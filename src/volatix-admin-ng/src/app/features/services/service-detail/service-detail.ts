@@ -429,7 +429,26 @@ export class ServiceDetail implements OnInit {
   }
 
   openKeysPanel() {
-    this.keysPanelModalOpen.set(true);
+    const serviceId = this.service()?.id;
+    const serviceName = this.service()?.name;
+    if (serviceId) {
+      this.router.navigate(['/service', serviceId, 'cache-keys'], {
+        queryParams: { serviceName: serviceName },
+      });
+    }
+  }
+
+  viewAgentResponseKeys(agentResponseId: string) {
+    const serviceId = this.service()?.id;
+    const serviceName = this.service()?.name;
+    if (serviceId) {
+      this.router.navigate(['/service', serviceId, 'cache-keys'], {
+        queryParams: {
+          serviceName: serviceName,
+          agentResponseId: agentResponseId,
+        },
+      });
+    }
   }
 
   closeKeysPanel() {

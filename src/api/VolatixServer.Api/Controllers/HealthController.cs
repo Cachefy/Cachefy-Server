@@ -4,7 +4,7 @@ namespace VolatixServer.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class HealthController : ControllerBase
+public class HealthCointroller : ControllerBase
 {
     /// <summary>
     /// Health check endpoint to verify API is running
