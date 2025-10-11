@@ -319,7 +319,8 @@ select.form-input {
 }
 
 @keyframes pulse-loading {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -409,7 +410,7 @@ select.form-input {
   .agent-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .table-header {
     flex-direction: column;
     align-items: flex-start;

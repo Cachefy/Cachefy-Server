@@ -2,33 +2,43 @@
   <section>
     <div class="card">
       <h2 class="text-app">Overview</h2>
-      
+
       @if (isLoading()) {
-        <div style="text-align: center; padding: 32px; color: var(--muted);">
-          <div style="display: inline-block; width: 32px; height: 32px; border: 3px solid var(--glass-border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-          <div style="margin-top: 12px; font-size: 14px;">Loading metrics...</div>
-        </div>
+      <div style="text-align: center; padding: 32px; color: var(--muted)">
+        <div
+          style="
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--glass-border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+          "
+        ></div>
+        <div style="margin-top: 12px; font-size: 14px">Loading metrics...</div>
+      </div>
       } @else {
-        <div class="row" style="margin-top: 6px">
-          <div class="card" style="flex: 1">
-            <div style="font-size: 12px">Active caches</div>
-            <div style="font-size: 22px; font-weight: 800; color: var(--vol-appname-text)">
-              {{ metrics().activeCaches }}
-            </div>
-          </div>
-          <div class="card" style="flex: 1">
-            <div style="font-size: 12px">Total items</div>
-            <div style="font-size: 22px; font-weight: 800; color: var(--vol-appname-text)">
-              {{ metrics().totalItems }}
-            </div>
-          </div>
-          <div class="card" style="flex: 1">
-            <div style="font-size: 12px">Hit ratio</div>
-            <div style="font-size: 22px; font-weight: 800; color: var(--vol-appname-text)">
-              {{ metrics().hitRatio }}
-            </div>
+      <div class="row" style="margin-top: 6px">
+        <div class="card" style="flex: 1">
+          <div style="font-size: 12px">Active caches</div>
+          <div style="font-size: 22px; font-weight: 800; color: var(--vol-appname-text)">
+            {{ metrics().activeCaches }}
           </div>
         </div>
+        <div class="card" style="flex: 1">
+          <div style="font-size: 12px">Total items</div>
+          <div style="font-size: 22px; font-weight: 800; color: var(--vol-appname-text)">
+            {{ metrics().totalItems }}
+          </div>
+        </div>
+        <div class="card" style="flex: 1">
+          <div style="font-size: 12px">Hit ratio</div>
+          <div style="font-size: 22px; font-weight: 800; color: var(--vol-appname-text)">
+            {{ metrics().hitRatio }}
+          </div>
+        </div>
+      </div>
       }
     </div>
 
@@ -95,122 +105,6 @@
       <h2>Info</h2>
       <div style="font-size: 12px">
         The layout uses a fixed center width to keep content aligned consistently across all pages.
-      </div>
-    </div>
-
-    <div class="card animate-fade-in-up" style="margin-top: 16px">
-      <h2>🧪 Notification System Demo</h2>
-      <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px">
-        <button
-          class="btn success btn-ripple animate-slide-in-right"
-          (click)="testSuccessNotification()"
-        >
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-          Test Success
-        </button>
-        <button
-          class="btn danger btn-ripple animate-slide-in-right"
-          (click)="testErrorNotification()"
-        >
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-          Test Error
-        </button>
-        <button
-          class="btn warning btn-ripple animate-slide-in-right"
-          (click)="testWarningNotification()"
-        >
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-            />
-          </svg>
-          Test Warning
-        </button>
-        <button class="btn info btn-ripple animate-slide-in-right" (click)="testInfoNotification()">
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          Test Info
-        </button>
-      </div>
-    </div>
-
-    <div class="card animate-fade-in-up" style="margin-top: 16px">
-      <h2>🔔 Confirmation Modal Demo</h2>
-      <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px">
-        <button
-          class="btn danger btn-ripple animate-slide-in-right"
-          (click)="testDeleteConfirmation()"
-        >
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-            />
-          </svg>
-          Delete Confirmation
-        </button>
-        <button
-          class="btn warning btn-ripple animate-slide-in-right"
-          (click)="testWarningConfirmation()"
-        >
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-            />
-          </svg>
-          Warning Action
-        </button>
-        <button
-          class="btn primary btn-ripple animate-slide-in-right"
-          (click)="testInfoConfirmation()"
-        >
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          Info Action
-        </button>
-      </div>
-
-      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--glass-border)">
-        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px">
-          ✨ Try the modern confirmation modal - integrated throughout the app!
-        </div>
-        <div style="font-size: 11px; color: var(--muted); opacity: 0.8">
-          Go to Settings → Delete an agent to see it in action
-        </div>
       </div>
     </div>
   </aside>

@@ -37,12 +37,13 @@ The UI now checks **two conditions** to show loading state:
 // 1. Agent is currently being pinged (isLoading = true), OR
 // 2. Agent has never been pinged yet (status = undefined)
 
-agentData.agent.isLoading || !agentData.agent.status
+agentData.agent.isLoading || !agentData.agent.status;
 ```
 
 ### Visual States
 
 #### 1. Initial Load (No Status Yet)
+
 ```
 ┌─────────────────────────────┐
 │  🐳  ⦿ (orange pulse)       │
@@ -58,6 +59,7 @@ Display: CHECKING... with spinner
 ```
 
 #### 2. Currently Pinging
+
 ```
 ┌─────────────────────────────┐
 │  🐳  ⦿ (orange pulse)       │
@@ -73,6 +75,7 @@ Display: CHECKING... with spinner
 ```
 
 #### 3. After First Ping - Online
+
 ```
 ┌─────────────────────────────┐
 │  🐳  ⦿ (green glow)         │
@@ -88,6 +91,7 @@ Display: ONLINE badge in green
 ```
 
 #### 4. After First Ping - Offline
+
 ```
 ┌─────────────────────────────┐
 │  🐳  ⦿ (red)                │
@@ -107,52 +111,51 @@ Display: OFFLINE badge in red
 ### File: `services-list.html`
 
 #### Status Indicator:
+
 ```html
 <!-- OLD: Only checked isLoading -->
 @if (agentData.agent.isLoading) {
-  <div class="status-indicator loading"></div>
+<div class="status-indicator loading"></div>
 } @else if (agentData.agent.status === 'online') {
-  <div class="status-indicator online"></div>
+<div class="status-indicator online"></div>
 } @else {
-  <div class="status-indicator offline"></div>
+<div class="status-indicator offline"></div>
 }
 
 <!-- NEW: Check both isLoading AND no status -->
 @if (agentData.agent.isLoading || !agentData.agent.status) {
-  <div class="status-indicator loading"></div>
+<div class="status-indicator loading"></div>
 } @else if (agentData.agent.status === 'online') {
-  <div class="status-indicator online"></div>
+<div class="status-indicator online"></div>
 } @else {
-  <div class="status-indicator offline"></div>
+<div class="status-indicator offline"></div>
 }
 ```
 
 #### Badge Display:
+
 ```html
 <!-- OLD: Defaulted to 'offline' if no status -->
 @if (agentData.agent.isLoading) {
-  <span class="agent-badge loading">
-    <span class="spinner-tiny"></span> CHECKING...
-  </span>
+<span class="agent-badge loading"> <span class="spinner-tiny"></span> CHECKING... </span>
 } @else {
-  <span class="agent-badge" [class]="agentData.agent.status || 'offline'">
-    {{ (agentData.agent.status || 'offline').toUpperCase() }}
-  </span>
+<span class="agent-badge" [class]="agentData.agent.status || 'offline'">
+  {{ (agentData.agent.status || 'offline').toUpperCase() }}
+</span>
 }
 
 <!-- NEW: Show loading if no status -->
 @if (agentData.agent.isLoading || !agentData.agent.status) {
-  <span class="agent-badge loading">
-    <span class="spinner-tiny"></span> CHECKING...
-  </span>
+<span class="agent-badge loading"> <span class="spinner-tiny"></span> CHECKING... </span>
 } @else {
-  <span class="agent-badge" [class]="agentData.agent.status">
-    {{ agentData.agent.status.toUpperCase() }}
-  </span>
+<span class="agent-badge" [class]="agentData.agent.status">
+  {{ agentData.agent.status.toUpperCase() }}
+</span>
 }
 ```
 
 #### Card Loading Class:
+
 ```html
 <!-- OLD: Only when isLoading -->
 [class.loading]="agentData.agent.isLoading"
@@ -164,6 +167,7 @@ Display: OFFLINE badge in red
 ## User Experience Flow
 
 ### Scenario 1: Initial Page Load
+
 ```
 Time    Agent Status           Display
 ─────────────────────────────────────────────
@@ -173,6 +177,7 @@ Time    Agent Status           Display
 ```
 
 ### Scenario 2: Manual Refresh
+
 ```
 Time    Agent Status           Display
 ─────────────────────────────────────────────
@@ -183,6 +188,7 @@ Time    Agent Status           Display
 ```
 
 ### Scenario 3: Slow Network
+
 ```
 Time    Agent Status           Display
 ─────────────────────────────────────────────
@@ -195,20 +201,24 @@ Time    Agent Status           Display
 ## Benefits
 
 ### 1. **Honest Status Display**
+
 - ✅ Never shows "OFFLINE" before actually checking
 - ✅ Clear "CHECKING..." state shows system is working
 - ✅ Users understand status is being determined
 
 ### 2. **Reduced Confusion**
+
 - ❌ OLD: "Why does my agent show offline? I just started it!"
 - ✅ NEW: "Agent is being checked... now it shows online"
 
 ### 3. **Better Loading UX**
+
 - Visual feedback from the moment agents load
 - No jarring transitions from "OFFLINE" to "ONLINE"
 - Consistent loading state across all scenarios
 
 ### 4. **Accurate State Representation**
+
 - Agent model: `status?: 'online' | 'offline'` (optional)
 - undefined = not yet checked
 - 'online' = confirmed online
@@ -217,6 +227,7 @@ Time    Agent Status           Display
 ## Edge Cases Handled
 
 ### 1. Agent Never Pinged
+
 ```typescript
 status: undefined
 isLoading: false
@@ -224,6 +235,7 @@ isLoading: false
 ```
 
 ### 2. Agent Currently Being Pinged
+
 ```typescript
 status: undefined or 'online' or 'offline'
 isLoading: true
@@ -231,6 +243,7 @@ isLoading: true
 ```
 
 ### 3. Agent Previously Pinged, Now Idle
+
 ```typescript
 status: 'online' or 'offline'
 isLoading: false
@@ -238,6 +251,7 @@ isLoading: false
 ```
 
 ### 4. Ping Fails
+
 ```typescript
 // DataService sets status to 'offline' even on error
 status: 'offline'
@@ -248,6 +262,7 @@ isLoading: false
 ## Testing Checklist
 
 ### Services List Page:
+
 - [ ] Navigate to services list page
 - [ ] **Verify all agents show "CHECKING..." initially** ← KEY TEST
 - [ ] Verify no agents show "OFFLINE" before ping completes
@@ -256,6 +271,7 @@ isLoading: false
 - [ ] Verify no default "OFFLINE" shown at any point before first ping
 
 ### With Network Throttling:
+
 - [ ] Set network to "Slow 3G"
 - [ ] Reload page
 - [ ] **Verify agents stay in "CHECKING..." state for several seconds** ← KEY TEST
@@ -263,10 +279,12 @@ isLoading: false
 - [ ] Verify no flash of "OFFLINE" before loading completes
 
 ### Quick Stats:
+
 - [ ] Verify "Active Agents" count doesn't include agents still loading
 - [ ] Verify count updates correctly after pings complete
 
 ### Service Detail Page:
+
 - [ ] Navigate to service detail with agent
 - [ ] Verify agent status card shows "CHECKING..." initially
 - [ ] Verify no "OFFLINE" shown before ping
@@ -277,6 +295,7 @@ isLoading: false
 ### None - Backward Compatible
 
 The change is purely visual and doesn't affect:
+
 - API contracts
 - Data models (status remains optional)
 - Component interfaces
@@ -296,6 +315,6 @@ The change is purely visual and doesn't affect:
 
 ---
 
-*Last Updated: October 7, 2025*
-*Change Type: UI Enhancement*
-*Breaking: No*
+_Last Updated: October 7, 2025_
+_Change Type: UI Enhancement_
+_Breaking: No_

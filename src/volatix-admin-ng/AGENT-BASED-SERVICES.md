@@ -1,22 +1,26 @@
 # Agent-Based Services Feature
 
 ## Overview
+
 The services list has been restructured to organize services by their registered agents. This provides a clear view of which agents are managing which services, with filtering capabilities.
 
 ## Features
 
 ### 🐳 Agent Selection Panel
+
 - **Visual Agent Cards**: Each agent is displayed with a container icon (🐳), status indicator, and service count
 - **All Services View**: Default view showing all services from all agents
 - **Agent Filtering**: Click on any agent card to filter services by that agent
 - **Status Indicators**: Online/offline status badges with visual indicators
 
 ### 📊 Service Organization
+
 - **Agent Column**: Services table includes an agent column showing which agent registered the service
 - **Filtered View**: When an agent is selected, only their services are displayed
 - **Quick Stats**: Sidebar shows total services, total agents, and active agents count
 
 ### 🎨 User Experience
+
 - **Responsive Grid**: Agent cards adapt to screen size
 - **Visual Feedback**: Selected agent cards are highlighted
 - **Clear Filter Badge**: Shows currently selected agent with a quick clear button
@@ -25,6 +29,7 @@ The services list has been restructured to organize services by their registered
 ## Data Models
 
 ### Service Model (Updated)
+
 ```typescript
 export interface Service {
   id?: string;
@@ -35,14 +40,15 @@ export interface Service {
   instances?: number;
   lastSeen?: string;
   lastSeenText?: string;
-  agentId?: string;          // NEW - Links service to agent
-  agentName?: string;        // NEW - Agent display name
-  description?: string;      // NEW - Service description
-  url?: string;              // NEW - Service URL
+  agentId?: string; // NEW - Links service to agent
+  agentName?: string; // NEW - Agent display name
+  description?: string; // NEW - Service description
+  url?: string; // NEW - Service URL
 }
 ```
 
 ### Agent Model (Updated)
+
 ```typescript
 export interface Agent {
   id: string;
@@ -52,7 +58,7 @@ export interface Agent {
   apiKeyGenerated?: string;
   createdAt?: string;
   updatedAt?: string;
-  status?: 'online' | 'offline';  // NEW - Agent status
+  status?: 'online' | 'offline'; // NEW - Agent status
 }
 ```
 
@@ -61,6 +67,7 @@ export interface Agent {
 ### ServicesList Component
 
 #### Signals
+
 ```typescript
 services = signal<Service[]>([]);
 agents = signal<Agent[]>([]);
@@ -71,17 +78,18 @@ isLoadingAgents = signal(false);
 ```
 
 #### Computed Properties
+
 ```typescript
 // Filtered services based on selected agent
 filteredServices = computed(() => {
   const allServices = this.services();
   const selected = this.selectedAgent();
-  
+
   if (!selected) {
     return allServices;
   }
-  
-  return allServices.filter(service => service.agentId === selected.id);
+
+  return allServices.filter((service) => service.agentId === selected.id);
 });
 
 // Paginated view of filtered services
@@ -101,21 +109,22 @@ totalPages = computed(() => {
 servicesByAgent = computed(() => {
   const allServices = this.services();
   const allAgents = this.agents();
-  
-  return allAgents.map(agent => ({
+
+  return allAgents.map((agent) => ({
     agent,
-    services: allServices.filter(service => service.agentId === agent.id),
-    serviceCount: allServices.filter(service => service.agentId === agent.id).length
+    services: allServices.filter((service) => service.agentId === agent.id),
+    serviceCount: allServices.filter((service) => service.agentId === agent.id).length,
   }));
 });
 
 // Count of active agents
 activeAgentsCount = computed(() => {
-  return this.servicesByAgent().filter(a => a.agent.status === 'online').length;
+  return this.servicesByAgent().filter((a) => a.agent.status === 'online').length;
 });
 ```
 
 #### Methods
+
 ```typescript
 // Load agents from API
 loadAgents(): void {
@@ -169,6 +178,7 @@ getAgentName(agentId: string): string {
 ## UI Components
 
 ### Agent Selection Panel
+
 ```html
 <div class="agent-grid">
   <!-- All Services Card -->
@@ -185,30 +195,36 @@ getAgentName(agentId: string): string {
 
   <!-- Individual Agent Cards -->
   @for (agentData of servicesByAgent(); track agentData.agent.id) {
-    <div class="agent-card" [class.selected]="selectedAgent()?.id === agentData.agent.id" (click)="selectAgent(agentData.agent)">
-      <div class="agent-icon">
-        <span class="icon">🐳</span>
-        <div class="status-indicator" [class]="agentData.agent.status || 'offline'"></div>
-      </div>
-      <div class="agent-info">
-        <h3>{{ agentData.agent.name }}</h3>
-        <p>{{ agentData.serviceCount }} services</p>
-        <span class="agent-badge" [class]="agentData.agent.status || 'offline'">
-          {{ (agentData.agent.status || 'offline').toUpperCase() }}
-        </span>
-      </div>
+  <div
+    class="agent-card"
+    [class.selected]="selectedAgent()?.id === agentData.agent.id"
+    (click)="selectAgent(agentData.agent)"
+  >
+    <div class="agent-icon">
+      <span class="icon">🐳</span>
+      <div class="status-indicator" [class]="agentData.agent.status || 'offline'"></div>
     </div>
+    <div class="agent-info">
+      <h3>{{ agentData.agent.name }}</h3>
+      <p>{{ agentData.serviceCount }} services</p>
+      <span class="agent-badge" [class]="agentData.agent.status || 'offline'">
+        {{ (agentData.agent.status || 'offline').toUpperCase() }}
+      </span>
+    </div>
+  </div>
   }
 </div>
 ```
 
 ### Services Table with Agent Column
+
 ```html
 <table>
   <thead>
     <tr>
       <th>Service</th>
-      <th>Agent</th>  <!-- NEW COLUMN -->
+      <th>Agent</th>
+      <!-- NEW COLUMN -->
       <th>Status</th>
       <th>Instances</th>
       <th>Version</th>
@@ -218,35 +234,37 @@ getAgentName(agentId: string): string {
   </thead>
   <tbody>
     @for (service of paginatedServices(); track service.id) {
-      <tr>
-        <td>
-          <strong>{{ service.name }}</strong>
-          <small>{{ service.description }}</small>
-        </td>
-        <td>
-          <span class="agent-icon-small">🐳</span>
-          {{ getAgentName(service.agentId || '') }}
-        </td>
-        <!-- Other columns... -->
-      </tr>
+    <tr>
+      <td>
+        <strong>{{ service.name }}</strong>
+        <small>{{ service.description }}</small>
+      </td>
+      <td>
+        <span class="agent-icon-small">🐳</span>
+        {{ getAgentName(service.agentId || '') }}
+      </td>
+      <!-- Other columns... -->
+    </tr>
     }
   </tbody>
 </table>
 ```
 
 ### Filter Badge
+
 ```html
 @if (selectedAgent()) {
-  <span class="selected-agent-badge">
-    🐳 {{ selectedAgent()!.name }} • {{ filteredServices().length }} services
-    <button class="btn-clear-filter" (click)="clearAgentFilter()">✕</button>
-  </span>
+<span class="selected-agent-badge">
+  🐳 {{ selectedAgent()!.name }} • {{ filteredServices().length }} services
+  <button class="btn-clear-filter" (click)="clearAgentFilter()">✕</button>
+</span>
 }
 ```
 
 ## CSS Styling
 
 ### Agent Card Styles
+
 ```css
 .agent-card {
   display: flex;
@@ -273,6 +291,7 @@ getAgentName(agentId: string): string {
 ```
 
 ### Status Indicators
+
 ```css
 .status-indicator {
   position: absolute;
@@ -295,6 +314,7 @@ getAgentName(agentId: string): string {
 ```
 
 ### Agent Badges
+
 ```css
 .agent-badge.all {
   background: rgba(255, 193, 7, 0.2);
@@ -315,12 +335,14 @@ getAgentName(agentId: string): string {
 ## User Flows
 
 ### 1. View All Services
+
 1. Navigate to Services page
 2. By default, "All Services" card is selected
 3. Table shows all services from all agents
 4. Agent column shows which agent registered each service
 
 ### 2. Filter by Agent
+
 1. Click on an agent card in the selection panel
 2. Agent card becomes highlighted with accent color
 3. Table filters to show only that agent's services
@@ -328,11 +350,13 @@ getAgentName(agentId: string): string {
 5. Pagination resets to page 1
 
 ### 3. Clear Filter
+
 1. Click the "✕" button in the filter badge
 2. OR click the "All Services" card
 3. View returns to showing all services
 
 ### 4. Navigate Services
+
 1. Select an agent to view their services
 2. Click "Details" on any service to view full details
 3. Click "Ping" to test service connectivity
@@ -340,6 +364,7 @@ getAgentName(agentId: string): string {
 ## Backend Requirements
 
 ### Services API Response
+
 Services should include `agentId` and optionally `agentName`:
 
 ```json
@@ -363,6 +388,7 @@ Response:
 ```
 
 ### Agents API Response
+
 Agents should include `status` field:
 
 ```json
@@ -386,6 +412,7 @@ Response:
 ## Features in Action
 
 ### Agent Selection Panel
+
 - 🌐 **All Services** - Shows all services (default)
 - 🐳 **Agent Cards** - Each agent with:
   - Container icon
@@ -394,11 +421,13 @@ Response:
   - Status badge (ONLINE/OFFLINE)
 
 ### Services Table
+
 - New **Agent** column showing which agent registered each service
 - Agent icon (🐳) with agent name
 - Filtered view when agent is selected
 
 ### Quick Stats (Sidebar)
+
 - 📊 Total Services count
 - 🐳 Total Agents count
 - ✓ Active Agents count

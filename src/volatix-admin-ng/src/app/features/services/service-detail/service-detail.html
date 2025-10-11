@@ -2,12 +2,22 @@
   <div class="grid">
     <section>
       @if (isLoading()) {
-        <div class="card">
-          <div style="text-align: center; padding: 48px; color: var(--muted);">
-            <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid var(--glass-border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-            <div style="margin-top: 16px; font-size: 14px;">Loading service details...</div>
-          </div>
+      <div class="card">
+        <div style="text-align: center; padding: 48px; color: var(--muted)">
+          <div
+            style="
+              display: inline-block;
+              width: 40px;
+              height: 40px;
+              border: 3px solid var(--glass-border);
+              border-top-color: var(--accent);
+              border-radius: 50%;
+              animation: spin 0.8s linear infinite;
+            "
+          ></div>
+          <div style="margin-top: 16px; font-size: 14px">Loading service details...</div>
         </div>
+      </div>
       } @else {
       <div class="card">
         <div class="row" style="align-items: center; justify-content: space-between">
@@ -55,10 +65,17 @@
 
       <!-- Agent Status Card -->
       @if (serviceAgent()) {
-      <div class="card" style="margin-top: 16px;">
-        <div class="row" style="align-items: center; justify-content: space-between; margin-bottom: 12px;">
-          <h2 class="text-app" style="margin: 0;">Agent Status</h2>
-          <button class="btn secondary sm btn-ripple" (click)="refreshAgentStatus()" [disabled]="agentStatus() === 'loading'">
+      <div class="card" style="margin-top: 16px">
+        <div
+          class="row"
+          style="align-items: center; justify-content: space-between; margin-bottom: 12px"
+        >
+          <h2 class="text-app" style="margin: 0">Agent Status</h2>
+          <button
+            class="btn secondary sm btn-ripple"
+            (click)="refreshAgentStatus()"
+            [disabled]="agentStatus() === 'loading'"
+          >
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -75,44 +92,47 @@
           <div class="agent-icon-large">
             <span class="icon">🐳</span>
             @if (agentStatus() === 'loading') {
-              <div class="status-indicator loading"></div>
+            <div class="status-indicator loading"></div>
             } @else if (agentStatus() === 'online') {
-              <div class="status-indicator online"></div>
+            <div class="status-indicator online"></div>
             } @else {
-              <div class="status-indicator offline"></div>
+            <div class="status-indicator offline"></div>
             }
           </div>
 
           <div class="agent-details">
-            <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: var(--text-primary);">
+            <h3
+              style="
+                margin: 0 0 8px 0;
+                font-size: 18px;
+                font-weight: 600;
+                color: var(--text-primary);
+              "
+            >
               {{ serviceAgent()!.name }}
             </h3>
-            
-            <div style="display: grid; grid-template-columns: 120px 1fr; gap: 8px; font-size: 14px;">
-              <div style="color: var(--muted);">Status:</div>
+
+            <div style="display: grid; grid-template-columns: 120px 1fr; gap: 8px; font-size: 14px">
+              <div style="color: var(--muted)">Status:</div>
               <div>
                 @if (agentStatus() === 'loading') {
-                  <span class="agent-badge loading">
-                    <span class="spinner-small"></span>
-                    CHECKING...
-                  </span>
+                <span class="agent-badge loading">
+                  <span class="spinner-small"></span>
+                  CHECKING...
+                </span>
                 } @else if (agentStatus() === 'online') {
-                  <span class="agent-badge online">
-                    ✓ ONLINE
-                  </span>
+                <span class="agent-badge online"> ✓ ONLINE </span>
                 } @else {
-                  <span class="agent-badge offline">
-                    ✗ OFFLINE
-                  </span>
+                <span class="agent-badge offline"> ✗ OFFLINE </span>
                 }
               </div>
 
-              <div style="color: var(--muted);">URL:</div>
-              <div style="color: var(--text);">{{ serviceAgent()!.url }}</div>
+              <div style="color: var(--muted)">URL:</div>
+              <div style="color: var(--text)">{{ serviceAgent()!.url }}</div>
 
               @if (agentStatusMessage()) {
-                <div style="color: var(--muted);">Message:</div>
-                <div style="color: var(--text);">{{ agentStatusMessage() }}</div>
+              <div style="color: var(--muted)">Message:</div>
+              <div style="color: var(--text)">{{ agentStatusMessage() }}</div>
               }
             </div>
           </div>
@@ -121,168 +141,218 @@
       }
 
       <div class="card" style="margin-top: 16px">
-        <div class="row" style="align-items: center; justify-content: space-between; margin-bottom: 16px">
+        <div
+          class="row"
+          style="align-items: center; justify-content: space-between; margin-bottom: 16px"
+        >
           <h2 class="text-app" style="margin: 0">Agent Responses for this service</h2>
           @if (agentResponses().length > 0) {
-          <button
-            class="btn danger sm btn-ripple"
-            (click)="flushAllCaches()"
-            [disabled]="isFlushingCaches()"
-          >
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
-            {{ isFlushingCaches() ? 'Flushing...' : 'Flush All Caches' }}
-          </button>
+          <div style="display: flex; gap: 8px">
+            <button class="btn primary sm btn-ripple" (click)="openKeysPanel()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                />
+              </svg>
+              View Keys
+            </button>
+            <button
+              class="btn danger sm btn-ripple"
+              (click)="flushAllCaches()"
+              [disabled]="isFlushingCaches()"
+            >
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+              {{ isFlushingCaches() ? 'Flushing...' : 'Flush All Caches' }}
+            </button>
+          </div>
           }
         </div>
-        
+
         @if (isLoadingCaches()) {
-          <div style="text-align: center; padding: 32px; color: var(--muted);">
-            <div style="display: inline-block; width: 32px; height: 32px; border: 3px solid var(--glass-border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-            <div style="margin-top: 12px; font-size: 14px;">Loading agent responses...</div>
-          </div>
-        } @else if (paginatedAgentResponses().length > 0) {
-          @for (agentResponse of paginatedAgentResponses(); track $index) {
-            <div style="margin-bottom: 24px; padding: 16px; border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(255, 255, 255, 0.02);">
-              
-              <!-- Collapsible Agent Response Details -->
-              <div style="margin-bottom: 20px;">
-                <div 
-                  (click)="toggleParametersExpanded($index)" 
-                  style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 8px 12px; margin: 0 -12px 12px -12px; border-radius: 8px; background: rgba(255, 255, 255, 0.03); transition: background 0.2s;"
-                  [style.background]="isParametersExpanded($index) ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.03)'"
+        <div style="text-align: center; padding: 32px; color: var(--muted)">
+          <div
+            style="
+              display: inline-block;
+              width: 32px;
+              height: 32px;
+              border: 3px solid var(--glass-border);
+              border-top-color: var(--accent);
+              border-radius: 50%;
+              animation: spin 0.8s linear infinite;
+            "
+          ></div>
+          <div style="margin-top: 12px; font-size: 14px">Loading agent responses...</div>
+        </div>
+        } @else if (paginatedAgentResponses().length > 0) { @for (agentResponse of
+        paginatedAgentResponses(); track $index) {
+        <div
+          style="
+            margin-bottom: 24px;
+            padding: 16px;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+          "
+        >
+          <!-- Collapsible Agent Response Details -->
+          <div style="margin-bottom: 20px">
+            <div
+              (click)="toggleParametersExpanded($index)"
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                cursor: pointer;
+                padding: 8px 12px;
+                margin: 0 -12px 12px -12px;
+                border-radius: 8px;
+                background: rgba(255, 255, 255, 0.03);
+                transition: background 0.2s;
+              "
+              [style.background]="
+                isParametersExpanded($index)
+                  ? 'rgba(255, 255, 255, 0.05)'
+                  : 'rgba(255, 255, 255, 0.03)'
+              "
+            >
+              <h3
+                style="
+                  font-size: 14px;
+                  font-weight: 600;
+                  color: var(--muted);
+                  margin: 0;
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                "
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  style="transition: transform 0.2s"
+                  [style.transform]="
+                    isParametersExpanded($index) ? 'rotate(90deg)' : 'rotate(0deg)'
+                  "
                 >
-                  <h3 style="font-size: 14px; font-weight: 600; color: var(--muted); margin: 0; display: flex; align-items: center; gap: 8px;">
-                    <svg 
-                      width="16" 
-                      height="16" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                      style="transition: transform 0.2s;"
-                      [style.transform]="isParametersExpanded($index) ? 'rotate(90deg)' : 'rotate(0deg)'"
-                    >
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                    Agent Response Details
-                    <span style="display: inline-block; background: rgba(255, 255, 255, 0.1); padding: 2px 8px; border-radius: 12px; font-size: 11px;">
-                      {{ (agentResponse.parametersDetails?.length || 0) + (agentResponse.cacheKeys?.length || 0) }} items
-                    </span>
-                  </h3>
-                  <span style="font-size: 12px; color: var(--muted); opacity: 0.7;">{{ isParametersExpanded($index) ? 'Click to collapse' : 'Click to expand' }}</span>
-                </div>
-                
-                @if (isParametersExpanded($index)) {
-                  <!-- Parameters Details Section -->
-                  @if (agentResponse.parametersDetails && agentResponse.parametersDetails.length > 0) {
-                    <div style="margin-bottom: 20px;">
-                      <h4 style="font-size: 13px; font-weight: 600; color: var(--accent); margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px;">Parameters</h4>
-                      @for (param of agentResponse.parametersDetails; track param.name) {
-                        <div style="margin-bottom: 16px;">
-                          <div style="font-weight: 600; color: var(--muted); margin-bottom: 8px; font-size: 13px;">{{ param.name }}</div>
-                          <div style="display: grid; grid-template-columns: 200px 1fr; gap: 8px; background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--glass-border);">
-                            @for (paramEntry of param.parameters | keyvalue; track paramEntry.key) {
-                              <div style="color: var(--muted); font-size: 13px; padding: 4px 0;">{{ paramEntry.key }}</div>
-                              <div style="color: var(--vol-appname-text); font-size: 13px; padding: 4px 0;">{{ paramEntry.value }}</div>
-                            }
-                          </div>
-                        </div>
-                      }
-                    </div>
-                  }
-
-                  <!-- Cache Keys Section -->
-                  @if (agentResponse.cacheKeys && agentResponse.cacheKeys.length > 0) {
-                    <div style="margin-bottom: 20px;">
-                      <h4 style="font-size: 13px; font-weight: 600; color: var(--accent); margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px;">
-                        Cache Keys
-                        <span style="display: inline-block; background: rgba(255, 255, 255, 0.1); padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px; text-transform: none; letter-spacing: normal;">{{ agentResponse.cacheKeys.length }}</span>
-                      </h4>
-                      <table>
-                        <thead>
-                          <tr>
-                            <th style="font-size: 12px;">Cache Name</th>
-                            <th class="col-actions" style="font-size: 12px;">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          @for (cacheName of agentResponse.cacheKeys; track cacheName) {
-                            <tr>
-                              <td>{{ cacheName }}</td>
-                              <td class="col-actions">
-                                <div class="table-actions">
-                                  <button
-                                    class="btn primary sm btn-ripple"
-                                    (click)="openCacheDetail(cacheName, agentResponse.id)"
-                                  >
-                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                      />
-                                      <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                      />
-                                    </svg>
-                                    Details
-                                  </button>
-                                  <button
-                                    class="btn danger sm btn-ripple"
-                                    (click)="removeCacheByKey(cacheName)"
-                                    [disabled]="removingCache() === cacheName"
-                                  >
-                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                      />
-                                    </svg>
-                                    {{ removingCache() === cacheName ? 'Removing...' : 'Remove' }}
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          }
-                        </tbody>
-                      </table>
-                    </div>
-                  }
-
-                  <!-- Cache Result Section -->
-                  @if (agentResponse.cacheResult) {
-                    <div>
-                      <h4 style="font-size: 13px; font-weight: 600; color: var(--accent); margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px;">Cache Result</h4>
-                      <pre class="pre" style="max-height: 300px; overflow: auto;">{{ agentResponse.cacheResult | json }}</pre>
-                    </div>
-                  }
-                }
-              </div>
-
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+                Agent Response Details
+                <span
+                  style="
+                    display: inline-block;
+                    background: rgba(255, 255, 255, 0.1);
+                    padding: 2px 8px;
+                    border-radius: 12px;
+                    font-size: 11px;
+                  "
+                >
+                  {{ agentResponse.parametersDetails?.length || 0 }}
+                  parameters
+                </span>
+              </h3>
+              <span style="font-size: 12px; color: var(--muted); opacity: 0.7">{{
+                isParametersExpanded($index) ? 'Click to collapse' : 'Click to expand'
+              }}</span>
             </div>
-          }
 
-          @if (totalPages() > 1) {
-            <app-pagination
-              [currentPage]="currentPage()"
-              [totalPages]="totalPages()"
-              (pageChange)="onPageChange($event)"
-            ></app-pagination>
-          }
-        } @else {
-          <div style="text-align: center; color: var(--muted); padding: 32px 0;">No agent responses found for this service</div>
+            @if (isParametersExpanded($index)) {
+            <!-- Parameters Details Section -->
+            @if (agentResponse.parametersDetails && agentResponse.parametersDetails.length > 0) {
+            <div style="margin-bottom: 20px">
+              <h4
+                style="
+                  font-size: 13px;
+                  font-weight: 600;
+                  color: var(--accent);
+                  margin: 0 0 12px 0;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                "
+              >
+                Parameters
+              </h4>
+              @for (param of agentResponse.parametersDetails; track param.name) {
+              <div style="margin-bottom: 16px">
+                <div
+                  style="font-weight: 600; color: var(--muted); margin-bottom: 8px; font-size: 13px"
+                >
+                  {{ param.name }}
+                </div>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: 200px 1fr;
+                    gap: 8px;
+                    background: rgba(255, 255, 255, 0.02);
+                    padding: 12px;
+                    border-radius: 8px;
+                    border: 1px solid var(--glass-border);
+                  "
+                >
+                  @for (paramEntry of param.parameters | keyvalue; track paramEntry.key) {
+                  <div style="color: var(--muted); font-size: 13px; padding: 4px 0">
+                    {{ paramEntry.key }}
+                  </div>
+                  <div style="color: var(--vol-appname-text); font-size: 13px; padding: 4px 0">
+                    {{ paramEntry.value }}
+                  </div>
+                  }
+                </div>
+              </div>
+              }
+            </div>
+            }
+
+            <!-- Cache Result Section -->
+            @if (agentResponse.cacheResult) {
+            <div>
+              <h4
+                style="
+                  font-size: 13px;
+                  font-weight: 600;
+                  color: var(--accent);
+                  margin: 0 0 12px 0;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                "
+              >
+                Cache Result
+              </h4>
+              <pre class="pre" style="max-height: 300px; overflow: auto">{{
+                agentResponse.cacheResult | json
+              }}</pre>
+            </div>
+            } }
+          </div>
+        </div>
+        } @if (totalPages() > 1) {
+        <app-pagination
+          [currentPage]="currentPage()"
+          [totalPages]="totalPages()"
+          (pageChange)="onPageChange($event)"
+        ></app-pagination>
+        } } @else {
+        <div style="text-align: center; color: var(--muted); padding: 32px 0">
+          No agent responses found for this service
+        </div>
         }
       </div>
       }
@@ -290,28 +360,167 @@
 
     <aside>
       <div class="card">
-        <h2 class="text-app">Service snapshot (JSON)</h2>
-        <div style="font-size: 12px; margin-bottom: 6px">
-          Includes serviceId, service info, and all caches for this service.
+        <h2 class="text-app" style="display: flex; align-items: center; gap: 8px">
+          <span style="font-size: 20px">💡</span> Page Guide
+        </h2>
+
+        <div style="margin-bottom: 24px">
+          <h3 style="font-size: 14px; font-weight: 600; color: var(--accent); margin: 0 0 8px 0">
+            Service Details
+          </h3>
+          <p style="font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0">
+            View comprehensive information about this service including its status, instances,
+            version, and when it was last seen.
+          </p>
         </div>
-        <pre
-          class="pre"
+
+        <div style="margin-bottom: 24px">
+          <h3 style="font-size: 14px; font-weight: 600; color: var(--accent); margin: 0 0 8px 0">
+            Agent Status
+          </h3>
+          <p style="font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0">
+            Monitor the agent managing this service. The status indicator shows whether the agent is
+            online or offline. Use the <strong>Refresh</strong> button to check the current status.
+          </p>
+        </div>
+
+        <div style="margin-bottom: 24px">
+          <h3 style="font-size: 14px; font-weight: 600; color: var(--accent); margin: 0 0 8px 0">
+            Agent Responses & Cache Management
+          </h3>
+          <p style="font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0 0 12px 0">
+            This section displays all cached responses for this service. You can:
+          </p>
+          <ul
+            style="
+              font-size: 13px;
+              color: var(--muted);
+              line-height: 1.8;
+              margin: 0;
+              padding-left: 20px;
+            "
+          >
+            <li><strong>View Keys</strong> - See all cache keys in a scrollable list</li>
+            <li><strong>Flush All Caches</strong> - Remove all cached data at once</li>
+            <li><strong>Expand Details</strong> - View parameters for each response</li>
+            <li><strong>View Cache Content</strong> - Inspect individual cache entries</li>
+            <li><strong>Remove Individual Cache</strong> - Delete specific cache keys</li>
+          </ul>
+        </div>
+
+        <div
           style="
-            font-family: monospace;
-            font-size: 12px;
-            min-height: 100px;
-            max-height: calc(100vh - 200px);
-            color: var(--muted);
-            background: rgba(255, 255, 255, 0.04);
-            padding: 10px;
+            margin-bottom: 24px;
+            padding: 12px;
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
             border-radius: 8px;
-            overflow-y: auto;
-            overflow-x: auto;
           "
-          >{{ serviceSnapshot() | json }}</pre
         >
-        <div class="row" style="margin-top: 8px">
-          <button class="btn primary sm btn-ripple" (click)="copyJSON()">
+          <h3
+            style="
+              font-size: 13px;
+              font-weight: 600;
+              color: var(--accent);
+              margin: 0 0 8px 0;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+            "
+          >
+            <span>💡</span> Quick Tips
+          </h3>
+          <ul
+            style="
+              font-size: 12px;
+              color: var(--muted);
+              line-height: 1.8;
+              margin: 0;
+              padding-left: 20px;
+            "
+          >
+            <li>Click on response sections to expand/collapse details</li>
+            <li>Use pagination to navigate through many responses</li>
+            <li>Cache details open in a modal for easy viewing</li>
+            <li>Agent status is refreshed automatically on page load</li>
+          </ul>
+        </div>
+
+        <div style="padding-top: 16px; border-top: 1px solid var(--glass-border)">
+          <h3 style="font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 0 8px 0">
+            Need Help?
+          </h3>
+          <p style="font-size: 12px; color: var(--muted); line-height: 1.6; margin: 0">
+            If you encounter any issues or need assistance managing this service, please contact
+            your system administrator.
+          </p>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Cache Detail Modal -->
+  <app-modal
+    [isOpen]="cacheDetailModalOpen()"
+    [title]="'Cache Details: ' + currentCacheKey()"
+    (closeModal)="closeCacheDetailModal()"
+  >
+    <div style="padding: 16px">
+      @if (cacheDetailLoading()) {
+      <div style="text-align: center; padding: 32px; color: var(--muted)">
+        <div
+          style="
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--glass-border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+          "
+        ></div>
+        <div style="margin-top: 16px; font-size: 14px">Loading cache details...</div>
+      </div>
+      } @else if (cacheDetailData()) {
+      <div style="margin-bottom: 16px">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            position: sticky;
+            top: -16px;
+            background: var(--bg);
+            backdrop-filter: blur(10px);
+            padding: 12px 0;
+            z-index: 10;
+            margin-left: -16px;
+            margin-right: -16px;
+            padding-left: 16px;
+            padding-right: 16px;
+            border-bottom: 2px solid var(--glass-border);
+          "
+        >
+          <div style="display: flex; align-items: center; gap: 12px">
+            <h3 style="font-size: 14px; font-weight: 600; color: var(--muted); margin: 0">
+              Cache Content
+            </h3>
+            <span
+              style="
+                display: inline-block;
+                background: rgba(255, 255, 255, 0.1);
+                padding: 2px 8px;
+                border-radius: 12px;
+                font-size: 11px;
+                color: var(--muted);
+                text-transform: uppercase;
+              "
+            >
+              {{ cacheDetailType() }}
+            </span>
+          </div>
+          <button class="btn primary sm btn-ripple" (click)="copyCacheDetailJSON()">
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -320,78 +529,140 @@
                 d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
               />
             </svg>
-            Copy JSON
-          </button>
-          <button class="btn secondary sm btn-ripple" (click)="downloadJSON()">
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            Download JSON
+            Copy
           </button>
         </div>
+        <pre
+          class="pre"
+          style="
+            max-height: 500px;
+            overflow: auto;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-word;
+          "
+          >{{ formattedCacheDetail() }}</pre
+        >
       </div>
-    </aside>
-  </div>
-
-  <!-- Cache Detail Modal -->
-  <app-modal 
-    [isOpen]="cacheDetailModalOpen()" 
-    [title]="'Cache Details: ' + currentCacheKey()"
-    (closeModal)="closeCacheDetailModal()"
-  >
-    <div style="padding: 16px;">
-      @if (cacheDetailLoading()) {
-        <div style="text-align: center; padding: 32px; color: var(--muted);">
-          <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid var(--glass-border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-          <div style="margin-top: 16px; font-size: 14px;">Loading cache details...</div>
-        </div>
-      } @else if (cacheDetailData()) {
-        <div style="margin-bottom: 16px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <h3 style="font-size: 14px; font-weight: 600; color: var(--muted); margin: 0;">Cache Content</h3>
-              <span style="display: inline-block; background: rgba(255, 255, 255, 0.1); padding: 2px 8px; border-radius: 12px; font-size: 11px; color: var(--muted); text-transform: uppercase;">
-                {{ cacheDetailType() }}
-              </span>
-            </div>
-            <button class="btn primary sm btn-ripple" (click)="copyCacheDetailJSON()">
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                />
-              </svg>
-              Copy
-            </button>
-          </div>
-          <pre 
-            class="pre" 
-            style="
-              max-height: 500px; 
-              overflow: auto; 
-              background: rgba(255, 255, 255, 0.04); 
-              padding: 16px; 
-              border-radius: 8px;
-              border: 1px solid var(--glass-border);
-              font-family: 'Courier New', monospace;
-              font-size: 13px;
-              line-height: 1.5;
-              white-space: pre-wrap;
-              word-break: break-word;
-            "
-          >{{ formattedCacheDetail() }}</pre>
-        </div>
       } @else {
-        <div style="text-align: center; padding: 32px; color: var(--muted);">
-          No cache data available
-        </div>
+      <div style="text-align: center; padding: 32px; color: var(--muted)">
+        No cache data available
+      </div>
+      }
+    </div>
+  </app-modal>
+
+  <!-- Keys Panel Modal -->
+  <app-modal
+    [isOpen]="keysPanelModalOpen()"
+    [title]="'All Cache Keys (' + totalCacheKeys() + ')'"
+    (closeModal)="closeKeysPanel()"
+  >
+    <div style="padding: 16px">
+      @if (totalCacheKeys() > 0) {
+      <div
+        style="
+          max-height: 600px;
+          overflow-y: auto;
+          border: 1px solid var(--glass-border);
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.02);
+        "
+      >
+        <table style="margin: 0">
+          <thead style="position: sticky; top: 0; z-index: 10">
+            <tr style="background: var(--bg); backdrop-filter: blur(10px)">
+              <th
+                style="
+                  font-size: 12px;
+                  padding: 12px 16px;
+                  border-bottom: 2px solid var(--glass-border);
+                  background: inherit;
+                "
+              >
+                Cache Key
+              </th>
+              <th
+                class="col-actions"
+                style="
+                  font-size: 12px;
+                  padding: 12px 16px;
+                  border-bottom: 2px solid var(--glass-border);
+                  background: inherit;
+                "
+              >
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (keyItem of allCacheKeys(); track keyItem.key) {
+            <tr>
+              <td style="padding: 12px 16px">{{ keyItem.key }}</td>
+              <td class="col-actions" style="padding: 12px 16px">
+                <div class="table-actions">
+                  <button
+                    class="btn primary sm btn-ripple"
+                    (click)="openCacheDetail(keyItem.key, keyItem.agentResponseId)"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                    Details
+                  </button>
+                  <button
+                    class="btn danger sm btn-ripple"
+                    (click)="removeCacheByKey(keyItem.key)"
+                    [disabled]="removingCache() === keyItem.key"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                    {{ removingCache() === keyItem.key ? 'Removing...' : 'Remove' }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      } @else {
+      <div style="text-align: center; padding: 32px; color: var(--muted)">No cache keys found</div>
       }
     </div>
   </app-modal>

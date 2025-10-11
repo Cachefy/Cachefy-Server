@@ -16,6 +16,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Configuration
 builder.Services.Configure<CosmosDbSettings>(
     builder.Configuration.GetSection("CosmosDb"));
+builder.Services.Configure<CorsSettings>(
+    builder.Configuration.GetSection("Cors"));
 
 // Cosmos DB Client
 builder.Services.AddSingleton<CosmosClient>(sp =>
@@ -95,17 +97,56 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// CORS
+// CORS - Dynamic Configuration
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAngularApp", policy =>
+    var corsSettings = builder.Configuration.GetSection("Cors").Get<CorsSettings>()!;
+    
+    options.AddPolicy(corsSettings.PolicyName, policy =>
     {
-        policy.WithOrigins("http://localhost:4200", "http://localhost:4201", "http://localhost:4202")
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials()
-              .SetIsOriginAllowedToAllowWildcardSubdomains()
-              .WithExposedHeaders("*");
+        // Configure origins
+        if (corsSettings.AllowedOrigins.Length > 0)
+        {
+            policy.WithOrigins(corsSettings.AllowedOrigins);
+        }
+        else
+        {
+            policy.AllowAnyOrigin();
+        }
+
+        // Configure methods
+        if (corsSettings.AllowAnyMethod)
+        {
+            policy.AllowAnyMethod();
+        }
+
+        // Configure headers
+        if (corsSettings.AllowAnyHeader)
+        {
+            policy.AllowAnyHeader();
+        }
+
+        // Configure credentials
+        if (corsSettings.AllowCredentials)
+        {
+            policy.AllowCredentials();
+        }
+
+        // Configure wildcard subdomains
+        if (corsSettings.AllowWildcardSubdomains)
+        {
+            policy.SetIsOriginAllowedToAllowWildcardSubdomains();
+        }
+
+        // Configure exposed headers
+        if (corsSettings.ExposeAllHeaders)
+        {
+            policy.WithExposedHeaders("*");
+        }
+        else if (corsSettings.ExposedHeaders.Length > 0)
+        {
+            policy.WithExposedHeaders(corsSettings.ExposedHeaders);
+        }
     });
 });
 
@@ -119,7 +160,8 @@ if (app.Environment.IsDevelopment())
 }
 
 // CORS must be placed before authentication and authorization
-app.UseCors("AllowAngularApp");
+var corsSettings = app.Configuration.GetSection("Cors").Get<CorsSettings>()!;
+app.UseCors(corsSettings.PolicyName);
 
 // API Key validation middleware (must be before authentication)
 app.UseApiKeyValidation();

@@ -30,12 +30,12 @@ export class ServiceDetail implements OnInit {
   isLoading = signal(false);
   isLoadingCaches = signal(false);
   expandedParameters = signal<Set<number>>(new Set());
-  
+
   // Agent status
   serviceAgent = signal<Agent | null>(null);
   agentStatus = signal<'online' | 'offline' | 'loading'>('loading');
   agentStatusMessage = signal<string>('');
-  
+
   // Cache detail modal
   cacheDetailModalOpen = signal(false);
   cacheDetailData = signal<any>(null);
@@ -43,13 +43,36 @@ export class ServiceDetail implements OnInit {
   currentCacheKey = signal<string>('');
   currentAgentResponseId = signal<string>('');
 
+  // Keys panel modal
+  keysPanelModalOpen = signal(false);
+
+  // Track if cache detail was opened from keys panel
+  cacheDetailFromKeysPanel = signal(false);
+
   // Computed properties
   totalPages = computed(() => Math.ceil(this.agentResponses().length / this.itemsPerPage));
-  
+
+  allCacheKeys = computed(() => {
+    const keys: Array<{ key: string; agentResponseId: string }> = [];
+    this.agentResponses().forEach((response) => {
+      if (response.cacheKeys && response.cacheKeys.length > 0) {
+        response.cacheKeys.forEach((key) => {
+          keys.push({
+            key: key,
+            agentResponseId: response.id,
+          });
+        });
+      }
+    });
+    return keys;
+  });
+
+  totalCacheKeys = computed(() => this.allCacheKeys().length);
+
   formattedCacheDetail = computed(() => {
     const data = this.cacheDetailData();
     if (!data) return '';
-    
+
     // If it's already a string, check if it's a JSON string
     if (typeof data === 'string') {
       try {
@@ -60,12 +83,12 @@ export class ServiceDetail implements OnInit {
         return data;
       }
     }
-    
+
     // If it's an object or array, stringify with formatting
     if (typeof data === 'object') {
       return JSON.stringify(data, null, 2);
     }
-    
+
     // For primitives (number, boolean, etc.), convert to string
     return String(data);
   });
@@ -73,7 +96,7 @@ export class ServiceDetail implements OnInit {
   cacheDetailType = computed(() => {
     const data = this.cacheDetailData();
     if (!data) return 'empty';
-    
+
     if (typeof data === 'string') {
       try {
         JSON.parse(data);
@@ -82,11 +105,11 @@ export class ServiceDetail implements OnInit {
         return 'string';
       }
     }
-    
+
     if (typeof data === 'object') {
       return Array.isArray(data) ? 'array' : 'json';
     }
-    
+
     return 'primitive';
   });
 
@@ -119,7 +142,7 @@ export class ServiceDetail implements OnInit {
 
   private loadServiceData(serviceId: string) {
     this.isLoading.set(true);
-    
+
     // Load services first to get the service details
     this.dataService.getServices().subscribe({
       next: (services) => {
@@ -148,7 +171,7 @@ export class ServiceDetail implements OnInit {
             },
             error: () => {
               this.isLoadingCaches.set(false);
-            }
+            },
           });
         } else {
           // Service not found, redirect back to services list
@@ -158,17 +181,17 @@ export class ServiceDetail implements OnInit {
       },
       error: () => {
         this.isLoading.set(false);
-      }
+      },
     });
   }
 
   private loadAgentStatus(agentId: string) {
     this.agentStatus.set('loading');
-    
+
     // Get agent details
     const agents = this.dataService.getAgents();
-    const agent = agents.find(a => a.id === agentId);
-    
+    const agent = agents.find((a) => a.id === agentId);
+
     if (agent) {
       this.serviceAgent.set(agent);
     }
@@ -178,11 +201,11 @@ export class ServiceDetail implements OnInit {
       next: (result) => {
         this.agentStatus.set(result.status);
         this.agentStatusMessage.set(result.message || '');
-        
+
         // Get the updated agent from dataService after ping
         const updatedAgents = this.dataService.getAgents();
-        const updatedAgent = updatedAgents.find(a => a.id === agentId);
-        
+        const updatedAgent = updatedAgents.find((a) => a.id === agentId);
+
         if (updatedAgent) {
           this.serviceAgent.set(updatedAgent);
         }
@@ -190,15 +213,15 @@ export class ServiceDetail implements OnInit {
       error: (error) => {
         this.agentStatus.set('offline');
         this.agentStatusMessage.set(error.message || 'Failed to ping agent');
-        
+
         // Get the updated agent from dataService after ping error
         const updatedAgents = this.dataService.getAgents();
-        const updatedAgent = updatedAgents.find(a => a.id === agentId);
-        
+        const updatedAgent = updatedAgents.find((a) => a.id === agentId);
+
         if (updatedAgent) {
           this.serviceAgent.set(updatedAgent);
         }
-      }
+      },
     });
   }
 
@@ -276,9 +299,7 @@ export class ServiceDetail implements OnInit {
 
     const confirmed = await this.confirmationService.confirm({
       title: 'Flush All Caches',
-      message: `Are you sure you want to flush all ${totalCaches} cache(s) for ${
-        service.name
-      }? This action cannot be undone.`,
+      message: `Are you sure you want to flush all ${totalCaches} cache(s) for ${service.name}? This action cannot be undone.`,
       confirmText: 'Flush All',
       cancelText: 'Cancel',
       type: 'warning',
@@ -302,7 +323,7 @@ export class ServiceDetail implements OnInit {
 
   private loadAgentResponsesForService(serviceId: string) {
     this.isLoadingCaches.set(true);
-    
+
     this.dataService.getCachesForService(serviceId).subscribe({
       next: (responses) => {
         this.agentResponses.set(responses as AgentResponse[]);
@@ -310,7 +331,7 @@ export class ServiceDetail implements OnInit {
       },
       error: () => {
         this.isLoadingCaches.set(false);
-      }
+      },
     });
   }
 
@@ -360,6 +381,15 @@ export class ServiceDetail implements OnInit {
     const service = this.service();
     if (!service) return;
 
+    // Track if we're coming from the keys panel
+    const fromKeysPanel = this.keysPanelModalOpen();
+    this.cacheDetailFromKeysPanel.set(fromKeysPanel);
+
+    // Close the keys panel if it's open
+    if (fromKeysPanel) {
+      this.keysPanelModalOpen.set(false);
+    }
+
     this.currentCacheKey.set(cacheKey);
     this.currentAgentResponseId.set(agentResponseId);
     this.cacheDetailModalOpen.set(true);
@@ -374,7 +404,7 @@ export class ServiceDetail implements OnInit {
       error: (error) => {
         console.error('Failed to load cache details:', error);
         this.cacheDetailLoading.set(false);
-      }
+      },
     });
   }
 
@@ -383,6 +413,12 @@ export class ServiceDetail implements OnInit {
     this.cacheDetailData.set(null);
     this.currentCacheKey.set('');
     this.currentAgentResponseId.set('');
+
+    // Restore the keys panel if we came from there
+    if (this.cacheDetailFromKeysPanel()) {
+      this.keysPanelModalOpen.set(true);
+      this.cacheDetailFromKeysPanel.set(false);
+    }
   }
 
   copyCacheDetailJSON() {
@@ -390,5 +426,13 @@ export class ServiceDetail implements OnInit {
     navigator.clipboard.writeText(formatted).then(() => {
       console.log('Cache detail copied to clipboard');
     });
+  }
+
+  openKeysPanel() {
+    this.keysPanelModalOpen.set(true);
+  }
+
+  closeKeysPanel() {
+    this.keysPanelModalOpen.set(false);
   }
 }

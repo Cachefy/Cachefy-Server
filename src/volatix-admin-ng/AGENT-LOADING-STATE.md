@@ -1,15 +1,19 @@
 # Agent Loading State Implementation
 
 ## Overview
+
 This document describes the implementation of individual loading states for each agent while pinging them. This provides better user feedback by showing which specific agents are currently being checked.
 
 ## Problem Solved
+
 Previously, when pinging agents, users couldn't see which agents were actively being checked. The UI would only update after the ping completed, providing no feedback during the request. This was especially problematic when:
+
 - Multiple agents were being pinged simultaneously
 - Network latency was high
 - Some agents were slow to respond
 
 ## Solution
+
 Added an `isLoading` property to each agent that tracks the loading state individually, allowing the UI to display loading indicators for specific agents while they're being pinged.
 
 ---
@@ -21,6 +25,7 @@ Added an `isLoading` property to each agent that tracks the loading state indivi
 **File**: `src/app/core/models/agent.model.ts`
 
 **Changes**:
+
 ```typescript
 export interface Agent {
   id: string;
@@ -36,6 +41,7 @@ export interface Agent {
 ```
 
 **Key Points**:
+
 - `isLoading` is optional to maintain backward compatibility
 - Set to `true` when ping starts
 - Set to `false` when ping completes (success or error)
@@ -49,6 +55,7 @@ export interface Agent {
 **Method**: `pingAgent(agentId: string)`
 
 #### Before Ping Starts:
+
 ```typescript
 // Set loading state for this agent
 const agents = [...this.agents()];
@@ -61,42 +68,45 @@ if (agentIndex >= 0) {
 ```
 
 #### After Ping Succeeds:
+
 ```typescript
 map((response) => {
   // ... status processing ...
-  
+
   if (agentIndex >= 0) {
-    agents[agentIndex] = { 
-      ...agents[agentIndex], 
-      status, 
-      isLoading: false  // ✅ Clear loading state
+    agents[agentIndex] = {
+      ...agents[agentIndex],
+      status,
+      isLoading: false, // ✅ Clear loading state
     };
     this.agents.set(agents);
   }
-  
+
   return { status, agentId, statusCode, message };
-})
+});
 ```
 
 #### After Ping Fails:
+
 ```typescript
 catchError((error) => {
   // ... error handling ...
-  
+
   if (agentIndex >= 0) {
-    agents[agentIndex] = { 
-      ...agents[agentIndex], 
-      status: 'offline', 
-      isLoading: false  // ✅ Clear loading state
+    agents[agentIndex] = {
+      ...agents[agentIndex],
+      status: 'offline',
+      isLoading: false, // ✅ Clear loading state
     };
     this.agents.set(agents);
   }
-  
+
   return of({ status: 'offline', agentId, statusCode, message });
-})
+});
 ```
 
 **Key Points**:
+
 - Loading state is set **immediately** before HTTP request
 - Loading state is cleared **always** (success or error)
 - Prevents stuck loading states if request fails
@@ -109,48 +119,55 @@ catchError((error) => {
 **File**: `src/app/features/services/services-list/services-list.html`
 
 #### Agent Card Template:
+
 ```html
 @for (agentData of servicesByAgent(); track agentData.agent.id) {
-  <div 
-    class="agent-card" 
-    [class.selected]="selectedAgent()?.id === agentData.agent.id"
-    [class.loading]="agentData.agent.isLoading"  <!-- ✅ Loading class -->
-    (click)="selectAgent(agentData.agent)">
-    
-    <div class="agent-icon">
-      <span class="icon">🐳</span>
-      
-      <!-- ✅ Conditional status indicator based on loading state -->
-      @if (agentData.agent.isLoading) {
-        <div class="status-indicator loading"></div>
-      } @else if (agentData.agent.status === 'online') {
-        <div class="status-indicator online"></div>
-      } @else {
-        <div class="status-indicator offline"></div>
-      }
-    </div>
-    
-    <div class="agent-info">
-      <h3>{{ agentData.agent.name }}</h3>
-      <p>{{ agentData.serviceCount }} services</p>
-      
-      <!-- ✅ Conditional badge based on loading state -->
-      @if (agentData.agent.isLoading) {
-        <span class="agent-badge loading">
-          <span class="spinner-tiny"></span> CHECKING...
-        </span>
-      } @else {
-        <span class="agent-badge" [class]="agentData.agent.status || 'offline'">
-          {{ (agentData.agent.status || 'offline').toUpperCase() }}
-        </span>
-      }
-    </div>
+<div
+  class="agent-card"
+  [class.selected]="selectedAgent()?.id === agentData.agent.id"
+  [class.loading]="agentData.agent.isLoading"
+  <!--
+  ✅
+  Loading
+  class
+  --
+>
+  (click)="selectAgent(agentData.agent)">
+
+  <div class="agent-icon">
+    <span class="icon">🐳</span>
+
+    <!-- ✅ Conditional status indicator based on loading state -->
+    @if (agentData.agent.isLoading) {
+    <div class="status-indicator loading"></div>
+    } @else if (agentData.agent.status === 'online') {
+    <div class="status-indicator online"></div>
+    } @else {
+    <div class="status-indicator offline"></div>
+    }
   </div>
+
+  <div class="agent-info">
+    <h3>{{ agentData.agent.name }}</h3>
+    <p>{{ agentData.serviceCount }} services</p>
+
+    <!-- ✅ Conditional badge based on loading state -->
+    @if (agentData.agent.isLoading) {
+    <span class="agent-badge loading"> <span class="spinner-tiny"></span> CHECKING... </span>
+    } @else {
+    <span class="agent-badge" [class]="agentData.agent.status || 'offline'">
+      {{ (agentData.agent.status || 'offline').toUpperCase() }}
+    </span>
+    }
+  </div>
+</div>
 }
 ```
 
 **UI Behavior**:
+
 1. When `isLoading` is `true`:
+
    - Card gets `.loading` class (reduced opacity, disabled click)
    - Status indicator shows orange pulsing circle
    - Badge shows "CHECKING..." with spinner
@@ -167,22 +184,25 @@ catchError((error) => {
 **File**: `src/app/features/services/services-list/services-list.css`
 
 #### Agent Card Loading State:
+
 ```css
 .agent-card.loading {
   opacity: 0.7;
-  pointer-events: none;  /* Prevent clicks while loading */
+  pointer-events: none; /* Prevent clicks while loading */
 }
 ```
 
 #### Status Indicator Loading State:
+
 ```css
 .status-indicator.loading {
-  background: #f59e0b;  /* Orange color */
+  background: #f59e0b; /* Orange color */
   animation: pulse-loading 1.5s ease-in-out infinite;
 }
 
 @keyframes pulse-loading {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -194,9 +214,10 @@ catchError((error) => {
 ```
 
 #### Agent Badge Loading State:
+
 ```css
 .agent-badge.loading {
-  background: rgba(245, 158, 11, 0.2);  /* Orange with transparency */
+  background: rgba(245, 158, 11, 0.2); /* Orange with transparency */
   color: #f59e0b;
   display: inline-flex;
   align-items: center;
@@ -215,6 +236,7 @@ catchError((error) => {
 ```
 
 **Visual Design**:
+
 - **Loading Color**: Orange (#f59e0b) to distinguish from online/offline
 - **Pulsing Animation**: Smooth opacity and scale changes
 - **Spinner**: Small rotating circle for badge
@@ -226,6 +248,7 @@ catchError((error) => {
 ## User Experience Flow
 
 ### Initial Page Load:
+
 ```
 1. User navigates to Services List page
 2. loadAgents() called
@@ -239,6 +262,7 @@ catchError((error) => {
 ```
 
 ### Manual Refresh (Service Detail):
+
 ```
 1. User clicks "Refresh" button on agent status card
 2. refreshAgentStatus() called
@@ -252,6 +276,7 @@ catchError((error) => {
 ```
 
 ### Multiple Agents Pinging:
+
 ```
 Agent A: [LOADING] → [ONLINE]  (responds in 0.8s)
 Agent B: [LOADING] → [LOADING] → [OFFLINE]  (responds in 2.3s)
@@ -267,6 +292,7 @@ Each agent updates independently as its ping completes.
 ### Agent Card States:
 
 #### 1. Loading State
+
 ```
 ┌─────────────────────────────┐
 │  🐳  ⦿             [70% opacity]
@@ -278,6 +304,7 @@ Each agent updates independently as its ping completes.
 ```
 
 #### 2. Online State
+
 ```
 ┌─────────────────────────────┐
 │  🐳  ⦿                      │
@@ -289,6 +316,7 @@ Each agent updates independently as its ping completes.
 ```
 
 #### 3. Offline State
+
 ```
 ┌─────────────────────────────┐
 │  🐳  ⦿                      │
@@ -343,26 +371,31 @@ Each agent updates independently as its ping completes.
 ## Benefits
 
 ### 1. **Immediate Feedback**
+
 - Users see which agents are being checked in real-time
 - No "dead air" waiting for all pings to complete
 - Clear indication of what's happening
 
 ### 2. **Individual Progress Tracking**
+
 - Each agent shows its own loading state
 - Fast agents show results immediately
 - Slow agents don't block UI updates for fast ones
 
 ### 3. **Better Error Visibility**
+
 - If one agent fails, others continue loading
 - Failed agents clearly show offline status
 - No confusion about which agents were checked
 
 ### 4. **Professional UX**
+
 - Smooth animations and transitions
 - Consistent with modern UI patterns
 - Reduces perceived wait time
 
 ### 5. **Accessibility**
+
 - Visual indicators for loading state
 - Text labels ("CHECKING...") for screen readers
 - Color-coded status (orange/green/red)
@@ -372,15 +405,18 @@ Each agent updates independently as its ping completes.
 ## Performance Considerations
 
 ### Memory Impact:
+
 - **Additional Property**: 1 boolean per agent (~1 byte)
 - **Minimal Overhead**: Negligible for typical agent counts (<100)
 
 ### Rendering Performance:
+
 - **Signal-Based**: Only affected components re-render
 - **CSS Animations**: GPU-accelerated (transform, opacity)
 - **Efficient Updates**: Angular change detection triggered only on state change
 
 ### Network Performance:
+
 - **No Additional Requests**: Same number of API calls
 - **Parallel Execution**: All pings execute simultaneously
 - **No Blocking**: UI remains responsive during pings
@@ -390,6 +426,7 @@ Each agent updates independently as its ping completes.
 ## Testing Checklist
 
 ### Services List Page:
+
 - [ ] Navigate to services list page
 - [ ] Verify all agent cards show loading state initially (orange pulse, "CHECKING...")
 - [ ] Verify agents update to online/offline as pings complete
@@ -400,6 +437,7 @@ Each agent updates independently as its ping completes.
 - [ ] Test with fast network - loading should flash briefly
 
 ### Service Detail Page:
+
 - [ ] Navigate to service detail page with agent
 - [ ] Verify agent status card shows loading state initially
 - [ ] Verify refresh button is disabled during loading
@@ -408,6 +446,7 @@ Each agent updates independently as its ping completes.
 - [ ] Verify status updates after refresh completes
 
 ### Edge Cases:
+
 - [ ] Rapid refresh clicks - should not cause duplicate pings
 - [ ] Navigate away during ping - should not cause errors
 - [ ] Multiple agents pinging - each should update independently
@@ -415,6 +454,7 @@ Each agent updates independently as its ping completes.
 - [ ] Network error - loading should clear and show offline
 
 ### Visual Verification:
+
 - [ ] Orange pulsing animation is smooth (no jank)
 - [ ] Spinner rotates smoothly
 - [ ] Card opacity reduces to 70% during loading
@@ -426,12 +466,14 @@ Each agent updates independently as its ping completes.
 ## Related Files
 
 ### Modified Files:
+
 - `src/app/core/models/agent.model.ts` - Added `isLoading` property
 - `src/app/core/services/data.ts` - Updated `pingAgent()` to manage loading state
 - `src/app/features/services/services-list/services-list.html` - Added loading UI
 - `src/app/features/services/services-list/services-list.css` - Added loading styles
 
 ### Related Documentation:
+
 - `AGENT-STATUS-UPDATE.md` - Agent status update flow
 - `AGENT-STATUS-INTEGRATION.md` - Agent status integration guide
 - `AGENT-BASED-SERVICES-SUMMARY.md` - Overall architecture
@@ -441,10 +483,11 @@ Each agent updates independently as its ping completes.
 ## Future Enhancements
 
 ### 1. Progress Indicator for Multiple Agents:
+
 ```typescript
 const pingProgress = computed(() => {
   const total = agents().length;
-  const loading = agents().filter(a => a.isLoading).length;
+  const loading = agents().filter((a) => a.isLoading).length;
   const completed = total - loading;
   return { completed, total, percentage: (completed / total) * 100 };
 });
@@ -453,6 +496,7 @@ const pingProgress = computed(() => {
 Display: "Checking agents... 2/5 (40%)"
 
 ### 2. Timeout Handling:
+
 ```typescript
 pingAgent(agentId: string, timeout = 5000): Observable<...> {
   return this.http.get(...).pipe(
@@ -467,6 +511,7 @@ pingAgent(agentId: string, timeout = 5000): Observable<...> {
 ```
 
 ### 3. Retry on Failure:
+
 ```typescript
 pingAgent(agentId: string): Observable<...> {
   return this.http.get(...).pipe(
@@ -477,12 +522,14 @@ pingAgent(agentId: string): Observable<...> {
 ```
 
 ### 4. Stagger Ping Requests:
+
 Instead of pinging all agents simultaneously, stagger them:
+
 ```typescript
 pingAllAgents(): Observable<...> {
   const agents = this.agents();
   return from(agents).pipe(
-    concatMap((agent, index) => 
+    concatMap((agent, index) =>
       of(agent).pipe(
         delay(index * 200),  // 200ms between each ping
         mergeMap(a => this.pingAgent(a.id))
@@ -494,7 +541,9 @@ pingAllAgents(): Observable<...> {
 ```
 
 ### 5. WebSocket Real-Time Updates:
+
 Replace polling with WebSocket for instant status updates:
+
 ```typescript
 connectToAgentStatusStream(): void {
   this.wsService.connect('/agent-status').subscribe((update) => {
@@ -513,24 +562,29 @@ connectToAgentStatusStream(): void {
 ## Troubleshooting
 
 ### Issue: Loading state never clears
+
 **Cause**: Error in ping response or network timeout
 **Solution**: Check browser console for errors, verify API endpoint is accessible
 
 ### Issue: All agents stuck in loading
+
 **Cause**: Backend API not returning responses
 **Solution**: Check backend server logs, verify agent ping endpoint implementation
 
 ### Issue: Spinner not visible
+
 **Cause**: CSS animation not loaded or overridden
 **Solution**: Check browser DevTools for CSS errors, verify `spin` animation is defined
 
 ### Issue: Rapid flashing of loading state
+
 **Cause**: Very fast network responses (<100ms)
 **Solution**: This is normal, consider adding minimum loading duration:
+
 ```typescript
 const MIN_LOADING_DURATION = 300; // ms
 ```
 
 ---
 
-*Last Updated: October 7, 2025*
+_Last Updated: October 7, 2025_

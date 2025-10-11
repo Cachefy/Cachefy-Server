@@ -1,11 +1,13 @@
 # Agent Status API Integration - Updated Implementation
 
 ## Overview
+
 Updated the agent ping functionality to work with the actual backend API structure that returns `AgentPingResponseDto` with `StatusCode` and `Message` properties. Also added agent status display to the service detail page.
 
 ## API Response Structure
 
 ### Backend DTO
+
 ```csharp
 public class AgentPingResponseDto
 {
@@ -15,6 +17,7 @@ public class AgentPingResponseDto
 ```
 
 ### Status Codes
+
 - **200**: OK - Agent is online
 - **404**: Not Found - Agent doesn't exist or can't be reached
 - **503**: Service Unavailable - Agent is down/unavailable
@@ -25,16 +28,17 @@ public class AgentPingResponseDto
 ### 1. DataService Updates (`data.ts`)
 
 #### Updated `pingAgent()` Method
+
 ```typescript
-pingAgent(agentId: string): Observable<{ 
-  status: 'online' | 'offline'; 
-  agentId: string; 
-  statusCode?: number; 
-  message?: string 
+pingAgent(agentId: string): Observable<{
+  status: 'online' | 'offline';
+  agentId: string;
+  statusCode?: number;
+  message?: string
 }> {
   return this.http
     .get<{ statusCode: number; message?: string }>(
-      `${environment.apiUrl}/agents/${agentId}/ping`, 
+      `${environment.apiUrl}/agents/${agentId}/ping`,
       { headers: this.getAuthHeaders() }
     )
     .pipe(
@@ -54,12 +58,12 @@ pingAgent(agentId: string): Observable<{
 
         const statusMessage = response.message || this.getStatusMessage(response.statusCode);
         this.addLog(`Pinged agent ${agentId}: ${status} (${response.statusCode} - ${statusMessage})`);
-        
-        return { 
-          status, 
-          agentId, 
-          statusCode: response.statusCode, 
-          message: statusMessage 
+
+        return {
+          status,
+          agentId,
+          statusCode: response.statusCode,
+          message: statusMessage
         };
       }),
       catchError((error) => {
@@ -73,11 +77,11 @@ pingAgent(agentId: string): Observable<{
         }
 
         this.addLog(`Agent ${agentId} ping failed: ${error.message}`);
-        return of({ 
-          status: 'offline' as const, 
-          agentId, 
-          statusCode: error.status || 0, 
-          message: error.message || 'Network error' 
+        return of({
+          status: 'offline' as const,
+          agentId,
+          statusCode: error.status || 0,
+          message: error.message || 'Network error'
         });
       })
     );
@@ -85,6 +89,7 @@ pingAgent(agentId: string): Observable<{
 ```
 
 #### New Helper Method
+
 ```typescript
 private getStatusMessage(statusCode: number): string {
   switch (statusCode) {
@@ -105,11 +110,13 @@ private getStatusMessage(statusCode: number): string {
 ### 2. Service Detail Component (`service-detail.ts`)
 
 #### New Imports
+
 ```typescript
 import { Agent } from '../../../core/models/agent.model';
 ```
 
 #### New Signals
+
 ```typescript
 // Agent status
 serviceAgent = signal<Agent | null>(null);
@@ -120,14 +127,15 @@ agentStatusMessage = signal<string>('');
 #### New Methods
 
 **Load Agent Status**
+
 ```typescript
 private loadAgentStatus(agentId: string) {
   this.agentStatus.set('loading');
-  
+
   // Get agent details
   const agents = this.dataService.getAgents();
   const agent = agents.find(a => a.id === agentId);
-  
+
   if (agent) {
     this.serviceAgent.set(agent);
   }
@@ -137,7 +145,7 @@ private loadAgentStatus(agentId: string) {
     next: (result) => {
       this.agentStatus.set(result.status);
       this.agentStatusMessage.set(result.message || '');
-      
+
       // Update service agent with latest status
       if (agent) {
         this.serviceAgent.set({ ...agent, status: result.status });
@@ -152,6 +160,7 @@ private loadAgentStatus(agentId: string) {
 ```
 
 **Refresh Agent Status**
+
 ```typescript
 refreshAgentStatus() {
   const service = this.service();
@@ -162,7 +171,9 @@ refreshAgentStatus() {
 ```
 
 #### Updated `loadServiceData()` Method
+
 Now checks if service has an `agentId` and loads agent status:
+
 ```typescript
 if (foundService) {
   this.service.set(foundService);
@@ -187,8 +198,11 @@ Added new Agent Status Card between service details and agent responses:
 <div class="card" style="margin-top: 16px;">
   <div class="row">
     <h2 class="text-app">Agent Status</h2>
-    <button class="btn secondary sm" (click)="refreshAgentStatus()" 
-            [disabled]="agentStatus() === 'loading'">
+    <button
+      class="btn secondary sm"
+      (click)="refreshAgentStatus()"
+      [disabled]="agentStatus() === 'loading'"
+    >
       <svg>...</svg>
       {{ agentStatus() === 'loading' ? 'Checking...' : 'Refresh' }}
     </button>
@@ -198,29 +212,29 @@ Added new Agent Status Card between service details and agent responses:
     <div class="agent-icon-large">
       <span class="icon">🐳</span>
       @if (agentStatus() === 'loading') {
-        <div class="status-indicator loading"></div>
+      <div class="status-indicator loading"></div>
       } @else if (agentStatus() === 'online') {
-        <div class="status-indicator online"></div>
+      <div class="status-indicator online"></div>
       } @else {
-        <div class="status-indicator offline"></div>
+      <div class="status-indicator offline"></div>
       }
     </div>
 
     <div class="agent-details">
       <h3>{{ serviceAgent()!.name }}</h3>
-      
+
       <div>
         <div>Status:</div>
         <div>
           @if (agentStatus() === 'loading') {
-            <span class="agent-badge loading">
-              <span class="spinner-small"></span>
-              CHECKING...
-            </span>
+          <span class="agent-badge loading">
+            <span class="spinner-small"></span>
+            CHECKING...
+          </span>
           } @else if (agentStatus() === 'online') {
-            <span class="agent-badge online">✓ ONLINE</span>
+          <span class="agent-badge online">✓ ONLINE</span>
           } @else {
-            <span class="agent-badge offline">✗ OFFLINE</span>
+          <span class="agent-badge offline">✗ OFFLINE</span>
           }
         </div>
 
@@ -228,8 +242,8 @@ Added new Agent Status Card between service details and agent responses:
         <div>{{ serviceAgent()!.url }}</div>
 
         @if (agentStatusMessage()) {
-          <div>Message:</div>
-          <div>{{ agentStatusMessage() }}</div>
+        <div>Message:</div>
+        <div>{{ agentStatusMessage() }}</div>
         }
       </div>
     </div>
@@ -305,7 +319,8 @@ Added comprehensive styles for agent status display:
 
 /* Animations */
 @keyframes pulse-online {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
   }
   50% {
@@ -314,8 +329,13 @@ Added comprehensive styles for agent status display:
 }
 
 @keyframes pulse-loading {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 ```
 
@@ -324,11 +344,13 @@ Added comprehensive styles for agent status display:
 ### Agent Status Card Components
 
 1. **Large Container Icon** (🐳)
+
    - 72x72px size
    - Rounded corners
    - Shadow effect
 
 2. **Status Indicator Dot**
+
    - Top-right corner of icon
    - Color-coded:
      - Green with pulse animation = online
@@ -336,11 +358,13 @@ Added comprehensive styles for agent status display:
      - Red = offline
 
 3. **Status Badge**
+
    - Color-coded background and border
    - Icons: ✓ (online), ✗ (offline)
    - Loading spinner for checking state
 
 4. **Agent Details Grid**
+
    - Agent name (heading)
    - Status with badge
    - Agent URL
@@ -353,12 +377,12 @@ Added comprehensive styles for agent status display:
 
 ### Status States
 
-| State | Indicator Color | Badge | Animation |
-|-------|----------------|-------|-----------|
-| Online (200) | Green | ✓ ONLINE | Pulsing glow |
-| Offline (404, 503, 408) | Red | ✗ OFFLINE | None |
-| Loading | Orange | CHECKING... | Fade in/out |
-| Error (network) | Red | ✗ OFFLINE | None |
+| State                   | Indicator Color | Badge       | Animation    |
+| ----------------------- | --------------- | ----------- | ------------ |
+| Online (200)            | Green           | ✓ ONLINE    | Pulsing glow |
+| Offline (404, 503, 408) | Red             | ✗ OFFLINE   | None         |
+| Loading                 | Orange          | CHECKING... | Fade in/out  |
+| Error (network)         | Red             | ✗ OFFLINE   | None         |
 
 ## API Integration Flow
 
@@ -389,11 +413,13 @@ Update UI:
 ## Backend API Requirements
 
 ### Endpoint
+
 ```
 GET /api/agents/{agentId}/ping
 ```
 
 ### Response Format
+
 ```json
 {
   "statusCode": 200,
@@ -402,12 +428,14 @@ GET /api/agents/{agentId}/ping
 ```
 
 ### Status Codes
+
 - **200**: Agent is online and responding
 - **404**: Agent not found or unreachable
 - **503**: Agent service unavailable
 - **408**: Agent ping timeout
 
 ### C# Implementation Example
+
 ```csharp
 [HttpGet("{agentId}/ping")]
 public async Task<ActionResult<AgentPingResponseDto>> PingAgent(string agentId)
@@ -417,48 +445,48 @@ public async Task<ActionResult<AgentPingResponseDto>> PingAgent(string agentId)
         var agent = await _agentRepository.GetByIdAsync(agentId);
         if (agent == null)
         {
-            return Ok(new AgentPingResponseDto 
-            { 
-                StatusCode = 404, 
-                Message = "Agent not found" 
+            return Ok(new AgentPingResponseDto
+            {
+                StatusCode = 404,
+                Message = "Agent not found"
             });
         }
 
         // Try to ping the agent's endpoint
         using var httpClient = new HttpClient();
         httpClient.Timeout = TimeSpan.FromSeconds(5);
-        
+
         var response = await httpClient.GetAsync($"{agent.Url}/health");
-        
+
         if (response.IsSuccessStatusCode)
         {
-            return Ok(new AgentPingResponseDto 
-            { 
-                StatusCode = 200, 
-                Message = "OK" 
+            return Ok(new AgentPingResponseDto
+            {
+                StatusCode = 200,
+                Message = "OK"
             });
         }
-        
-        return Ok(new AgentPingResponseDto 
-        { 
-            StatusCode = 503, 
-            Message = "Service Unavailable" 
+
+        return Ok(new AgentPingResponseDto
+        {
+            StatusCode = 503,
+            Message = "Service Unavailable"
         });
     }
     catch (TaskCanceledException)
     {
-        return Ok(new AgentPingResponseDto 
-        { 
-            StatusCode = 408, 
-            Message = "Request Timeout" 
+        return Ok(new AgentPingResponseDto
+        {
+            StatusCode = 408,
+            Message = "Request Timeout"
         });
     }
     catch (Exception ex)
     {
-        return Ok(new AgentPingResponseDto 
-        { 
-            StatusCode = 503, 
-            Message = ex.Message 
+        return Ok(new AgentPingResponseDto
+        {
+            StatusCode = 503,
+            Message = ex.Message
         });
     }
 }
@@ -467,6 +495,7 @@ public async Task<ActionResult<AgentPingResponseDto>> PingAgent(string agentId)
 ## Usage Scenarios
 
 ### Scenario 1: Agent Online
+
 ```
 User opens service detail page
 → Service has agentId: "agent-123"
@@ -480,6 +509,7 @@ User opens service detail page
 ```
 
 ### Scenario 2: Agent Not Found
+
 ```
 User opens service detail page
 → Service has agentId: "agent-456"
@@ -493,6 +523,7 @@ User opens service detail page
 ```
 
 ### Scenario 3: Agent Timeout
+
 ```
 User opens service detail page
 → Service has agentId: "agent-789"
@@ -506,6 +537,7 @@ User opens service detail page
 ```
 
 ### Scenario 4: Manual Refresh
+
 ```
 User clicks "Refresh" button
 → Status changes to "loading"
@@ -521,11 +553,13 @@ User clicks "Refresh" button
 ## Files Modified
 
 1. ✅ `src/app/core/services/data.ts`
+
    - Updated `pingAgent()` to handle `AgentPingResponseDto`
    - Added `getStatusMessage()` helper method
    - Updated `pingAllAgents()` return type
 
 2. ✅ `src/app/features/services/service-detail/service-detail.ts`
+
    - Added Agent import
    - Added agent status signals
    - Added `loadAgentStatus()` method
@@ -533,6 +567,7 @@ User clicks "Refresh" button
    - Updated `loadServiceData()` to load agent status
 
 3. ✅ `src/app/features/services/service-detail/service-detail.html`
+
    - Added Agent Status Card
    - Added status indicators and badges
    - Added refresh button
@@ -574,5 +609,6 @@ User clicks "Refresh" button
 ---
 
 **Related Documentation:**
+
 - `AGENT-STATUS-PING.md` - Original ping feature documentation
 - `AGENT-BASED-SERVICES.md` - Agent-based services feature

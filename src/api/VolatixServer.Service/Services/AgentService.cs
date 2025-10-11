@@ -107,6 +107,8 @@ namespace VolatixServer.Service.Services
             try
             {
                 // Make the request to the external API
+
+                client.DefaultRequestHeaders.Add("x-api-key", agent.ApiKey);
                 var response = await client.GetAsync(pingUrl);
                 
                 // Return only the status code

@@ -7,6 +7,7 @@ The services list page now organizes services by their registered agents, provid
 ## Key Features
 
 ### 1. Agent Selection Panel
+
 - **Visual cards** with container icons (🐳) for each agent
 - **"All Services"** card to view everything (default)
 - **Status indicators** showing online/offline status
@@ -14,11 +15,13 @@ The services list page now organizes services by their registered agents, provid
 - **Click to filter** services by selected agent
 
 ### 2. Enhanced Services Table
+
 - **New "Agent" column** showing which agent registered each service
 - **Filtered view** when an agent is selected
 - **Clear filter badge** with quick clear button
 
 ### 3. Quick Stats (Sidebar)
+
 - Total services count
 - Total agents count
 - Active agents count
@@ -26,25 +29,31 @@ The services list page now organizes services by their registered agents, provid
 ## Models Updated
 
 ### Service Model
+
 Added new fields:
+
 - `agentId?: string` - Links service to agent
 - `agentName?: string` - Agent display name
 - `description?: string` - Service description
 - `url?: string` - Service URL
 
 ### Agent Model
+
 Added new field:
+
 - `status?: 'online' | 'offline'` - Agent status
 
 ## Component Features
 
 ### Computed Properties
+
 - `filteredServices` - Services filtered by selected agent
 - `paginatedServices` - Paginated view of filtered services
 - `servicesByAgent` - Services grouped by agent
 - `activeAgentsCount` - Count of online agents
 
 ### Methods
+
 - `selectAgent(agent)` - Filter services by agent
 - `clearAgentFilter()` - Show all services
 - `getAgentName(agentId)` - Get agent name from ID
@@ -52,10 +61,12 @@ Added new field:
 ## User Flow
 
 1. **View All Services** (default)
+
    - See all services from all agents
    - Agent column shows which agent registered each service
 
 2. **Filter by Agent**
+
    - Click an agent card
    - View only that agent's services
    - Filter badge shows selected agent
@@ -68,6 +79,7 @@ Added new field:
 ## Visual Design
 
 ### Agent Cards
+
 - Container icon (🐳)
 - Status dot (green = online, red = offline)
 - Agent name
@@ -77,6 +89,7 @@ Added new field:
 - Selected state with accent highlighting
 
 ### Table
+
 - Agent column with icon + name
 - Responsive layout
 - Empty states when no services found
@@ -84,26 +97,32 @@ Added new field:
 ## Backend Requirements
 
 ### Services API (`GET /api/services`)
+
 Must include:
+
 ```json
 {
-  "agentId": "agent-id-here",  // REQUIRED
-  "agentName": "Agent Name",   // Optional
-  "description": "...",        // Optional
-  "url": "..."                 // Optional
+  "agentId": "agent-id-here", // REQUIRED
+  "agentName": "Agent Name", // Optional
+  "description": "...", // Optional
+  "url": "..." // Optional
 }
 ```
 
 ### Agents API (`GET /api/agents`)
+
 Must include:
+
 ```json
 {
-  "status": "online"  // Optional - will be determined by ping endpoint
+  "status": "online" // Optional - will be determined by ping endpoint
 }
 ```
 
 ### Agent Ping API (`GET /api/agents/ping`) - **NEW**
+
 Used to determine real-time agent status:
+
 ```
 GET /api/agents/ping?agentId={agentId}
 
@@ -118,6 +137,7 @@ Error/Offline:
 ```
 
 **How Status Works:**
+
 - When services page loads, all agents are automatically pinged
 - If ping returns "ok" or "online" → Agent status = online (green indicator)
 - If ping fails or times out → Agent status = offline (red indicator)
@@ -152,6 +172,7 @@ Error/Offline:
 
 ---
 
-**Documentation**: 
+**Documentation**:
+
 - See `AGENT-BASED-SERVICES.md` for complete feature details
 - See `AGENT-STATUS-PING.md` for ping implementation details

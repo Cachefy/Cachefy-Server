@@ -1,14 +1,17 @@
 # Agent Status Ping Feature
 
 ## Overview
+
 Agent status is now determined by pinging each agent through the API endpoint `/agents/ping`. This provides real-time status information for each agent.
 
 ## How It Works
 
 ### 1. Agent Ping Endpoint
+
 The system calls `GET /api/agents/ping?agentId={agentId}` for each agent to determine if it's online or offline.
 
 ### API Response
+
 ```json
 GET /api/agents/ping?agentId=agent-123
 
@@ -23,6 +26,7 @@ Error Response (Agent is Offline):
 ```
 
 ### 2. Status Determination
+
 - **Online**: API returns status "ok" or "online" with HTTP 200
 - **Offline**: API returns error, timeout, or any non-ok status
 
@@ -31,6 +35,7 @@ Error Response (Agent is Offline):
 ### DataService Methods
 
 #### `pingAgent(agentId: string)`
+
 Pings a single agent and updates its status.
 
 ```typescript
@@ -43,16 +48,16 @@ pingAgent(agentId: string): Observable<{ status: 'online' | 'offline'; agentId: 
       map((response) => {
         const isOnline = response.status === 'ok' || response.status === 'online';
         const status: 'online' | 'offline' = isOnline ? 'online' : 'offline';
-        
+
         // Update the agent's status in local state
         const agents = [...this.agents()];
         const agentIndex = agents.findIndex((a) => a.id === agentId);
-        
+
         if (agentIndex >= 0) {
           agents[agentIndex] = { ...agents[agentIndex], status };
           this.agents.set(agents);
         }
-        
+
         this.addLog(`Pinged agent ${agentId}: ${status}`);
         return { status, agentId };
       }),
@@ -60,12 +65,12 @@ pingAgent(agentId: string): Observable<{ status: 'online' | 'offline'; agentId: 
         // If ping fails, agent is offline
         const agents = [...this.agents()];
         const agentIndex = agents.findIndex((a) => a.id === agentId);
-        
+
         if (agentIndex >= 0) {
           agents[agentIndex] = { ...agents[agentIndex], status: 'offline' };
           this.agents.set(agents);
         }
-        
+
         this.addLog(`Agent ${agentId} ping failed: ${error.message}`);
         return of({ status: 'offline' as const, agentId });
       })
@@ -74,6 +79,7 @@ pingAgent(agentId: string): Observable<{ status: 'online' | 'offline'; agentId: 
 ```
 
 #### `pingAllAgents()`
+
 Pings all agents in parallel and returns aggregated results.
 
 ```typescript
@@ -122,12 +128,12 @@ The services list component automatically pings all agents after loading them:
 ```typescript
 loadAgents() {
   this.isLoadingAgents.set(true);
-  
+
   this.dataService.loadAgentsFromApi().subscribe({
     next: (agents) => {
       this.agents.set(agents);
       this.isLoadingAgents.set(false);
-      
+
       // Ping all agents to update their status
       this.pingAllAgents();
     },
@@ -177,22 +183,24 @@ pingAllAgents() {
 ## Visual Indicators
 
 ### Agent Card Status
+
 ```html
 <div class="agent-icon">
   <span class="icon">🐳</span>
   @if (agentData.agent.status === 'online') {
-    <div class="status-indicator online"></div>
+  <div class="status-indicator online"></div>
   } @else {
-    <div class="status-indicator offline"></div>
+  <div class="status-indicator offline"></div>
   }
 </div>
 ```
 
 ### CSS Styles
+
 ```css
 .status-indicator.online {
   background: #22c55e;
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);  /* Pulsing glow effect */
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5); /* Pulsing glow effect */
 }
 
 .status-indicator.offline {
@@ -201,6 +209,7 @@ pingAllAgents() {
 ```
 
 ### Agent Badge
+
 ```html
 <span class="agent-badge" [class]="agentData.agent.status || 'offline'">
   {{ (agentData.agent.status || 'offline').toUpperCase() }}
@@ -237,20 +246,21 @@ Error Response:
 ### Implementation Examples
 
 #### Node.js/Express Example
+
 ```javascript
 app.get('/api/agents/ping', async (req, res) => {
   const { agentId } = req.query;
-  
+
   try {
     // Check if agent exists and is reachable
     const agent = await Agent.findById(agentId);
     if (!agent) {
       return res.status(404).json({ status: 'offline', error: 'Agent not found' });
     }
-    
+
     // Try to ping the agent's endpoint
     const agentResponse = await fetch(agent.url + '/health', { timeout: 5000 });
-    
+
     if (agentResponse.ok) {
       return res.json({ status: 'ok' });
     } else {
@@ -263,6 +273,7 @@ app.get('/api/agents/ping', async (req, res) => {
 ```
 
 #### .NET Example
+
 ```csharp
 [HttpGet("ping")]
 public async Task<IActionResult> PingAgent([FromQuery] string agentId)
@@ -277,14 +288,14 @@ public async Task<IActionResult> PingAgent([FromQuery] string agentId)
 
         using var httpClient = new HttpClient();
         httpClient.Timeout = TimeSpan.FromSeconds(5);
-        
+
         var response = await httpClient.GetAsync($"{agent.Url}/health");
-        
+
         if (response.IsSuccessStatusCode)
         {
             return Ok(new { status = "ok" });
         }
-        
+
         return StatusCode(503, new { status = "offline" });
     }
     catch (Exception ex)
@@ -306,6 +317,7 @@ public async Task<IActionResult> PingAgent([FromQuery] string agentId)
 ## Usage Scenarios
 
 ### Scenario 1: All Agents Online
+
 ```
 User opens Services page
 → 3 agents loaded
@@ -315,6 +327,7 @@ User opens Services page
 ```
 
 ### Scenario 2: Mixed Status
+
 ```
 User opens Services page
 → 3 agents loaded
@@ -325,6 +338,7 @@ User opens Services page
 ```
 
 ### Scenario 3: All Agents Offline
+
 ```
 User opens Services page
 → 3 agents loaded
@@ -336,16 +350,19 @@ User opens Services page
 ## Performance Considerations
 
 ### Timeout Configuration
+
 - Default HTTP timeout: 5 seconds per ping
 - Adjust based on network conditions
 - Consider agent location (local vs. remote)
 
 ### Parallel Execution
+
 - All agents pinged simultaneously
 - No sequential delays
 - Total time ≈ slowest single ping time
 
 ### Caching Strategy
+
 - Status cached in component state
 - No automatic refresh (manual page reload required)
 - Consider implementing:
@@ -370,18 +387,22 @@ User opens Services page
 ### Test Cases
 
 1. **All Agents Online**
+
    - Mock API returns { status: "ok" } for all
    - Verify all show green indicators
 
 2. **All Agents Offline**
+
    - Mock API returns 503/timeout for all
    - Verify all show red indicators
 
 3. **Mixed Status**
+
    - Mock some success, some failure
    - Verify correct indicators per agent
 
 4. **API Error Handling**
+
    - Mock network error
    - Verify graceful degradation to offline
 
@@ -403,12 +424,14 @@ User opens Services page
 ### Agents Always Show Offline
 
 **Possible Causes:**
+
 - Backend `/agents/ping` endpoint not implemented
 - CORS issues preventing API calls
 - Network timeout too short
 - Agent URLs are unreachable
 
 **Solutions:**
+
 - Verify endpoint exists and returns correct format
 - Check CORS configuration on backend
 - Increase timeout value
@@ -417,11 +440,13 @@ User opens Services page
 ### Ping Takes Too Long
 
 **Possible Causes:**
+
 - Many agents being pinged
 - Slow network connections
 - High timeout values
 
 **Solutions:**
+
 - Optimize backend ping implementation
 - Reduce timeout value
 - Implement caching strategy
@@ -430,5 +455,6 @@ User opens Services page
 ---
 
 **Related Documentation:**
+
 - `AGENT-BASED-SERVICES.md` - Agent-based services feature
 - `AGENT-BASED-SERVICES-SUMMARY.md` - Quick reference guide

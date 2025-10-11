@@ -14,6 +14,7 @@ Added individual loading indicators for each agent while pinging them, providing
 ## Visual Changes
 
 ### Before:
+
 ```
 Agent Card
 └─ Shows only final status (online/offline)
@@ -21,6 +22,7 @@ Agent Card
 ```
 
 ### After:
+
 ```
 Agent Card
 ├─ Initial: [CHECKING...] with orange pulse
@@ -46,8 +48,15 @@ Agent Card
 
 ```css
 @keyframes pulse-loading {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.95); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.95);
+  }
 }
 ```
 
@@ -61,6 +70,7 @@ Agent Card
 ## Testing
 
 ### Quick Test:
+
 1. Open Services List page
 2. Observe agents showing "CHECKING..." initially
 3. Verify agents update to "ONLINE" or "OFFLINE"
@@ -69,6 +79,7 @@ Agent Card
 6. Verify loading indicator appears briefly
 
 ### With Network Throttling:
+
 1. Open Chrome DevTools → Network tab
 2. Set throttling to "Slow 3G"
 3. Refresh page
@@ -82,4 +93,4 @@ Agent Card
 
 ---
 
-*Implementation Date: October 7, 2025*
+_Implementation Date: October 7, 2025_

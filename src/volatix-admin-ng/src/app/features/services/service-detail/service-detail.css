@@ -1,7 +1,25 @@
 .grid {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: minmax(0, 1fr) 300px;
   gap: 20px;
+  align-items: start;
+  max-width: none !important;
+  width: 100%;
+}
+
+.grid > section {
+  min-width: 0;
+  overflow: visible;
+}
+
+.grid > aside {
+  min-width: 0;
+}
+
+@media (max-width: 1200px) {
+  .grid {
+    grid-template-columns: 1fr 280px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -135,7 +153,8 @@
 }
 
 @keyframes pulse-online {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
   }
   50% {
@@ -144,7 +163,8 @@
 }
 
 @keyframes pulse-loading {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

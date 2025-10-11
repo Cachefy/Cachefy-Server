@@ -354,20 +354,30 @@ export class DataService {
       );
   }
 
-  pingAgent(agentId: string): Observable<{ status: 'online' | 'offline'; agentId: string; statusCode?: number; message?: string }> {
+  pingAgent(
+    agentId: string
+  ): Observable<{
+    status: 'online' | 'offline';
+    agentId: string;
+    statusCode?: number;
+    message?: string;
+  }> {
     // Set loading state for this agent
     const agents = [...this.agents()];
     const agentIndex = agents.findIndex((a) => a.id === agentId);
-    
+
     if (agentIndex >= 0) {
       agents[agentIndex] = { ...agents[agentIndex], isLoading: true };
       this.agents.set(agents);
     }
 
     return this.http
-      .get<{ statusCode: number; message?: string }>(`${environment.apiUrl}/agents/${agentId}/ping`, {
-        headers: this.getAuthHeaders(),
-      })
+      .get<{ statusCode: number; message?: string }>(
+        `${environment.apiUrl}/agents/${agentId}/ping`,
+        {
+          headers: this.getAuthHeaders(),
+        }
+      )
       .pipe(
         map((response) => {
           // StatusCode can be: 200 (ok), 404 (not found), 503 (service unavailable), 408 (timeout)
@@ -384,13 +394,15 @@ export class DataService {
           }
 
           const statusMessage = response.message || this.getStatusMessage(response.statusCode);
-          this.addLog(`Pinged agent ${agentId}: ${status} (${response.statusCode} - ${statusMessage})`);
-          
-          return { 
-            status, 
-            agentId, 
-            statusCode: response.statusCode, 
-            message: statusMessage 
+          this.addLog(
+            `Pinged agent ${agentId}: ${status} (${response.statusCode} - ${statusMessage})`
+          );
+
+          return {
+            status,
+            agentId,
+            statusCode: response.statusCode,
+            message: statusMessage,
           };
         }),
         catchError((error) => {
@@ -404,11 +416,11 @@ export class DataService {
           }
 
           this.addLog(`Agent ${agentId} ping failed: ${error.message}`);
-          return of({ 
-            status: 'offline' as const, 
-            agentId, 
-            statusCode: error.status || 0, 
-            message: error.message || 'Network error' 
+          return of({
+            status: 'offline' as const,
+            agentId,
+            statusCode: error.status || 0,
+            message: error.message || 'Network error',
           });
         })
       );
@@ -429,7 +441,9 @@ export class DataService {
     }
   }
 
-  pingAllAgents(): Observable<{ status: 'online' | 'offline'; agentId: string; statusCode?: number; message?: string }[]> {
+  pingAllAgents(): Observable<
+    { status: 'online' | 'offline'; agentId: string; statusCode?: number; message?: string }[]
+  > {
     const agents = this.agents();
     if (agents.length === 0) {
       return of([]);
@@ -440,7 +454,12 @@ export class DataService {
 
     // Use forkJoin to execute all pings in parallel
     return new Observable((observer) => {
-      const results: { status: 'online' | 'offline'; agentId: string; statusCode?: number; message?: string }[] = [];
+      const results: {
+        status: 'online' | 'offline';
+        agentId: string;
+        statusCode?: number;
+        message?: string;
+      }[] = [];
       let completed = 0;
 
       pingObservables.forEach((ping$) => {

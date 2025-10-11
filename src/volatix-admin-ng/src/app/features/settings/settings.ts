@@ -51,7 +51,7 @@ export class Settings implements OnInit {
 
   loadAgents() {
     this.isLoading.set(true);
-    
+
     // First get cached agents for immediate display
     const cachedAgents = this.dataService.getAgents();
     this.agents.set(cachedAgents);

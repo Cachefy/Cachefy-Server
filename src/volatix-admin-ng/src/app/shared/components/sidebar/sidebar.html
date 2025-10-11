@@ -17,6 +17,61 @@
       </div>
     </a>
 
+    @if (canAccessSettings) {
+    <a [routerLink]="'/settings'" [routerLinkActive]="'active'">
+      <span class="nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <rect
+            x="2"
+            y="7"
+            width="20"
+            height="4"
+            rx="1"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <rect
+            x="2"
+            y="13"
+            width="20"
+            height="4"
+            rx="1"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <circle cx="6" cy="9" r="1" fill="currentColor" />
+          <circle cx="6" cy="15" r="1" fill="currentColor" />
+          <rect
+            x="2"
+            y="3"
+            width="20"
+            height="2"
+            rx="1"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <rect
+            x="2"
+            y="19"
+            width="20"
+            height="2"
+            rx="1"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </span>
+      <div>
+        <div class="text-sm">Agents Settings</div>
+        <div class="text-xs text-slate-400">Agents management</div>
+      </div>
+    </a>
+    }
+
     <a [routerLink]="'/services'" [routerLinkActive]="'active'">
       <span class="nav-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -32,38 +87,37 @@
         <div class="text-xs text-slate-400">List of Services registered</div>
       </div>
     </a>
-
-    @if (canAccessSettings) {
-    <a [routerLink]="'/settings'" [routerLinkActive]="'active'">
-      <span class="nav-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M12 8a4 4 0 100 8 4 4 0 000-8z"
-          />
-          <path
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M2 12h3m14 0h3M12 2v3m0 14v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M19.8 4.2l-2.1 2.1M6.3 17.7l-2.1 2.1"
-          />
-        </svg>
-      </span>
-      <div>
-        <div class="text-sm">Agents Settings</div>
-        <div class="text-xs text-slate-400">Agents management</div>
-      </div>
-    </a>
-    }
   </nav>
 
   <div style="margin-top: 18px">
     <div style="display: flex; justify-content: space-between; align-items: center">
       <div>
         <div style="font-size: 12px; color: var(--muted)">Status</div>
-        <div style="font-weight: 700; color: var(--accent)">Healthy</div>
+        <div
+          style="font-weight: 700; display: flex; align-items: center; gap: 6px"
+          [style.color]="healthStatus() === 'healthy' ? '#10b981' : '#f97316'"
+        >
+          @if (healthStatus() === 'healthy') {
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2.5"
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+          } @else {
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2.5"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+          }
+          {{ healthStatus() === 'healthy' ? 'Healthy' : 'Unhealthy' }}
+        </div>
       </div>
       <div style="text-align: right; font-size: 12px; color: var(--muted)">v0.1</div>
     </div>

@@ -31,13 +31,13 @@ export class ServicesList implements OnInit {
   filteredServices = computed(() => {
     const allServices = this.services();
     const selected = this.selectedAgent();
-    
+
     if (!selected) {
       return allServices;
     }
-    
+
     // Filter services by selected agent
-    return allServices.filter(service => service.agentId === selected.id);
+    return allServices.filter((service) => service.agentId === selected.id);
   });
 
   paginatedServices = computed(() => {
@@ -54,16 +54,16 @@ export class ServicesList implements OnInit {
   servicesByAgent = computed(() => {
     const allServices = this.services();
     const allAgents = this.agents();
-    
-    return allAgents.map(agent => ({
+
+    return allAgents.map((agent) => ({
       agent,
-      services: allServices.filter(service => service.agentId === agent.id),
-      serviceCount: allServices.filter(service => service.agentId === agent.id).length
+      services: allServices.filter((service) => service.agentId === agent.id),
+      serviceCount: allServices.filter((service) => service.agentId === agent.id).length,
     }));
   });
 
   activeAgentsCount = computed(() => {
-    return this.servicesByAgent().filter(a => a.agent.status === 'online').length;
+    return this.servicesByAgent().filter((a) => a.agent.status === 'online').length;
   });
 
   ngOnInit() {
@@ -73,12 +73,12 @@ export class ServicesList implements OnInit {
 
   loadAgents() {
     this.isLoadingAgents.set(true);
-    
+
     this.dataService.loadAgentsFromApi().subscribe({
       next: (agents) => {
         this.agents.set(agents);
         this.isLoadingAgents.set(false);
-        
+
         // Ping all agents to update their status
         this.pingAllAgents();
       },
@@ -93,21 +93,21 @@ export class ServicesList implements OnInit {
   pingAllAgents() {
     this.dataService.pingAllAgents().subscribe({
       next: (results) => {
-        const onlineCount = results.filter(r => r.status === 'online').length;
+        const onlineCount = results.filter((r) => r.status === 'online').length;
         console.log(`Agent ping complete: ${onlineCount}/${results.length} agents online`);
-        
+
         // Update local agents signal with the updated agents from dataService
         this.agents.set(this.dataService.getAgents());
       },
       error: (error) => {
         console.error('Error pinging agents:', error);
-      }
+      },
     });
   }
 
   loadServices() {
     this.isLoading.set(true);
-    
+
     this.dataService.getServices().subscribe({
       next: (services) => {
         this.services.set(services);
@@ -161,7 +161,7 @@ export class ServicesList implements OnInit {
   }
 
   getAgentName(agentId: string): string {
-    const agent = this.agents().find(a => a.id === agentId);
+    const agent = this.agents().find((a) => a.id === agentId);
     return agent?.name || 'Unknown Agent';
   }
 }

@@ -1,65 +1,75 @@
 <div class="grid">
   <section>
     <!-- Agent Selection Panel -->
-    <div class="card" style="margin-bottom: 24px;">
-      <h2 class="text-app" style="margin-bottom: 8px;">Select Agent</h2>
-      <p style="color: var(--muted); font-size: 14px; margin-bottom: 20px;">Choose an agent to view its registered services</p>
-      
-      @if (isLoadingAgents()) {
-        <div style="text-align: center; padding: 32px; color: var(--muted);">
-          <div style="display: inline-block; width: 32px; height: 32px; border: 3px solid var(--glass-border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-          <div style="margin-top: 12px; font-size: 14px;">Loading agents...</div>
-        </div>
-      } @else {
-        <div class="agent-grid">
-          <!-- All Services Option -->
-          <div 
-            class="agent-card" 
-            [class.selected]="!selectedAgent()"
-            (click)="clearAgentFilter()">
-            <div class="agent-icon all-services">
-              <span class="icon">🌐</span>
-            </div>
-            <div class="agent-info">
-              <h3>All Services</h3>
-              <p>{{ services().length }} services total</p>
-              <span class="agent-badge all">ALL</span>
-            </div>
-          </div>
+    <div class="card" style="margin-bottom: 24px">
+      <h2 class="text-app" style="margin-bottom: 8px">Select Agent</h2>
+      <p style="color: var(--muted); font-size: 14px; margin-bottom: 20px">
+        Choose an agent to view its registered services
+      </p>
 
-          <!-- Individual Agent Cards -->
-          @for (agentData of servicesByAgent(); track agentData.agent.id) {
-            <div 
-              class="agent-card" 
-              [class.selected]="selectedAgent()?.id === agentData.agent.id"
-              [class.loading]="agentData.agent.isLoading || !agentData.agent.status"
-              (click)="selectAgent(agentData.agent)">
-              <div class="agent-icon">
-                <span class="icon">🐳</span>
-                @if (agentData.agent.isLoading || !agentData.agent.status) {
-                  <div class="status-indicator loading"></div>
-                } @else if (agentData.agent.status === 'online') {
-                  <div class="status-indicator online"></div>
-                } @else {
-                  <div class="status-indicator offline"></div>
-                }
-              </div>
-              <div class="agent-info">
-                <h3>{{ agentData.agent.name }}</h3>
-                <p>{{ agentData.serviceCount }} services</p>
-                @if (agentData.agent.isLoading || !agentData.agent.status) {
-                  <span class="agent-badge loading">
-                    <span class="spinner-tiny"></span> CHECKING...
-                  </span>
-                } @else {
-                  <span class="agent-badge" [class]="agentData.agent.status">
-                    {{ agentData.agent.status.toUpperCase() }}
-                  </span>
-                }
-              </div>
-            </div>
-          }
+      @if (isLoadingAgents()) {
+      <div style="text-align: center; padding: 32px; color: var(--muted)">
+        <div
+          style="
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--glass-border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+          "
+        ></div>
+        <div style="margin-top: 12px; font-size: 14px">Loading agents...</div>
+      </div>
+      } @else {
+      <div class="agent-grid">
+        <!-- All Services Option -->
+        <div class="agent-card" [class.selected]="!selectedAgent()" (click)="clearAgentFilter()">
+          <div class="agent-icon all-services">
+            <span class="icon">🌐</span>
+          </div>
+          <div class="agent-info">
+            <h3>All Services</h3>
+            <p>{{ services().length }} services total</p>
+            <span class="agent-badge all">ALL</span>
+          </div>
         </div>
+
+        <!-- Individual Agent Cards -->
+        @for (agentData of servicesByAgent(); track agentData.agent.id) {
+        <div
+          class="agent-card"
+          [class.selected]="selectedAgent()?.id === agentData.agent.id"
+          [class.loading]="agentData.agent.isLoading || !agentData.agent.status"
+          (click)="selectAgent(agentData.agent)"
+        >
+          <div class="agent-icon">
+            <span class="icon">🐳</span>
+            @if (agentData.agent.isLoading || !agentData.agent.status) {
+            <div class="status-indicator loading"></div>
+            } @else if (agentData.agent.status === 'online') {
+            <div class="status-indicator online"></div>
+            } @else {
+            <div class="status-indicator offline"></div>
+            }
+          </div>
+          <div class="agent-info">
+            <h3>{{ agentData.agent.name }}</h3>
+            <p>{{ agentData.serviceCount }} services</p>
+            @if (agentData.agent.isLoading || !agentData.agent.status) {
+            <span class="agent-badge loading">
+              <span class="spinner-tiny"></span> CHECKING...
+            </span>
+            } @else {
+            <span class="agent-badge" [class]="agentData.agent.status">
+              {{ agentData.agent.status.toUpperCase() }}
+            </span>
+            }
+          </div>
+        </div>
+        }
+      </div>
       }
     </div>
 
@@ -67,63 +77,70 @@
     <div class="card">
       <div class="table-header">
         <h2 class="text-app">
-          @if (selectedAgent()) {
-            Services from {{ selectedAgent()!.name }}
-          } @else {
-            Registered services
-          }
+          @if (selectedAgent()) { Services from {{ selectedAgent()!.name }}
+          } @else { Registered services }
         </h2>
         <div class="table-info">
           @if (selectedAgent()) {
-            <span class="selected-agent-badge">
-              🐳 {{ selectedAgent()!.name }} • {{ filteredServices().length }} services
-              <button class="btn-clear-filter" (click)="clearAgentFilter()">✕</button>
-            </span>
+          <span class="selected-agent-badge">
+            🐳 {{ selectedAgent()!.name }} • {{ filteredServices().length }} services
+            <button class="btn-clear-filter" (click)="clearAgentFilter()">✕</button>
+          </span>
           } @else {
-            <span style="color: var(--muted); font-size: 14px;">
-              Showing {{ filteredServices().length }} services from {{ agents().length }} agents
-            </span>
+          <span style="color: var(--muted); font-size: 14px">
+            Showing {{ filteredServices().length }} services from {{ agents().length }} agents
+          </span>
           }
         </div>
       </div>
 
       @if (isLoading()) {
-        <div style="text-align: center; padding: 48px; color: var(--muted);">
-          <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid var(--glass-border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-          <div style="margin-top: 16px; font-size: 14px;">Loading services...</div>
-        </div>
+      <div style="text-align: center; padding: 48px; color: var(--muted)">
+        <div
+          style="
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--glass-border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+          "
+        ></div>
+        <div style="margin-top: 16px; font-size: 14px">Loading services...</div>
+      </div>
       } @else if (filteredServices().length === 0) {
-        <div class="empty-state">
-          @if (selectedAgent()) {
-            <p style="margin-bottom: 16px;">No services found for agent "{{ selectedAgent()!.name }}"</p>
-            <button class="btn secondary btn-ripple" (click)="clearAgentFilter()">
-              View All Services
-            </button>
-          } @else {
-            <p>No services available</p>
-          }
-        </div>
+      <div class="empty-state">
+        @if (selectedAgent()) {
+        <p style="margin-bottom: 16px">No services found for agent "{{ selectedAgent()!.name }}"</p>
+        <button class="btn secondary btn-ripple" (click)="clearAgentFilter()">
+          View All Services
+        </button>
+        } @else {
+        <p>No services available</p>
+        }
+      </div>
       } @else {
-        <table class="min-w-full table-fixed text-sm">
-          <thead>
-            <tr class="text-left text-xs text-slate-400 border-b border-slate-800">
-              <th class="p-2 w-64">Service</th>
-              <th class="p-2 w-40">Agent</th>
-              <th class="p-2 w-24">Status</th>
-              <th class="p-2 w-24">Instances</th>
-              <th class="p-2 w-24">Version</th>
-              <th class="p-2 w-48">Last seen</th>
-              <th class="p-2 col-actions">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+      <table class="min-w-full table-fixed text-sm">
+        <thead>
+          <tr class="text-left text-xs text-slate-400 border-b border-slate-800">
+            <th class="p-2" style="width: 26%">Service</th>
+            <th class="p-2" style="width: 16%">Agent</th>
+            <th class="p-2" style="width: 13%">Status</th>
+            <th class="p-2" style="width: 10%">Instances</th>
+            <th class="p-2" style="width: 10%">Version</th>
+            <th class="p-2" style="width: 16%">Last seen</th>
+            <th class="p-2 col-actions" style="width: 9%">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
           @for (service of paginatedServices(); track service.id || service.name) {
           <tr>
             <td class="p-2">
               <div class="service-name-cell">
                 <strong>{{ service.name }}</strong>
                 @if (service.description) {
-                  <small>{{ service.description }}</small>
+                <small>{{ service.description }}</small>
                 }
               </div>
             </td>
@@ -154,17 +171,6 @@
                   </svg>
                   Details
                 </button>
-                <button class="btn secondary sm btn-ripple" (click)="pingService(service)">
-                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"
-                    />
-                  </svg>
-                  Ping
-                </button>
               </div>
             </td>
           </tr>
@@ -188,19 +194,28 @@
   <aside>
     <div class="card">
       <h2>Agent-Based Services</h2>
-      <div style="font-size: 12px; color: var(--muted);">
-        Services are registered by agents. Select an agent above to filter services, or view all services from all agents.
+      <div style="font-size: 12px; color: var(--muted)">
+        Services are registered by agents. Select an agent above to filter services, or view all
+        services from all agents.
       </div>
-      
+
       @if (agents().length) {
-        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--glass-border);">
-          <div style="font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 8px;">QUICK STATS</div>
-          <div style="font-size: 13px; color: var(--text); line-height: 1.8;">
-            <div>📊 Total Services: <strong>{{ services().length }}</strong></div>
-            <div>🐳 Total Agents: <strong>{{ agents().length }}</strong></div>
-            <div>✓ Active Agents: <strong>{{ activeAgentsCount() }}</strong></div>
+      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--glass-border)">
+        <div style="font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 8px">
+          QUICK STATS
+        </div>
+        <div style="font-size: 13px; color: var(--text); line-height: 1.8">
+          <div>
+            📊 Total Services: <strong>{{ services().length }}</strong>
+          </div>
+          <div>
+            🐳 Total Agents: <strong>{{ agents().length }}</strong>
+          </div>
+          <div>
+            ✓ Active Agents: <strong>{{ activeAgentsCount() }}</strong>
           </div>
         </div>
+      </div>
       }
     </div>
   </aside>
