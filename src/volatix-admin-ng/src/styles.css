@@ -1,7 +1,7 @@
 /* Import enhanced button styles */
 @import './enhanced-buttons.css';
 
-/* Global styles for Volatix Admin */
+/* Global styles for MemoIQ Admin */
 :root {
   --bg: #0b0b0b;
   --panel: rgba(255, 255, 255, 0.06);

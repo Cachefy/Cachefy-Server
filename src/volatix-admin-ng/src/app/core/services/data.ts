@@ -18,8 +18,8 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root',
 })
 export class DataService {
-  private readonly AGENTS_KEY = 'volatix-agents';
-  private readonly LOGS_KEY = 'volatix-logs';
+  private readonly AGENTS_KEY = 'memoiq-agents';
+  private readonly LOGS_KEY = 'memoiq-logs';
 
   private services = signal<Service[]>([]);
   private caches = signal<Cache[]>([]);

@@ -13,7 +13,7 @@ export const routes: Routes = [
     path: 'login',
     component: Login,
     canActivate: [GuestGuard],
-    title: 'Login - Volatix Admin',
+    title: 'Login - MemoIQ Admin',
   },
   {
     path: '',
@@ -24,32 +24,32 @@ export const routes: Routes = [
     path: 'dashboard',
     component: Dashboard,
     canActivate: [AuthGuard],
-    title: 'Dashboard - Volatix Admin',
+    title: 'Dashboard - MemoIQ Admin',
   },
   {
     path: 'services',
     component: ServicesList,
     canActivate: [AuthGuard],
-    title: 'Services - Volatix Admin',
+    title: 'Services - MemoIQ Admin',
   },
   {
     path: 'service/:id',
     component: ServiceDetail,
     canActivate: [AuthGuard],
-    title: 'Service Details - Volatix Admin',
+    title: 'Service Details - MemoIQ Admin',
   },
   {
     path: 'service/:id/cache-keys',
     component: CacheKeys,
     canActivate: [AuthGuard],
-    title: 'Cache Keys - Volatix Admin',
+    title: 'Cache Keys - MemoIQ Admin',
   },
   {
     path: 'settings',
     component: Settings,
     canActivate: [AuthGuard],
     data: { roles: [UserRole.ADMIN, UserRole.MANAGER] }, // Only admin and manager can access settings
-    title: 'Settings - Volatix Admin',
+    title: 'Settings - MemoIQ Admin',
   },
   {
     path: '**',
