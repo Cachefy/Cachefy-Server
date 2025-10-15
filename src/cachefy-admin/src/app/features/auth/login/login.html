@@ -1,0 +1,204 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <div
+        class="logo"
+        style="display: flex; flex-direction: column; align-items: center; gap: 12px"
+      >
+        <!-- Distributed nodes/network icon -->
+        <svg
+          width="60"
+          height="60"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#f4c400"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="5" r="2" fill="#f4c400" />
+          <circle cx="5" cy="12" r="2" fill="#f4c400" />
+          <circle cx="19" cy="12" r="2" fill="#f4c400" />
+          <circle cx="12" cy="19" r="2" fill="#f4c400" />
+          <line x1="12" y1="7" x2="12" y2="17" />
+          <line x1="10.5" y1="6" x2="6.5" y2="10.5" />
+          <line x1="13.5" y1="6" x2="17.5" y2="10.5" />
+          <line x1="6.5" y1="13.5" x2="10.5" y2="18" />
+          <line x1="17.5" y1="13.5" x2="13.5" y2="18" />
+        </svg>
+        <div
+          class="brand"
+          style="font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text)"
+        >
+          Cachefy
+        </div>
+      </div>
+      <p>Sign in to your account</p>
+    </div>
+
+    <form class="login-form" (ngSubmit)="onSubmit()" #loginForm="ngForm">
+      <!-- Username Field -->
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          [value]="credentials().username"
+          (input)="onUsernameChange($any($event.target).value)"
+          placeholder="Enter your username"
+          required
+          [disabled]="isLoading"
+          autocomplete="username"
+        />
+      </div>
+
+      <!-- Password Field -->
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="password-input">
+          <input
+            [type]="showPassword() ? 'text' : 'password'"
+            id="password"
+            name="password"
+            [value]="credentials().password"
+            (input)="onPasswordChange($any($event.target).value)"
+            placeholder="Enter your password"
+            required
+            [disabled]="isLoading"
+            autocomplete="current-password"
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility()"
+            [disabled]="isLoading"
+            aria-label="Toggle password visibility"
+          >
+            @if (showPassword()) {
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.464 8.464M9.878 9.878l-1.414 1.414m4.242 4.242l1.414-1.414m0 0l1.414 1.414M14.12 14.12L12.293 12.293"
+              />
+            </svg>
+            } @else {
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+              />
+            </svg>
+            }
+          </button>
+        </div>
+      </div>
+
+      <!-- Remember Me -->
+      <div class="form-options">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [checked]="rememberMe()"
+            (change)="rememberMe.set($any($event.target).checked)"
+            [disabled]="isLoading"
+          />
+          <span class="checkmark"></span>
+          Remember me
+        </label>
+      </div>
+
+      <!-- Error Message -->
+      @if (hasError) {
+      <div class="error-message" (click)="clearError()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        {{ error }}
+        <button type="button" class="error-close">×</button>
+      </div>
+      }
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="btn primary lg animate-fade-in-up"
+        [class.loading]="isLoading"
+        [disabled]="isLoading || !credentials().username || !credentials().password"
+        style="width: 100%; justify-content: center"
+      >
+        @if (isLoading) {
+        <svg class="spinner" width="20" height="20" viewBox="0 0 24 24">
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+            fill="none"
+            stroke-dasharray="32"
+            stroke-linecap="round"
+          />
+        </svg>
+        Signing in... } @else {
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+          />
+        </svg>
+        Sign In }
+      </button>
+    </form>
+
+    <!-- Demo Credentials -->
+    <div class="demo-section">
+      <h3>Demo Accounts</h3>
+      <p>Click to use demo credentials:</p>
+      <div class="demo-grid">
+        @for (demo of demoCredentials; track demo.username) {
+        <button
+          type="button"
+          class="btn secondary btn-ripple animate-slide-in-right demo-card-btn"
+          (click)="fillDemoCredentials(demo)"
+          [disabled]="isLoading"
+          style="flex-direction: column; padding: 16px; text-align: center"
+        >
+          <div
+            class="demo-role"
+            style="
+              font-weight: 600;
+              color: var(--accent);
+              font-size: 12px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            "
+          >
+            {{ demo.role }}
+          </div>
+          <div class="demo-username" style="margin-top: 4px; font-size: 14px">
+            {{ demo.username }}
+          </div>
+        </button>
+        }
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <p>&copy; 2024 cachefy Labs. All rights reserved.</p>
+    </div>
+  </div>
+</div>
