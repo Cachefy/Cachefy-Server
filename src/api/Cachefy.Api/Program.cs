@@ -159,6 +159,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Enable static files (for index.html)
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 // CORS must be placed before authentication and authorization
 var corsSettings = app.Configuration.GetSection("Cors").Get<CorsSettings>()!;
 app.UseCors(corsSettings.PolicyName);
@@ -187,7 +191,7 @@ using (var scope = app.Services.CreateScope())
     var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
     try
     {
-        await authService.CreateUserAsync("admin@volatix.com", "admin123", "Admin");
+        await authService.CreateUserAsync("admin@cachefy.com", "admin123", "Admin");
         Console.WriteLine("Default admin user created successfully.");
     }
     catch (InvalidOperationException ex)

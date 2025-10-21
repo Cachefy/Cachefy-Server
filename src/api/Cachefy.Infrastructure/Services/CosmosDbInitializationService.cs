@@ -28,19 +28,10 @@ namespace Cachefy.Infrastructure.Services
         {
             try
             {
-                // Determine throughput properties for database
-                ThroughputProperties? databaseThroughput = null;
-                if (_cosmosDbSettings.DatabaseThroughput.HasValue)
-                {
-                    databaseThroughput = _cosmosDbSettings.UseAutoscale && _cosmosDbSettings.MaxAutoscaleThroughput.HasValue
-                        ? ThroughputProperties.CreateAutoscaleThroughput(_cosmosDbSettings.MaxAutoscaleThroughput.Value)
-                        : ThroughputProperties.CreateManualThroughput(_cosmosDbSettings.DatabaseThroughput.Value);
-                }
-
                 // Create database if it doesn't exist
+                // Note: For serverless accounts, throughput cannot be specified at database level
                 var databaseResponse = await _cosmosClient.CreateDatabaseIfNotExistsAsync(
-                    _cosmosDbSettings.DatabaseName,
-                    throughputProperties: databaseThroughput
+                    _cosmosDbSettings.DatabaseName
                 );
 
                 var database = databaseResponse.Database;
@@ -112,18 +103,10 @@ namespace Cachefy.Infrastructure.Services
                 containerProperties.IndexingPolicy.Automatic = true;
                 containerProperties.IndexingPolicy.IncludedPaths.Add(new IncludedPath { Path = "/*" });
 
-                // Determine throughput properties for container
-                ThroughputProperties? containerThroughput = null;
-                if (config.Throughput.HasValue)
-                {
-                    containerThroughput = config.UseAutoscale && config.MaxAutoscaleThroughput.HasValue
-                        ? ThroughputProperties.CreateAutoscaleThroughput(config.MaxAutoscaleThroughput.Value)
-                        : ThroughputProperties.CreateManualThroughput(config.Throughput.Value);
-                }
-
+                // Note: For serverless accounts, throughput cannot be specified at container level
+                // The container is created without throughput properties in serverless mode
                 var containerResponse = await database.CreateContainerIfNotExistsAsync(
-                    containerProperties,
-                    throughputProperties: containerThroughput
+                    containerProperties
                 );
 
                 Console.WriteLine($"Container '{config.ContainerName}' for {entityTypeName} initialized successfully.");

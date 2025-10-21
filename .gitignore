@@ -11,3 +11,7 @@
 *.user
 /src/api/VolatixServer.Service/bin/Debug/net9.0
 /src/api/VolatixServer.Service/obj
+/src/cachefy-admin/src/environments/environment.prod.ts
+/src/cachefy-admin/src/environments/environment.ts
+/src/api/Cachefy.Api/Properties/PublishProfiles
+/src/api/Cachefy.Api/Properties/ServiceDependencies/cubic3cachemanager-server-api - FTP

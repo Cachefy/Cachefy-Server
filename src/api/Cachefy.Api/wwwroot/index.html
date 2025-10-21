@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cachefy API Server</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0b0b0b;
+        --panel: rgba(255, 255, 255, 0.06);
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --accent: #f4c400;
+        --muted: #bdbdbd;
+        --card-radius: 14px;
+        --glass-blur: 10px;
+        --glass-contrast: 0.8;
+        --vol-logo-text: #f7c200;
+        --vol-appname-text: #f8f7f5;
+      }
+
+      :root.light {
+        --bg: linear-gradient(180deg, #f6f7f9, #e9ecf0);
+        --panel: rgba(255, 255, 255, 0.6);
+        --glass-border: rgba(0, 0, 0, 0.06);
+        --accent: #f2a900;
+        --muted: #404040;
+        --vol-logo-text: #070707;
+        --vol-appname-text: #070707;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        font-family: "Inter", Roboto, system-ui, -apple-system, "Helvetica Neue",
+          Arial, sans-serif;
+        color: var(--muted);
+        background: var(--bg);
+        transition: all 0.3s ease;
+      }
+
+      body {
+        padding-top: 72px;
+        line-height: 1.6;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* Topbar */
+      .topbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 18px 28px;
+        backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-contrast));
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(0, 0, 0, 0.02)
+        );
+        border-bottom: 1px solid var(--glass-border);
+      }
+
+      .logo-circle {
+        width: 52px;
+        height: 52px;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+      }
+
+      .logo-x {
+        color: #f4c400;
+        font-weight: 900;
+        font-size: 3.3rem;
+        transform: rotate(-6deg);
+        line-height: 1;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1.5rem;
+      }
+
+      .brand .x {
+        color: #f7c200;
+        position: relative;
+        padding-left: 0.12rem;
+        padding-right: 0.12rem;
+        transform: skewX(-8deg);
+        font-weight: 800;
+        text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+      }
+
+      .brand .appname {
+        color: var(--accent);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .text-app {
+        color: var(--vol-appname-text) !important;
+      }
+
+      .controls {
+        margin-left: auto;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      /* Theme Toggle */
+      .theme-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: transparent;
+        border: none;
+        padding: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .theme-toggle:hover {
+        transform: scale(1.1);
+      }
+
+      .theme-icon {
+        font-size: 24px;
+        opacity: 1;
+        transition: all 0.2s ease;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+      }
+
+      .theme-icon.sun {
+        color: #fbbf24;
+      }
+
+      /* Content Area */
+      .wrap {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 22px;
+        max-width: 1600px;
+        margin: 18px auto;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 980px 360px;
+        gap: 20px;
+        max-width: 1340px;
+        margin: 0 auto;
+        align-items: start;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Card Styles */
+      .card {
+        padding: 16px;
+        border-radius: 12px;
+        background: var(--panel);
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(var(--glass-blur));
+        animation: fadeIn 0.8s ease;
+      }
+
+      .card h2 {
+        margin: 0 0 12px 0;
+        color: var(--muted);
+        font-size: 1.5rem;
+      }
+
+      .card h1 {
+        margin: 0 0 8px 0;
+        color: var(--vol-appname-text);
+        font-size: 2.5rem;
+        font-weight: 800;
+      }
+
+      .subtitle {
+        font-size: 1rem;
+        opacity: 0.8;
+        margin-bottom: 1rem;
+        color: var(--muted);
+      }
+
+      .section {
+        margin-bottom: 1.5rem;
+      }
+
+      .endpoints-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .endpoint-card {
+        padding: 1.25rem;
+        border-radius: 12px;
+        background: var(--panel);
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(var(--glass-blur));
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .endpoint-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      /* Method Badges */
+      .method-badge {
+        display: inline-block;
+        padding: 0.3rem 0.7rem;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: white;
+        margin-right: 0.4rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .method-badge.get {
+        background: #10b981;
+      }
+      .method-badge.post {
+        background: #f59e0b;
+      }
+      .method-badge.put {
+        background: #3b82f6;
+      }
+      .method-badge.delete {
+        background: #ef4444;
+      }
+
+      .endpoint-path {
+        font-family: "Courier New", monospace;
+        font-size: 0.85rem;
+        margin: 0.5rem 0;
+        color: var(--vol-appname-text);
+      }
+
+      .endpoint-description {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-top: 0.5rem;
+      }
+
+      /* Stats Grid */
+      .stats-grid {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+      }
+
+      .stat-card {
+        flex: 1;
+        padding: 1rem;
+        border-radius: 12px;
+        background: var(--panel);
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(var(--glass-blur));
+        transition: all 0.3s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .stat-number {
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
+        color: var(--vol-appname-text);
+      }
+
+      .stat-label {
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+
+      /* Status Badge */
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        background: #10b981;
+        color: white;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: white;
+        animation: blink 1.5s infinite;
+      }
+
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      /* Footer */
+      .footer {
+        text-align: center;
+        margin-top: 2rem;
+        padding: 1rem 0;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      /* Quick Links */
+      .quick-links {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 0.75rem;
+      }
+
+      .quick-link {
+        padding: 0.75rem 1.5rem;
+        background: var(--accent);
+        color: #111;
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .quick-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(244, 196, 0, 0.3);
+        background: #ffce33;
+      }
+
+      /* Row Layout */
+      .row {
+        display: flex;
+        gap: 10px;
+      }
+
+      /* Responsive */
+      @media (max-width: 1080px) {
+        .wrap {
+          padding: 12px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+          max-width: 720px;
+        }
+
+        .endpoints-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .logo-circle {
+          display: none;
+        }
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding-top: 60px;
+        }
+
+        .topbar {
+          padding: 12px 16px;
+        }
+
+        .brand {
+          font-size: 1.2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="brand">
+        <span class="x">Cachefy</span><span class="appname">Server</span>
+      </div>
+      <div class="controls">
+        <div class="status-badge">
+          <span class="status-dot"></span>
+          <span>Online</span>
+        </div>
+        <button
+          class="theme-toggle"
+          onclick="toggleTheme()"
+          aria-label="Toggle theme"
+        >
+          <span id="themeIcon" class="theme-icon sun">☀️</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="wrap">
+      <div class="grid">
+        <!-- Main Content Section -->
+        <section>
+          <div class="card">
+            <h1>⚡ Cachefy API Server</h1>
+            <p class="subtitle">Caching Management Platform</p>
+
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">Uptime</div>
+                <div class="stat-number" id="uptime">00:00:00</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Endpoints</div>
+                <div class="stat-number">6</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Protocol</div>
+                <div class="stat-number">REST</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Runtime</div>
+                <div class="stat-number">.NET 9</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px">
+            <h2 class="text-app">🔗 Quick Access</h2>
+            <div class="quick-links">
+              <a href="/swagger" class="quick-link"> 📖 API Documentation </a>
+              <a href="/api/health/ping" class="quick-link">
+                💚 Health Check
+              </a>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px">
+            <h2 class="text-app">🚀 API Endpoints</h2>
+            <div class="endpoints-grid">
+              <div class="endpoint-card" onclick="navigateTo('/swagger')">
+                <span class="method-badge get">GET</span>
+                <span class="method-badge post">POST</span>
+                <div class="endpoint-path">/api/auth/*</div>
+                <div class="endpoint-description">
+                  Authentication & Authorization
+                </div>
+              </div>
+
+              <div class="endpoint-card" onclick="navigateTo('/swagger')">
+                <span class="method-badge get">GET</span>
+                <span class="method-badge post">POST</span>
+                <span class="method-badge put">PUT</span>
+                <span class="method-badge delete">DELETE</span>
+                <div class="endpoint-path">/api/agents/*</div>
+                <div class="endpoint-description">
+                  Manage cache agents and monitor status
+                </div>
+              </div>
+
+              <div class="endpoint-card" onclick="navigateTo('/swagger')">
+                <span class="method-badge get">GET</span>
+                <span class="method-badge post">POST</span>
+                <span class="method-badge put">PUT</span>
+                <span class="method-badge delete">DELETE</span>
+                <div class="endpoint-path">/api/services/*</div>
+                <div class="endpoint-description">
+                  Service registration and management
+                </div>
+              </div>
+
+              <div class="endpoint-card" onclick="navigateTo('/swagger')">
+                <span class="method-badge get">GET</span>
+                <span class="method-badge delete">DELETE</span>
+                <div class="endpoint-path">/api/caches/*</div>
+                <div class="endpoint-description">
+                  Cache operations and key management
+                </div>
+              </div>
+
+              <div class="endpoint-card" onclick="navigateTo('/swagger')">
+                <span class="method-badge post">POST</span>
+                <span class="method-badge get">GET</span>
+                <div class="endpoint-path">/api/callback/*</div>
+                <div class="endpoint-description">
+                  Service registration callbacks
+                </div>
+              </div>
+
+              <div
+                class="endpoint-card"
+                onclick="navigateTo('/api/health/ping')"
+              >
+                <span class="method-badge get">GET</span>
+                <div class="endpoint-path">/api/health/ping</div>
+                <div class="endpoint-description">Health check endpoint</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Sidebar -->
+        <aside>
+          <div class="card">
+            <h2>ℹ️ About Cachefy</h2>
+            <div style="font-size: 0.9rem; line-height: 1.6">
+              Cachefy is a caching management platform designed to help you
+              manage and monitor Redis cache instances across your
+              infrastructure. Built with .NET 9 and Azure Cosmos DB, it provides
+              a centralized API for cache operations, agent management, and
+              service coordination.
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px">
+            <h2>🕐 Server Time</h2>
+            <div
+              id="currentTime"
+              style="
+                font-size: 1.2rem;
+                font-weight: 600;
+                color: var(--vol-appname-text);
+                margin-top: 8px;
+              "
+            ></div>
+          </div>
+        </aside>
+      </div>
+
+      <footer class="footer">
+        <p>© 2025 Cachefy API Server.</p>
+        <p style="margin-top: 0.5rem">Powered by .NET 9 & Azure Cosmos DB</p>
+      </footer>
+    </div>
+
+    <script>
+      // Theme management
+      function updateTheme() {
+        const hour = new Date().getHours();
+        const isEvening = hour >= 18 || hour < 6; // 6 PM to 6 AM is night
+        const root = document.documentElement;
+
+        if (isEvening) {
+          root.classList.remove("light");
+          document.getElementById("themeIcon").textContent = "🌙";
+          document.getElementById("themeIcon").className = "theme-icon";
+        } else {
+          root.classList.add("light");
+          document.getElementById("themeIcon").textContent = "☀️";
+          document.getElementById("themeIcon").className = "theme-icon sun";
+        }
+      }
+
+      // Manual theme toggle
+      function toggleTheme() {
+        const root = document.documentElement;
+        const icon = document.getElementById("themeIcon");
+
+        if (root.classList.contains("light")) {
+          root.classList.remove("light");
+          icon.textContent = "🌙";
+          icon.className = "theme-icon";
+        } else {
+          root.classList.add("light");
+          icon.textContent = "☀️";
+          icon.className = "theme-icon sun";
+        }
+      }
+
+      // Update current time
+      function updateTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+        });
+        const dateString = now.toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        document.getElementById(
+          "currentTime"
+        ).innerHTML = `<div>${timeString}</div><div style="font-size: 0.75rem; margin-top: 4px; opacity: 0.7;">${dateString}</div>`;
+      }
+
+      // Uptime tracking
+      let startTime = Date.now();
+      function updateUptime() {
+        const elapsed = Date.now() - startTime;
+        const hours = Math.floor(elapsed / 3600000);
+        const minutes = Math.floor((elapsed % 3600000) / 60000);
+        const seconds = Math.floor((elapsed % 60000) / 1000);
+
+        const uptimeString = `${String(hours).padStart(2, "0")}:${String(
+          minutes
+        ).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+        document.getElementById("uptime").textContent = uptimeString;
+      }
+
+      // Navigate to endpoint
+      function navigateTo(url) {
+        window.location.href = url;
+      }
+
+      // Initialize
+      updateTheme();
+      updateTime();
+      updateUptime();
+
+      // Update every second
+      setInterval(() => {
+        updateTime();
+        updateUptime();
+      }, 1000);
+
+      // Check theme every minute
+      setInterval(updateTheme, 60000);
+
+      // Background particle animation
+      function createParticle() {
+        const particle = document.createElement("div");
+        particle.style.position = "fixed";
+        particle.style.width = Math.random() * 5 + 2 + "px";
+        particle.style.height = particle.style.width;
+        particle.style.background = "rgba(244, 196, 0, 0.3)";
+        particle.style.borderRadius = "50%";
+        particle.style.left = Math.random() * 100 + "%";
+        particle.style.top = "-20px";
+        particle.style.pointerEvents = "none";
+        particle.style.zIndex = "0";
+        particle.style.animation = `fall ${Math.random() * 3 + 2}s linear`;
+
+        document.body.appendChild(particle);
+
+        setTimeout(() => {
+          particle.remove();
+        }, 5000);
+      }
+
+      // Add CSS for particle animation
+      const style = document.createElement("style");
+      style.textContent = `
+        @keyframes fall {
+          to {
+            transform: translateY(100vh) rotate(360deg);
+            opacity: 0;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Create particles periodically
+      setInterval(createParticle, 1000);
+    </script>
+  </body>
+</html>
