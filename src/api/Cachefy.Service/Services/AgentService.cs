@@ -110,11 +110,39 @@ namespace Cachefy.Service.Services
 
                 client.DefaultRequestHeaders.Add("x-api-key", agent.ApiKey);
                 var response = await client.GetAsync(pingUrl);
-                
-                // Return only the status code
+
+                if(!response.IsSuccessStatusCode)
+                {
+                    // Try to parse the response content
+                    try
+                    {
+                        var content = await response.Content.ReadAsStringAsync();
+
+                        var pingResponse = System.Text.Json.JsonSerializer.Deserialize<PingResponse>(content);
+                        if (pingResponse != null && !string.IsNullOrEmpty(pingResponse.error))
+                        {
+                            return new AgentPingResponseDto
+                            {
+                                StatusCode = (int)response.StatusCode,
+                                Message = pingResponse.error
+                            };
+                        }
+                    }
+                    catch (System.Text.Json.JsonException)
+                    {
+                        // Ignore JSON parsing errors, just return status code
+                    }
+                  
+                    return new AgentPingResponseDto
+                    {
+                        StatusCode = (int)response.StatusCode,
+                    };
+                }
+
+                // Successful ping
                 return new AgentPingResponseDto
                 {
-                    StatusCode = (int)response.StatusCode
+                    StatusCode = (int)response.StatusCode,
                 };
             }
             catch (HttpRequestException ex)
@@ -149,6 +177,11 @@ namespace Cachefy.Service.Services
                 CreatedAt = agent.CreatedAt,
                 UpdatedAt = agent.UpdatedAt
             };
+        }
+
+        internal class PingResponse
+        {
+            public string? error { get; set; }
         }
     }
 }

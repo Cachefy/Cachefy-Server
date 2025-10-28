@@ -96,7 +96,7 @@
             } @else if (agentStatus() === 'online') {
             <div class="status-indicator online"></div>
             } @else {
-            <div class="status-indicator offline"></div>
+            <div class="status-indicator offline" [attr.data-tooltip]="agentStatusMessage()"></div>
             }
           </div>
 
@@ -123,7 +123,9 @@
                 } @else if (agentStatus() === 'online') {
                 <span class="agent-badge online"> ✓ ONLINE </span>
                 } @else {
-                <span class="agent-badge offline"> ✗ OFFLINE </span>
+                <span class="agent-badge offline" [attr.data-tooltip]="agentStatusMessage()">
+                  ✗ OFFLINE
+                </span>
                 }
               </div>
 

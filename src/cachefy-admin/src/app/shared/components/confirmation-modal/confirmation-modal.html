@@ -63,7 +63,7 @@
       <!-- Content -->
       <div class="confirmation-text">
         <h3 class="confirmation-title">{{ config().title }}</h3>
-        <p class="confirmation-message">{{ config().message }}</p>
+        <p class="confirmation-message" [innerHTML]="config().message"></p>
       </div>
 
       <!-- Actions -->

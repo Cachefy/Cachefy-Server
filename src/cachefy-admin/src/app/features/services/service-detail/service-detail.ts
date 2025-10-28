@@ -341,7 +341,7 @@ export class ServiceDetail implements OnInit {
 
     const confirmed = await this.confirmationService.confirm({
       title: 'Remove Cache',
-      message: `Are you sure you want to remove the cache "${cacheKey}"? This action cannot be undone.`,
+      message: `Are you sure you want to remove the cache "${cacheKey}"?<br><br><strong>This operation will delete this cache for all nodes.</strong>`,
       confirmText: 'Remove',
       cancelText: 'Cancel',
       type: 'warning',

@@ -51,7 +51,10 @@
             } @else if (agentData.agent.status === 'online') {
             <div class="status-indicator online"></div>
             } @else {
-            <div class="status-indicator offline"></div>
+            <div
+              class="status-indicator offline"
+              [attr.data-tooltip]="agentData.agent.statusMessage || 'Agent is offline'"
+            ></div>
             }
           </div>
           <div class="agent-info">
@@ -62,7 +65,15 @@
               <span class="spinner-tiny"></span> CHECKING...
             </span>
             } @else {
-            <span class="agent-badge" [class]="agentData.agent.status">
+            <span
+              class="agent-badge"
+              [class]="agentData.agent.status"
+              [attr.data-tooltip]="
+                agentData.agent.status === 'offline'
+                  ? agentData.agent.statusMessage || 'Agent is offline'
+                  : null
+              "
+            >
               {{ agentData.agent.status.toUpperCase() }}
             </span>
             }
@@ -78,7 +89,16 @@
       <div class="table-header">
         <h2 class="text-app">
           @if (selectedAgent()) { Services from {{ selectedAgent()!.name }}
-          } @else { Registered services }
+          @if (selectedAgent()!.status === 'offline' && selectedAgent()!.statusMessage) {
+          <span class="agent-status-message">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+              />
+            </svg>
+            {{ selectedAgent()!.statusMessage }}
+          </span>
+          } } @else { Registered services }
         </h2>
         <div class="table-info">
           @if (selectedAgent()) {

@@ -386,12 +386,18 @@ export class DataService {
           const agents = [...this.agents()];
           const agentIndex = agents.findIndex((a) => a.id === agentId);
 
+          const statusMessage = response.message || this.getStatusMessage(response.statusCode);
+
           if (agentIndex >= 0) {
-            agents[agentIndex] = { ...agents[agentIndex], status, isLoading: false };
+            agents[agentIndex] = {
+              ...agents[agentIndex],
+              status,
+              isLoading: false,
+              statusMessage: status === 'offline' ? statusMessage : undefined,
+            };
             this.agents.set(agents);
           }
 
-          const statusMessage = response.message || this.getStatusMessage(response.statusCode);
           this.addLog(
             `Pinged agent ${agentId}: ${status} (${response.statusCode} - ${statusMessage})`
           );
@@ -408,17 +414,24 @@ export class DataService {
           const agents = [...this.agents()];
           const agentIndex = agents.findIndex((a) => a.id === agentId);
 
+          const errorMessage = error.message || 'Network error';
+
           if (agentIndex >= 0) {
-            agents[agentIndex] = { ...agents[agentIndex], status: 'offline', isLoading: false };
+            agents[agentIndex] = {
+              ...agents[agentIndex],
+              status: 'offline',
+              isLoading: false,
+              statusMessage: errorMessage,
+            };
             this.agents.set(agents);
           }
 
-          this.addLog(`Agent ${agentId} ping failed: ${error.message}`);
+          this.addLog(`Agent ${agentId} ping failed: ${errorMessage}`);
           return of({
             status: 'offline' as const,
             agentId,
             statusCode: error.status || 0,
-            message: error.message || 'Network error',
+            message: errorMessage,
           });
         })
       );

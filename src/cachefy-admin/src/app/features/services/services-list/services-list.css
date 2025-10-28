@@ -247,6 +247,7 @@ select.form-input {
 
 .status-indicator.offline {
   background: #ef4444;
+  cursor: help;
 }
 
 .status-indicator.loading {
@@ -298,6 +299,7 @@ select.form-input {
 .agent-badge.offline {
   background: rgba(239, 68, 68, 0.2);
   color: #ef4444;
+  cursor: help;
 }
 
 .agent-badge.loading {
@@ -406,6 +408,32 @@ select.form-input {
   font-size: 16px;
 }
 
+/* Agent Status Message in Header */
+.agent-status-message {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 12px;
+  padding: 6px 12px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  color: #ef4444;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.agent-status-message:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.agent-status-message svg {
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
 @media (max-width: 768px) {
   .agent-grid {
     grid-template-columns: 1fr;
@@ -415,5 +443,145 @@ select.form-input {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+
+  .agent-status-message {
+    display: flex;
+    margin-left: 0;
+    margin-top: 8px;
+    font-size: 12px;
+  }
+}
+
+/* Beautiful Custom Tooltip Styles */
+.status-indicator.offline[data-tooltip],
+.agent-badge.offline[data-tooltip] {
+  position: relative;
+}
+
+.status-indicator.offline[data-tooltip]::before,
+.status-indicator.offline[data-tooltip]::after,
+.agent-badge.offline[data-tooltip]::before,
+.agent-badge.offline[data-tooltip]::after {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+}
+
+/* Tooltip content */
+.status-indicator.offline[data-tooltip]::before,
+.agent-badge.offline[data-tooltip]::before {
+  content: attr(data-tooltip);
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #f1f5f9;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  max-width: 320px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 10px 15px -3px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(239, 68, 68, 0.1), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+}
+
+/* Tooltip arrow */
+.status-indicator.offline[data-tooltip]::after,
+.agent-badge.offline[data-tooltip]::after {
+  content: '';
+  border: 6px solid transparent;
+}
+
+/* Status indicator tooltip positioning (appears above) */
+.status-indicator.offline[data-tooltip]::before {
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(5px);
+}
+
+.status-indicator.offline[data-tooltip]::after {
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(5px);
+  border-top-color: #1e293b;
+}
+
+/* Badge tooltip positioning (appears above) */
+.agent-badge.offline[data-tooltip]::before {
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(5px);
+}
+
+.agent-badge.offline[data-tooltip]::after {
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(5px);
+  border-top-color: #1e293b;
+}
+
+/* Show tooltip on hover */
+.status-indicator.offline[data-tooltip]:hover::before,
+.status-indicator.offline[data-tooltip]:hover::after,
+.agent-badge.offline[data-tooltip]:hover::before,
+.agent-badge.offline[data-tooltip]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Pulse effect on hover */
+.status-indicator.offline[data-tooltip]:hover {
+  animation: tooltip-pulse 0.6s ease-out;
+}
+
+@keyframes tooltip-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+/* Error icon in tooltip */
+.status-indicator.offline[data-tooltip]::before {
+  padding-left: 32px;
+  background-image: linear-gradient(135deg, #1e293b 0%, #0f172a 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23ef4444' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat, no-repeat;
+  background-position: center, 10px center;
+  background-size: auto, 16px 16px;
+}
+
+.agent-badge.offline[data-tooltip]::before {
+  padding-left: 32px;
+  background-image: linear-gradient(135deg, #1e293b 0%, #0f172a 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23ef4444' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat, no-repeat;
+  background-position: center, 10px center;
+  background-size: auto, 16px 16px;
+}
+
+/* Responsive tooltip for mobile */
+@media (max-width: 768px) {
+  .status-indicator.offline[data-tooltip]::before,
+  .agent-badge.offline[data-tooltip]::before {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%) translateY(5px);
+    white-space: normal;
+    max-width: 280px;
+  }
+
+  .status-indicator.offline[data-tooltip]:hover::before,
+  .agent-badge.offline[data-tooltip]:hover::before {
+    transform: translateX(-50%) translateY(0);
   }
 }

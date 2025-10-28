@@ -166,7 +166,7 @@ export class CacheKeys implements OnInit {
   async removeCacheByKey(key: string) {
     const confirmed = await this.confirmationService.confirm({
       title: 'Remove Cache',
-      message: `Are you sure you want to remove the cache "${key}"? This action cannot be undone.`,
+      message: `Are you sure you want to remove the cache "${key}"?<br><br><strong>This operation will delete this cache for all nodes.</strong>`,
       confirmText: 'Remove',
       cancelText: 'Cancel',
       type: 'warning',
