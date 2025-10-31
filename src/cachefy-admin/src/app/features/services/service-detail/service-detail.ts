@@ -2,11 +2,13 @@ import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../../core/services/data';
+import { AuthService } from '../../../core/services/auth.service';
 import { Service } from '../../../core/models/service.model';
 import { Agent } from '../../../core/models/agent.model';
 import { AgentResponse } from '../../../core/models/agent-response.model';
 import { Pagination } from '../../../shared/components/pagination/pagination';
 import { ConfirmationService } from '../../../core/services/confirmation.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { Modal } from '../../../shared/components/modal/modal';
 
 @Component({
@@ -19,7 +21,9 @@ export class ServiceDetail implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   public dataService = inject(DataService);
+  private authService = inject(AuthService);
   private confirmationService = inject(ConfirmationService);
+  private notificationService = inject(NotificationService);
 
   service = signal<Service | null>(null);
   agentResponses = signal<AgentResponse[]>([]);
@@ -175,6 +179,10 @@ export class ServiceDetail implements OnInit {
           });
         } else {
           // Service not found, redirect back to services list
+          this.notificationService.showError(
+            'Service Not Found',
+            'The requested service could not be found.'
+          );
           this.isLoading.set(false);
           this.router.navigate(['/services']);
         }

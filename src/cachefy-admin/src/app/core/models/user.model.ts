@@ -1,20 +1,16 @@
 export interface User {
   id: string;
-  username: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  role: UserRole;
-  avatar?: string;
-  isActive: boolean;
-  lastLogin?: Date;
-  createdAt: Date;
+  role: string; // 'Admin', 'Manager', or 'User'
+  linkedServiceNames: string[]; // Names of services this user has access to
+  createdAt: string;
+  updatedAt: string;
 }
 
 export enum UserRole {
-  ADMIN = 'admin',
-  MANAGER = 'manager',
-  USER = 'user',
+  ADMIN = 'Admin',
+  MANAGER = 'Manager',
+  USER = 'User',
 }
 
 export interface LoginCredentials {

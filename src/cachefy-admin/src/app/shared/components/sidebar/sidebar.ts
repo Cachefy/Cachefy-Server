@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -18,6 +18,24 @@ export class Sidebar implements OnInit, OnDestroy {
 
   healthStatus = signal<'healthy' | 'unhealthy'>('unhealthy');
   private intervalId: any;
+
+  // Use computed for reactive role checks
+  canAccessSettings = computed(() =>
+    this.authService.hasAnyRole([UserRole.ADMIN, UserRole.MANAGER])
+  );
+
+  isAdmin = computed(() => {
+    const user = this.authService.currentUser();
+    const hasAdminRole = this.authService.hasRole(UserRole.ADMIN);
+
+    // Debug logging
+    console.log('🔍 Sidebar - Current user:', user);
+    console.log('🔍 Sidebar - User role:', user?.role);
+    console.log('🔍 Sidebar - UserRole.ADMIN:', UserRole.ADMIN);
+    console.log('🔍 Sidebar - isAdmin:', hasAdminRole);
+
+    return hasAdminRole;
+  });
 
   ngOnInit() {
     this.checkHealth();
@@ -59,13 +77,5 @@ export class Sidebar implements OnInit, OnDestroy {
           this.healthStatus.set('unhealthy');
         },
       });
-  }
-
-  get currentUser() {
-    return this.authService.currentUser();
-  }
-
-  get canAccessSettings() {
-    return this.authService.hasAnyRole([UserRole.ADMIN, UserRole.MANAGER]);
   }
 }

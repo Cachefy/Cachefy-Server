@@ -7,7 +7,9 @@ namespace Cachefy.Service.Services
     public interface IServiceService
     {
         Task<IEnumerable<ServiceResponseDto>> GetAllServicesAsync();
+        Task<IEnumerable<ServiceResponseDto>> GetServicesForUserAsync(string userId);
         Task<ServiceResponseDto> GetServiceByIdAsync(string id);
+        Task<ServiceResponseDto> GetServiceByIdForUserAsync(string id, string userId);
         Task<ServiceResponseDto?> GetServiceByNameAsync(string name);
         Task<ServiceResponseDto> CreateServiceAsync(CreateServiceDto createServiceDto);
         Task<ServiceResponseDto> RegisterOrUpdateServiceAsync(CreateServiceDto createServiceDto);
@@ -18,10 +20,14 @@ namespace Cachefy.Service.Services
     public class ServiceService : IServiceService
     {
         private readonly IRepository<Infrastructure.Models.Service> _serviceRepository;
+        private readonly IRepository<User> _userRepository;
 
-        public ServiceService(IRepository<Infrastructure.Models.Service> serviceRepository)
+        public ServiceService(
+            IRepository<Infrastructure.Models.Service> serviceRepository,
+            IRepository<User> userRepository)
         {
             _serviceRepository = serviceRepository;
+            _userRepository = userRepository;
         }
 
         public async Task<IEnumerable<ServiceResponseDto>> GetAllServicesAsync()
@@ -30,12 +36,51 @@ namespace Cachefy.Service.Services
             return services.Select(MapToResponseDto);
         }
 
+        public async Task<IEnumerable<ServiceResponseDto>> GetServicesForUserAsync(string userId)
+        {
+            // Get the user to access their linked service names
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+                throw new KeyNotFoundException($"User with ID {userId} not found");
+
+            // If user has no linked services, return empty list
+            if (user.LinkedServiceNames == null || !user.LinkedServiceNames.Any())
+                return new List<ServiceResponseDto>();
+
+            // Get all services and filter by user's linked service names
+            var allServices = await _serviceRepository.GetAllAsync();
+            var userServices = allServices
+                .Where(s => user.LinkedServiceNames.Contains(s.Name))
+                .Select(MapToResponseDto);
+
+            return userServices;
+        }
+
         public async Task<ServiceResponseDto> GetServiceByIdAsync(string id)
         {
             var service = await _serviceRepository.GetByIdAsync(id);
             if (service == null)
                 throw new KeyNotFoundException($"Service with ID {id} not found");
                 
+            return MapToResponseDto(service);
+        }
+
+        public async Task<ServiceResponseDto> GetServiceByIdForUserAsync(string id, string userId)
+        {
+            // Get the user to check permissions
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+                throw new KeyNotFoundException($"User with ID {userId} not found");
+
+            // Get the service
+            var service = await _serviceRepository.GetByIdAsync(id);
+            if (service == null)
+                throw new KeyNotFoundException($"Service with ID {id} not found");
+
+            // Check if user has access to this service by name
+            if (user.LinkedServiceNames == null || !user.LinkedServiceNames.Contains(service.Name))
+                throw new UnauthorizedAccessException($"User does not have access to service with ID {id}");
+
             return MapToResponseDto(service);
         }
 

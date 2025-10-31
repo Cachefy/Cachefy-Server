@@ -60,6 +60,7 @@ builder.Services.AddScoped<IAgentService, AgentService>();
 builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
 builder.Services.AddScoped<IServiceService, ServiceService>();
 builder.Services.AddScoped<ICacheService, CacheService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 // Cosmos DB Initialization Service
 builder.Services.AddScoped<ICosmosDbInitializationService>(sp =>

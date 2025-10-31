@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DataService } from '../../../core/services/data';
+import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ConfirmationService } from '../../../core/services/confirmation.service';
 import { Modal } from '../../../shared/components/modal/modal';
@@ -16,6 +17,7 @@ export class CacheKeys implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private dataService = inject(DataService);
+  private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
   private confirmationService = inject(ConfirmationService);
 

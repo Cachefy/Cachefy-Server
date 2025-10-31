@@ -5,6 +5,8 @@ import { ServiceDetail } from './features/services/service-detail/service-detail
 import { CacheKeys } from './features/services/cache-keys/cache-keys';
 import { Settings } from './features/settings/settings';
 import { Login } from './features/auth/login/login';
+import { UsersList } from './features/users/users-list/users-list';
+import { UserDetail } from './features/users/user-detail/user-detail';
 import { AuthGuard, GuestGuard } from './core/guards/auth.guard';
 import { UserRole } from './core/models/user.model';
 
@@ -50,6 +52,20 @@ export const routes: Routes = [
     canActivate: [AuthGuard],
     data: { roles: [UserRole.ADMIN, UserRole.MANAGER] }, // Only admin and manager can access settings
     title: 'Settings - cachefy Admin',
+  },
+  {
+    path: 'users',
+    component: UsersList,
+    canActivate: [AuthGuard],
+    data: { roles: [UserRole.ADMIN] }, // Only admin can manage users
+    title: 'User Management - cachefy Admin',
+  },
+  {
+    path: 'users/:id',
+    component: UserDetail,
+    canActivate: [AuthGuard],
+    data: { roles: [UserRole.ADMIN] }, // Only admin can manage users
+    title: 'User Details - cachefy Admin',
   },
   {
     path: '**',

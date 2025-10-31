@@ -4,12 +4,12 @@
 
 /src/.vs
 /src/api/.vs
-/src/api/VolatixServer.Api/bin/Debug/net9.0
-/src/api/VolatixServer.Api/obj
-/src/api/VolatixServer.Infrastructure/bin/Debug/net9.0
-/src/api/VolatixServer.Infrastructure/obj
+/src/api/CachefyServer.Api/bin/Debug/net9.0
+/src/api/CachefyServer.Api/obj
+/src/api/CachefyServer.Infrastructure/bin/Debug/net9.0
+/src/api/CachefyServer.Infrastructure/obj
 *.user
-/src/api/VolatixServer.Service/bin/Debug/net9.0
-/src/api/VolatixServer.Service/obj
+/src/api/CachefyServer.Service/bin/Debug/net9.0
+/src/api/CachefyServer.Service/obj
 
 /src/api/Cachefy.Api/Properties/PublishProfiles

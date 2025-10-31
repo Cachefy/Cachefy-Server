@@ -3,7 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, of, throwError } from 'rxjs';
-import { map, delay, catchError, tap } from 'rxjs/operators';
+import { map, delay, catchError, tap, switchMap } from 'rxjs/operators';
 import { User, LoginCredentials, AuthResponse, AuthState, UserRole } from '../models/user.model';
 import { environment } from '../../../environments/environment';
 
@@ -84,9 +84,31 @@ export class AuthService {
     const token = this.getFromStorage(this.TOKEN_KEY);
     const userData = this.getFromStorage(this.USER_KEY);
 
+    console.log('🚀 AuthService - Initializing auth from storage');
+    console.log('🔑 Token exists:', !!token);
+    console.log('👤 User data exists:', !!userData);
+
     if (token && userData) {
       try {
         const user: User = JSON.parse(userData);
+        console.log('📦 Loaded user from storage:', user);
+        console.log('🎭 Original role:', user.role);
+
+        // Migrate old lowercase role values to uppercase first character
+        if (user.role) {
+          const normalizedRole =
+            user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase();
+          if (user.role !== normalizedRole) {
+            console.log('🔄 Migrating role from', user.role, 'to', normalizedRole);
+            user.role = normalizedRole;
+            // Save updated user data back to storage
+            this.setInStorage(this.USER_KEY, JSON.stringify(user));
+            console.log('✅ Role migrated and saved to storage');
+          } else {
+            console.log('✅ Role already in correct format:', user.role);
+          }
+        }
+
         this.updateAuthState({
           isAuthenticated: true,
           user,
@@ -94,10 +116,13 @@ export class AuthService {
           loading: false,
           error: null,
         });
+        console.log('✅ Auth state updated with user role:', user.role);
       } catch (error) {
-        console.error('Error parsing stored user data:', error);
+        console.error('❌ Error parsing stored user data:', error);
         this.clearStoredAuth();
       }
+    } else {
+      console.log('⚠️ No stored authentication found');
     }
   }
 
@@ -109,32 +134,58 @@ export class AuthService {
 
     // Call real API
     return this.http
-      .post<{ token: string; email: string }>(`${environment.apiUrl}/auth/login`, {
-        email: credentials.username,
-        password: credentials.password,
-      })
+      .post<{ token: string; email: string; serviceIds?: string[] }>(
+        `${environment.apiUrl}/auth/login`,
+        {
+          email: credentials.username,
+          password: credentials.password,
+        }
+      )
       .pipe(
-        map((response) => {
-          // Create user object from response
-          const emailParts = response.email.split('@');
-          const user: User = {
-            id: 'api-user',
-            username: response.email,
-            email: response.email,
-            firstName: emailParts[0],
-            lastName: '',
-            role: UserRole.ADMIN,
-            isActive: true,
-            createdAt: new Date(),
-            lastLogin: new Date(),
-          };
+        // After successful login, fetch user data from /user/me endpoint
+        switchMap((loginResponse) => {
+          const token = loginResponse.token;
+          console.log('✅ Login successful, fetching user data from /user/me');
 
-          return {
-            success: true,
-            user: user,
-            token: response.token,
-            message: 'Login successful',
-          };
+          // Fetch user data with the token
+          return this.http
+            .get<User>(`${environment.apiUrl}/user/me`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            })
+            .pipe(
+              map((user) => {
+                console.log('✅ Fetched user data from /user/me:', user);
+                console.log('🎭 User role from API:', user.role);
+
+                return {
+                  success: true,
+                  user: user,
+                  token: token,
+                  message: 'Login successful',
+                } as AuthResponse;
+              }),
+              catchError((error) => {
+                console.error('❌ Error fetching user data from /user/me:', error);
+                // If /user/me fails, fallback to basic user data from login
+                const fallbackUser: User = {
+                  id: 'api-user',
+                  email: loginResponse.email,
+                  role: 'User', // Default to User role if we can't fetch
+                  linkedServiceNames: loginResponse.serviceIds || [],
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                };
+
+                return of({
+                  success: true,
+                  user: fallbackUser,
+                  token: token,
+                  message: 'Login successful (using fallback user data)',
+                } as AuthResponse);
+              })
+            );
         }),
         tap((authResponse) => {
           if (authResponse.success && authResponse.user && authResponse.token) {
@@ -178,17 +229,48 @@ export class AuthService {
   /**
    * Check if user has specific role
    */
-  hasRole(role: UserRole): boolean {
+  hasRole(role: UserRole | string): boolean {
     const user = this._authState().user;
-    return user?.role === role;
+    return user?.role === role || user?.role === role.toString();
   }
 
   /**
    * Check if user has any of the specified roles
    */
-  hasAnyRole(roles: UserRole[]): boolean {
+  hasAnyRole(roles: (UserRole | string)[]): boolean {
     const user = this._authState().user;
-    return user ? roles.includes(user.role) : false;
+    if (!user) return false;
+
+    return roles.some((role) => user.role === role || user.role === role.toString());
+  }
+
+  /**
+   * Check if user has access to a specific service
+   * Admins and Managers have access to all services
+   * Regular users only have access to services in their linkedServiceNames array
+   */
+  hasServiceAccess(serviceId: string): boolean {
+    const user = this._authState().user;
+
+    if (!user) {
+      return false;
+    }
+
+    // Admins and Managers have access to all services
+    if (user.role === 'Admin' || user.role === 'Manager') {
+      return true;
+    }
+
+    // Regular users only have access to their linked services
+    return user.linkedServiceNames ? user.linkedServiceNames.includes(serviceId) : false;
+  }
+
+  /**
+   * Get the list of service IDs the current user has access to
+   */
+  getUserServiceIds(): string[] {
+    const user = this._authState().user;
+    return user?.linkedServiceNames || [];
   }
 
   /**
@@ -222,55 +304,9 @@ export class AuthService {
   }
 
   /**
-   * Simulate authentication request
-   */
-  private simulateAuthRequest(credentials: LoginCredentials): Observable<AuthResponse> {
-    return this.http.get<{ users: any[] }>('/users.json').pipe(
-      delay(800), // Simulate network delay
-      map((data) => {
-        const user = data.users.find(
-          (u) => u.username === credentials.username && u.password === credentials.password
-        );
-
-        if (!user) {
-          return {
-            success: false,
-            message: 'Invalid username or password',
-          };
-        }
-
-        if (!user.isActive) {
-          return {
-            success: false,
-            message: 'Account is inactive. Please contact administrator.',
-          };
-        }
-
-        // Convert string dates to Date objects and map role
-        const authenticatedUser: User = {
-          ...user,
-          role: user.role as UserRole,
-          lastLogin: user.lastLogin ? new Date(user.lastLogin) : undefined,
-          createdAt: new Date(user.createdAt),
-        };
-
-        return {
-          success: true,
-          user: authenticatedUser,
-          token: this.generateFakeToken(),
-          message: 'Login successful',
-        };
-      })
-    );
-  }
-
-  /**
    * Set authentication data in state and localStorage
    */
   private setAuthData(user: User, token: string): void {
-    // Update last login
-    user.lastLogin = new Date();
-
     this.setInStorage(this.TOKEN_KEY, token);
     this.setInStorage(this.USER_KEY, JSON.stringify(user));
 

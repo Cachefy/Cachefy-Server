@@ -8,6 +8,7 @@ import { Service } from '../models/service.model';
 import { Cache } from '../models/cache.model';
 import { Agent } from '../models/agent.model';
 import { AgentResponse } from '../models/agent-response.model';
+import { User } from '../models/user.model';
 import { NotificationService } from './notification.service';
 import { ConfirmationService } from './confirmation.service';
 import { ApiKeyService } from './api-key.service';
@@ -62,6 +63,8 @@ export class DataService {
               ? new Date(s.lastSeen).toLocaleString()
               : s.lastSeenText || 'Unknown',
           }));
+
+          // API already filters services based on user access token
           this.services.set(processedServices);
           this.addLog(`Loaded ${processedServices.length} services from API`);
           return processedServices;
@@ -72,6 +75,23 @@ export class DataService {
           return of([]);
         })
       );
+  }
+
+  getServiceNames(): Observable<string[]> {
+    const url = `${environment.apiUrl}/Services/names`;
+    console.log('Calling getServiceNames API:', url);
+    return this.http.get<string[]>(url, { headers: this.getAuthHeaders() }).pipe(
+      tap((serviceNames) => {
+        console.log('Received service names:', serviceNames);
+        this.addLog(`Loaded ${serviceNames.length} service names from API`);
+      }),
+      catchError((err) => {
+        console.error('Error loading service names:', err);
+        this.addLog('Error loading service names from API: ' + err.message);
+        this.notificationService.showError('Failed to load service names', err.message);
+        return of([]);
+      })
+    );
   }
 
   getCachesForService(serviceId: string): Observable<AgentResponse[] | Cache[]> {
@@ -159,6 +179,13 @@ export class DataService {
     return this.services().find(
       (s) => s.id === id || s.serviceId === id || this.toSlug(s.name) === id
     );
+  }
+
+  /**
+   * Check if the current user has access to a specific service
+   */
+  hasAccessToService(serviceId: string): boolean {
+    return this.authService.hasServiceAccess(serviceId);
   }
 
   // Service management
@@ -815,5 +842,154 @@ export class DataService {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       this.notificationService.showError('Import Failed', errorMessage);
     }
+  }
+
+  // User Management
+  /**
+   * Get all users
+   */
+  getUsers(): Observable<User[]> {
+    return this.http
+      .get<User[]>(`${environment.apiUrl}/user`, { headers: this.getAuthHeaders() })
+      .pipe(
+        map((users) => {
+          this.addLog(`Loaded ${users.length} users from API`);
+          return users;
+        }),
+        catchError((err) => {
+          this.addLog('Error loading users from API: ' + err.message);
+          this.notificationService.showError('Failed to load users', err.message);
+          return of([]);
+        })
+      );
+  }
+
+  /**
+   * Get user by ID
+   */
+  getUserById(id: string): Observable<User> {
+    return this.http
+      .get<User>(`${environment.apiUrl}/user/${id}`, { headers: this.getAuthHeaders() })
+      .pipe(
+        tap((user) => {
+          this.addLog(`Loaded user: ${user.email}`);
+        }),
+        catchError((err) => {
+          this.addLog(`Error loading user ${id}: ${err.message}`);
+          this.notificationService.showError('Failed to load user', err.message);
+          throw err;
+        })
+      );
+  }
+
+  /**
+   * Create or update a user
+   */
+  saveUser(user: Partial<User> & { password?: string }): Observable<User> {
+    const isUpdate = !!user.id;
+    const url = isUpdate ? `${environment.apiUrl}/user/${user.id}` : `${environment.apiUrl}/user`;
+
+    const method = isUpdate
+      ? this.http.put<User>(url, user, { headers: this.getAuthHeaders() })
+      : this.http.post<User>(url, user, { headers: this.getAuthHeaders() });
+
+    return method.pipe(
+      tap((savedUser) => {
+        this.addLog(`${isUpdate ? 'Updated' : 'Created'} user: ${savedUser.email}`);
+
+        const userName = savedUser.email.split('@')[0];
+        if (isUpdate) {
+          this.notificationService.showUpdateSuccess(`User "${userName}"`);
+        } else {
+          this.notificationService.showCreateSuccess(`User "${userName}"`);
+        }
+      }),
+      catchError((error) => {
+        const errorMessage = error.message || 'Unknown error occurred';
+        const userName = user.email?.split('@')[0] || 'User';
+        if (isUpdate) {
+          this.notificationService.showUpdateError(`User "${userName}"`, errorMessage);
+        } else {
+          this.notificationService.showCreateError(`User "${userName}"`, errorMessage);
+        }
+        this.addLog(`Error saving user: ${errorMessage}`);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Delete a user
+   */
+  async deleteUser(id: string): Promise<void> {
+    const confirmed = await this.confirmationService.confirmDelete('User');
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await firstValueFrom(
+        this.http.delete(`${environment.apiUrl}/user/${id}`, { headers: this.getAuthHeaders() })
+      );
+
+      this.addLog(`Deleted user with ID: ${id}`);
+      this.notificationService.showDeleteSuccess('User');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      this.notificationService.showDeleteError('User', errorMessage);
+      this.addLog(`Error deleting user: ${errorMessage}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Link a service to a user
+   */
+  linkServiceToUser(userId: string, serviceId: string): Observable<User> {
+    return this.http
+      .post<User>(
+        `${environment.apiUrl}/users/${userId}/services/${serviceId}`,
+        {},
+        { headers: this.getAuthHeaders() }
+      )
+      .pipe(
+        tap((user) => {
+          this.addLog(`Linked service ${serviceId} to user ${userId}`);
+          this.notificationService.showSuccess(
+            'Service Linked',
+            'Service has been linked to the user'
+          );
+        }),
+        catchError((err) => {
+          this.addLog(`Error linking service to user: ${err.message}`);
+          this.notificationService.showError('Failed to link service', err.message);
+          throw err;
+        })
+      );
+  }
+
+  /**
+   * Unlink a service from a user
+   */
+  unlinkServiceFromUser(userId: string, serviceId: string): Observable<User> {
+    return this.http
+      .delete<User>(`${environment.apiUrl}/users/${userId}/services/${serviceId}`, {
+        headers: this.getAuthHeaders(),
+      })
+      .pipe(
+        tap((user) => {
+          this.addLog(`Unlinked service ${serviceId} from user ${userId}`);
+          this.notificationService.showSuccess(
+            'Service Unlinked',
+            'Service has been unlinked from the user'
+          );
+        }),
+        catchError((err) => {
+          this.addLog(`Error unlinking service from user: ${err.message}`);
+          this.notificationService.showError('Failed to unlink service', err.message);
+          throw err;
+        })
+      );
   }
 }

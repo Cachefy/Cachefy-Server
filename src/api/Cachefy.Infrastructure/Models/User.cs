@@ -7,14 +7,17 @@ namespace Cachefy.Infrastructure.Models
     {
         [JsonProperty("email")]
         [Required]
-        public string Email { get; set; }
+        public string Email { get; set; } = null!;
         
         [JsonProperty("passwordHash")]
         [Required]
-        public string PasswordHash { get; set; }
+        public string PasswordHash { get; set; } = null!;
         
         [JsonProperty("role")]
         public string Role { get; set; } = "Admin";
+
+        [JsonProperty("linkedServiceNames")]
+        public List<string> LinkedServiceNames { get; set; } = new List<string>();
 
         public User()
         {

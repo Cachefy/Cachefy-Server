@@ -44,17 +44,14 @@
           <img
             class="user-avatar"
             [src]="
-              currentUser?.avatar ||
               'https://ui-avatars.com/api/?name=' +
-                (currentUser?.firstName || 'U') +
-                '+' +
-                (currentUser?.lastName || 'U') +
-                '&background=3b82f6&color=fff'
+              (currentUser?.email || 'User') +
+              '&background=3b82f6&color=fff'
             "
-            [alt]="(currentUser?.firstName || '') + ' ' + (currentUser?.lastName || '') + ' Avatar'"
+            [alt]="(currentUser?.email || 'User') + ' Avatar'"
           />
           <div class="user-info">
-            <span class="user-name">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</span>
+            <span class="user-name">{{ currentUser?.email }}</span>
             <span class="user-role">{{ currentUser?.role | titlecase }}</span>
           </div>
           <span class="dropdown-arrow">▼</span>

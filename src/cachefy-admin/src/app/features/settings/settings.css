@@ -44,12 +44,14 @@
 .table-actions {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  align-items: center;
 }
 
 .table-actions .btn {
-  padding: 4px 8px;
-  font-size: 12px;
+  padding: 6px 12px;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 .text-slate-400 {
@@ -57,7 +59,7 @@
 }
 
 .col-actions {
-  width: 120px;
+  width: 280px;
 }
 
 /* Status styles for consistency */

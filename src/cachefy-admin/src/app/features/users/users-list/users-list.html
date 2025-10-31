@@ -1,0 +1,247 @@
+<div class="grid">
+  <section>
+    <!-- Search and Filters -->
+    <div class="card">
+      <div class="row" style="align-items: center; justify-content: space-between">
+        <h2 class="text-app">User Management</h2>
+        <button class="btn primary btn-ripple" (click)="createNewUser()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+          Create New User
+        </button>
+      </div>
+
+      <div class="search-section">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            placeholder="Search users by name, email..."
+            [value]="searchTerm()"
+            (input)="onSearchChange($event)"
+            class="search-input"
+          />
+        </div>
+        <div class="stats">
+          <div class="stat-item">
+            <span class="stat-label">Total Users:</span>
+            <span class="stat-value">{{ filteredUsers().length }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+    <div class="card">
+      <div style="text-align: center; padding: 48px; color: var(--muted)">
+        <div
+          style="
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--glass-border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+          "
+        ></div>
+        <div style="margin-top: 16px; font-size: 14px">Loading users...</div>
+      </div>
+    </div>
+    }
+
+    <!-- Users Table -->
+    @if (!isLoading() && paginatedUsers().length > 0) {
+    <div class="card">
+      <table class="table-fixed text-sm">
+        <thead>
+          <tr class="text-left text-xs text-slate-400 border-b border-slate-800">
+            <th class="p-2">User</th>
+            <th class="p-2">Email</th>
+            <th class="p-2">Role</th>
+            <th class="p-2">Services</th>
+            <th class="p-2 col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of paginatedUsers(); track user.id) {
+          <tr class="border-b border-slate-800 hover:bg-slate-800/50">
+            <td class="p-2">
+              <div class="user-info">
+                <div class="user-avatar">
+                  {{ user.email.charAt(0).toUpperCase() }}{{ user.email.charAt(1).toUpperCase() }}
+                </div>
+                <div>
+                  <div class="user-name">
+                    {{ user.email.split('@')[0] }}
+                  </div>
+                  <div class="user-username">&#64;{{ user.email.split('@')[0] }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="p-2">{{ user.email }}</td>
+            <td class="p-2">
+              <span [class]="getRoleBadgeClass(user.role)">
+                {{ user.role }}
+              </span>
+            </td>
+            <td class="p-2">
+              @if (user.linkedServiceNames && user.linkedServiceNames.length > 0) {
+              <div class="services-grid">
+                @for (serviceName of user.linkedServiceNames; track serviceName) {
+                <span class="service-badge">{{ serviceName }}</span>
+                }
+              </div>
+              } @else {
+              <span class="no-services">No services linked</span>
+              }
+            </td>
+            <td class="p-2 col-actions">
+              <div class="table-actions">
+                <button
+                  class="btn primary sm btn-ripple"
+                  (click)="viewUserDetails(user)"
+                  title="View Details"
+                >
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    />
+                  </svg>
+                  View
+                </button>
+                <button
+                  class="btn danger sm btn-ripple"
+                  (click)="deleteUser(user)"
+                  title="Delete User"
+                  [disabled]="user.id === authService.currentUser()?.id"
+                >
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+    <app-pagination
+      [currentPage]="currentPage()"
+      [totalPages]="totalPages()"
+      (pageChange)="onPageChange($event)"
+    ></app-pagination>
+    } }
+
+    <!-- Empty State -->
+    @if (!isLoading() && filteredUsers().length === 0) {
+    <div class="card">
+      <div style="text-align: center; padding: 60px 20px">
+        <div style="font-size: 64px; margin-bottom: 16px; opacity: 0.5">👤</div>
+        <h3 style="font-size: 20px; margin: 0 0 8px 0; color: var(--text)">No users found</h3>
+        <p style="color: var(--muted); margin: 0 0 24px 0">
+          {{ searchTerm() ? 'Try adjusting your search criteria' : 'Start by creating a new user' }}
+        </p>
+        @if (!searchTerm()) {
+        <button class="btn primary btn-ripple" (click)="createNewUser()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+          Create New User
+        </button>
+        }
+      </div>
+    </div>
+    }
+  </section>
+
+  <aside>
+    <div class="card">
+      <h2 class="text-app"><span style="font-size: 20px">💡</span> Page Guide</h2>
+
+      <div style="margin-bottom: 24px">
+        <h3 style="font-size: 14px; font-weight: 600; color: var(--accent); margin: 0 0 8px 0">
+          User Management
+        </h3>
+        <p style="font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0">
+          View and manage all users in the system. Create new users, edit existing ones, or delete
+          accounts as needed.
+        </p>
+      </div>
+
+      <div style="margin-bottom: 24px">
+        <h3 style="font-size: 14px; font-weight: 600; color: var(--accent); margin: 0 0 8px 0">
+          Quick Actions
+        </h3>
+        <ul
+          style="
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.8;
+            margin: 0;
+            padding-left: 20px;
+          "
+        >
+          <li>👁️ <strong>View</strong> - See detailed user information</li>
+          <li>🗑️ <strong>Delete</strong> - Remove user from the system</li>
+          <li>🔍 <strong>Search</strong> - Find users by name or email</li>
+        </ul>
+      </div>
+
+      <div style="margin-bottom: 24px">
+        <h3 style="font-size: 14px; font-weight: 600; color: var(--accent); margin: 0 0 8px 0">
+          Service Access
+        </h3>
+        <p style="font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0">
+          Each user can be linked to specific services. Service badges show which services a user
+          has access to. Users without linked services will show "No services linked".
+        </p>
+      </div>
+
+      <div
+        style="
+          padding: 12px;
+          background: rgba(59, 130, 246, 0.1);
+          border-radius: 8px;
+          border: 1px solid rgba(59, 130, 246, 0.2);
+        "
+      >
+        <p style="font-size: 12px; color: var(--accent); margin: 0; line-height: 1.6">
+          💡 <strong>Tip:</strong> Click on a user to view and manage their detailed information and
+          service access.
+        </p>
+      </div>
+    </div>
+  </aside>
+</div>
